@@ -1,0 +1,55 @@
+{
+  "name": "basebots",
+  "private": true,
+  "engines": { "node": ">=18.18 <23" },
+  "packageManager": "npm@10.8.2",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "preview": "next build && next start -p 3000",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "vercel-build": "npm ci --omit=dev && next build"
+  },
+  "dependencies": {
+    "@coinbase/onchainkit": "0.38.19",
+    "@coinbase/wallet-sdk": "3.9.3",
+    "@farcaster/miniapp-sdk": "latest",
+    "@farcaster/miniapp-wagmi-connector": "1.1.0",
+    "@neynar/react": "1.2.20",
+    "@pigment-css/react": "0.0.29",
+    "@rainbow-me/rainbowkit": "2.2.1",
+    "@tanstack/react-query": "5.59.0",
+    "@walletconnect/ethereum-provider": "2.21.1",
+    "@wagmi/core": "2.22.1",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "dotenv": "16.4.5",
+    "ethers": "6.15.0",
+    "next": "15.0.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "swr": "2.3.3",
+    "viem": "2.38.5",
+    "wagmi": "2.19.2",
+    "framer-motion": "11.3.16"
+  },
+  "devDependencies": {
+    "@types/node": "20.11.30",
+    "@types/react": "18.2.66",
+    "@types/react-dom": "18.2.22",
+    "prettier": "3.3.3",
+    "tsx": "4.7.0",
+    "typescript": "5.5.4"
+  },
+  "overrides": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@types/react": "18.2.66",
+    "@types/react-dom": "18.2.22",
+    "wagmi": "2.19.2",
+    "@wagmi/core": "2.22.1",
+    "viem": "2.38.5",
+    "ethers": "6.15.0"
+  }
+}
