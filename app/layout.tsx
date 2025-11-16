@@ -1,5 +1,5 @@
 // app/layout.tsx
-import "../styles/globals.css";
+import "./globals.css";
 import Providers from "./providers";
 import type { Metadata, Viewport } from "next";
 import MiniAppBoot from "@/components/MiniAppBoot";
