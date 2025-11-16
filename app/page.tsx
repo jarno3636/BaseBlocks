@@ -1,8 +1,13 @@
 // app/page.tsx
 "use client";
 
-import { useMemo } from "react";
-import { useAccount, useReadContract } from "wagmi";
+import { useMemo, useState } from "react";
+import {
+  useAccount,
+  useReadContract,
+  useReadContracts,
+  useWriteContract,
+} from "wagmi";
 import { formatEther } from "viem";
 import { BASEBLOCKS_ADDRESS, BASEBLOCKS_ABI } from "@/lib/baseblocksAbi";
 
@@ -23,6 +28,23 @@ function decodeBytes8Symbol(sym?: string | null): string {
     out += String.fromCharCode(byte);
   }
   return out;
+}
+
+function encodeBytes8Symbol(sym: string): `0x${string}` {
+  const trimmed = sym.trim().slice(0, 8);
+  const bytes: number[] = [];
+  for (let i = 0; i < 8; i++) {
+    if (i < trimmed.length) {
+      bytes.push(trimmed.charCodeAt(i));
+    } else {
+      bytes.push(0);
+    }
+  }
+  let hex = "0x";
+  for (const b of bytes) {
+    hex += b.toString(16).padStart(2, "0");
+  }
+  return hex as `0x${string}`;
 }
 
 function seasonNameFromNow(): string {
@@ -58,8 +80,21 @@ function prestigeLabel(prestige: number): string {
   return `Prestige ${prestige}`;
 }
 
+// Small helper for the little blue-cube avatar
+function BlueCubeAvatar({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="flex items-center justify-center rounded-full bg-white/95 shadow-sm shadow-sky-900/40"
+      style={{ width: size, height: size }}
+    >
+      <div className="rounded-md bg-sky-500" style={{ width: size * 0.52, height: size * 0.52 }} />
+    </div>
+  );
+}
+
 export default function Home() {
   const { address, isConnected } = useAccount();
+  const { writeContractAsync, isPending: isWriting } = useWriteContract();
 
   // --- Onchain reads ---
 
@@ -124,7 +159,76 @@ export default function Home() {
     functionName: "promoMintsRemaining",
   });
 
-  // --- Derived UI values ---
+  // --- Recently minted: last up to 5 cubes by tokenId ---
+
+  const recentTokenIds = useMemo(() => {
+    if (!nextTokenIdData || nextTokenIdData <= 1n) return [] as bigint[];
+    const last = Number(nextTokenIdData) - 1; // last minted tokenId
+    const first = Math.max(1, last - 4); // up to 5
+    const ids: bigint[] = [];
+    for (let id = last; id >= first; id--) {
+      ids.push(BigInt(id));
+    }
+    return ids;
+  }, [nextTokenIdData]);
+
+  const { data: recentResults } = useReadContracts({
+    contracts: recentTokenIds.flatMap((id) => [
+      {
+        address: BASEBLOCKS_ADDRESS,
+        abi: BASEBLOCKS_ABI,
+        functionName: "ownerOf",
+        args: [id],
+      } as const,
+      {
+        address: BASEBLOCKS_ADDRESS,
+        abi: BASEBLOCKS_ABI,
+        functionName: "getCubeData",
+        args: [id],
+      } as const,
+    ]),
+    query: {
+      enabled: recentTokenIds.length > 0,
+    },
+  });
+
+  const recentCubes = useMemo(() => {
+    if (!recentResults || recentResults.length === 0) return [];
+
+    const out: {
+      tokenId: number;
+      owner: string | undefined;
+      mintedAtDate: string;
+    }[] = [];
+
+    for (let i = 0; i < recentTokenIds.length; i++) {
+      const tokenId = Number(recentTokenIds[i]);
+      const ownerRes = recentResults[i * 2];
+      const cubeRes = recentResults[i * 2 + 1];
+
+      const owner = ownerRes?.result as string | undefined;
+      const cube = cubeRes?.result as any | undefined;
+      const mintedAtSeconds: number = cube ? Number(cube.mintedAt) : 0;
+
+      const mintedAt =
+        mintedAtSeconds > 0
+          ? new Date(mintedAtSeconds * 1000).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })
+          : "—";
+
+      out.push({
+        tokenId,
+        owner,
+        mintedAtDate: mintedAt,
+      });
+    }
+
+    return out;
+  }, [recentResults, recentTokenIds]);
+
+  // --- Derived UI values for current user ---
 
   const {
     ageDays,
@@ -171,6 +275,103 @@ export default function Home() {
 
   const notConnected = !isConnected;
   const noCubeYet = isConnected && !hasCube;
+
+  // --- Local form state for Set Primary Token ---
+
+  const [primaryTokenInput, setPrimaryTokenInput] = useState("");
+  const [primarySymbolInput, setPrimarySymbolInput] = useState("");
+  const [manageError, setManageError] = useState<string | null>(null);
+  const [manageSuccess, setManageSuccess] = useState<string | null>(null);
+
+  async function handleMint() {
+    if (!mintPriceData) return;
+    setManageError(null);
+    setManageSuccess(null);
+
+    try {
+      await writeContractAsync({
+        address: BASEBLOCKS_ADDRESS,
+        abi: BASEBLOCKS_ABI,
+        functionName: "mint",
+        args: [],
+        value: mintPriceData as bigint,
+      });
+      setManageSuccess("Mint submitted. Your cube will appear once the transaction confirms.");
+    } catch (err: any) {
+      setManageError(err?.shortMessage || err?.message || "Mint failed.");
+    }
+  }
+
+  async function handleSetPrimaryToken(e: React.FormEvent) {
+    e.preventDefault();
+    if (!hasCube) return;
+    setManageError(null);
+    setManageSuccess(null);
+
+    try {
+      const addr = primaryTokenInput.trim();
+      if (!addr || !addr.startsWith("0x") || addr.length !== 42) {
+        setManageError("Enter a valid token address (0x...).");
+        return;
+      }
+      const sym = primarySymbolInput.trim();
+      if (!sym) {
+        setManageError("Enter a token symbol (up to 8 chars).");
+        return;
+      }
+
+      await writeContractAsync({
+        address: BASEBLOCKS_ADDRESS,
+        abi: BASEBLOCKS_ABI,
+        functionName: "setPrimaryToken",
+        args: [addr as `0x${string}`, encodeBytes8Symbol(sym)],
+      });
+
+      setManageSuccess("Primary token updated for your cube.");
+    } catch (err: any) {
+      setManageError(err?.shortMessage || err?.message || "Update failed.");
+    }
+  }
+
+  // --- Share handlers ---
+
+  function handleShareX() {
+    if (!hasCube) return;
+    const url =
+      typeof window !== "undefined"
+        ? window.location.href
+        : "https://baseblocks.xyz";
+    const text = encodeURIComponent(
+      `My BaseBlocks cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabel(
+        prestigeLevel
+      )}, ${seasonName} season.`
+    );
+    const shareUrl = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(
+      url
+    )}`;
+    if (typeof window !== "undefined") {
+      window.open(shareUrl, "_blank");
+    }
+  }
+
+  function handleShareFarcaster() {
+    if (!hasCube) return;
+    const url =
+      typeof window !== "undefined"
+        ? window.location.href
+        : "https://baseblocks.xyz";
+    const text = encodeURIComponent(
+      `Checking in with my BaseBlocks cube #${cubeId} — ${ageDays} days old, ${prestigeLabel(
+        prestigeLevel
+      )}, ${seasonName} season.`
+    );
+    const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(
+      url
+    )}`;
+    if (typeof window !== "undefined") {
+      window.open(shareUrl, "_blank");
+    }
+  }
 
   return (
     <section className="w-full max-w-md flex flex-col gap-6">
@@ -340,6 +541,103 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Mint + Manage cube */}
+        <div className="mt-5 pt-4 border-t border-slate-800/80">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+                Mint & manage
+              </p>
+              <p className="text-xs text-slate-300/85">
+                Forge a new cube or set your primary token.
+              </p>
+            </div>
+          </div>
+
+          {/* Mint button */}
+          <button
+            type="button"
+            disabled={!isConnected || hasCube || isWriting || !mintPriceData}
+            onClick={handleMint}
+            className={`w-full text-xs sm:text-sm px-4 py-2.5 rounded-xl border font-medium transition
+              ${
+                !isConnected || hasCube || !mintPriceData
+                  ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
+                  : "bg-sky-500/20 border-sky-400/70 text-sky-50 hover:bg-sky-500/35"
+              }`}
+          >
+            {!isConnected
+              ? "Connect wallet to mint"
+              : hasCube
+              ? "One cube per wallet (already minted)"
+              : isWriting
+              ? "Minting..."
+              : `Mint your cube for ${mintPriceEth} ETH`}
+          </button>
+
+          {/* Manage cube form */}
+          {hasCube && (
+            <form
+              onSubmit={handleSetPrimaryToken}
+              className="mt-4 space-y-2.5 rounded-2xl bg-slate-950/70 border border-slate-800 px-3 py-3.5"
+            >
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
+                Primary token
+              </p>
+              <p className="text-[11px] text-slate-300/80 mb-1.5">
+                Link a token you&apos;re known for. Symbol is etched on the cube.
+              </p>
+              <div className="space-y-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] text-slate-400">
+                    Token address (Base)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="0x..."
+                    value={primaryTokenInput}
+                    onChange={(e) => setPrimaryTokenInput(e.target.value)}
+                    className="w-full rounded-lg bg-slate-900/80 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] text-slate-400">
+                    Token symbol (max 8 chars)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. POT, TOBY"
+                    value={primarySymbolInput}
+                    onChange={(e) => setPrimarySymbolInput(e.target.value.toUpperCase())}
+                    maxLength={8}
+                    className="w-full rounded-lg bg-slate-900/80 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 tracking-[0.12em]"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={isWriting}
+                className={`mt-2 inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-lg border transition ${
+                  isWriting
+                    ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-900 border-slate-600 text-slate-100 hover:bg-slate-800/90"
+                }`}
+              >
+                {isWriting ? "Updating..." : "Set primary token"}
+              </button>
+
+              {manageError && (
+                <p className="text-[11px] text-rose-400 mt-1">{manageError}</p>
+              )}
+              {manageSuccess && (
+                <p className="text-[11px] text-emerald-400 mt-1">
+                  {manageSuccess}
+                </p>
+              )}
+            </form>
+          )}
+        </div>
+
         {/* Links row – wire these up to your real URLs */}
         <div className="mt-5 flex flex-col gap-2">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
@@ -370,6 +668,121 @@ export default function Home() {
             >
               Visit BaseBlocks site
             </a>
+          </div>
+        </div>
+
+        {/* --- Share CTA --------------------------------------------------- */}
+        <div className="mt-6 pt-4 border-t border-slate-800/80">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+                Share your cube
+              </p>
+              <p className="text-xs text-slate-300/85">
+                Cast or tweet your BaseBlocks stats as a flex.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={!hasCube}
+              onClick={handleShareFarcaster}
+              className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
+                hasCube
+                  ? "bg-violet-500/15 border-violet-400/50 text-violet-100 hover:bg-violet-500/25"
+                  : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
+              }`}
+            >
+              <span>Share on Farcaster</span>
+            </button>
+
+            <button
+              type="button"
+              disabled={!hasCube}
+              onClick={handleShareX}
+              className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
+                hasCube
+                  ? "bg-slate-900 border-slate-500 text-slate-100 hover:bg-black"
+                  : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
+              }`}
+            >
+              <span>Share on X</span>
+            </button>
+          </div>
+
+          {!hasCube && (
+            <p className="text-[10px] text-slate-400 mt-2">
+              Mint a cube first to unlock sharing.
+            </p>
+          )}
+        </div>
+
+        {/* --- Recently minted -------------------------------------------- */}
+        <div className="mt-6 pt-4 border-t border-slate-800/80">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
+            Freshly forged cubes
+          </p>
+
+          {recentCubes.length === 0 ? (
+            <p className="text-xs text-slate-400">
+              No cubes have been forged yet. Be the first mint on BaseBlocks.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {recentCubes.map((item) => (
+                <div
+                  key={item.tokenId}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-slate-950/70 border border-slate-800 px-3 py-2.5"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <BlueCubeAvatar size={32} />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold">
+                        Cube #{item.tokenId}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Owner: {truncateAddress(item.owner)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] text-slate-400">Minted</p>
+                    <p className="text-xs text-slate-200">
+                      {item.mintedAtDate}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* --- Promo cubes ------------------------------------------------- */}
+        <div className="mt-6 pt-4 border-t border-slate-800/80">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
+            Featured cubes
+          </p>
+          <p className="text-xs text-slate-300/85 mb-3">
+            Spotlighted BaseBlocks identities. For now, just blue cube vibes. 🟦
+          </p>
+
+          <div className="grid grid-cols-2 gap-3">
+            {[0, 1, 2, 3].map((idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 rounded-2xl bg-slate-950/70 border border-slate-800 px-3 py-3"
+              >
+                <BlueCubeAvatar size={32} />
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold">Coming soon</span>
+                  <span className="text-[11px] text-slate-400">
+                    Curated Base cube
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
