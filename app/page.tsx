@@ -1,155 +1,135 @@
 // app/page.tsx
 
-export default function Page() {
-  // You can later wire this up to real Neynar / mini-app data
-  const user = {
+export default function Home() {
+  // You can wire these up to real data later
+  const demoProfile = {
     name: "Proof",
     handle: "@jarno12-base",
     fid: "1121193",
+    cubeId: "#0001",
     followers: "116",
     following: "223",
     casts: "99+",
-    openRank: "#375.4K",
+    rank: "#375.4K",
   };
 
   return (
-    <main className="w-full px-4">
-      <div className="mx-auto max-w-md py-8">
-        {/* Outer gradient frame */}
-        <section className="rounded-3xl bg-gradient-to-br from-indigo-800 via-purple-800 to-blue-900 p-[1px] shadow-2xl">
-          {/* Inner card */}
-          <div className="rounded-[22px] bg-slate-950/95 p-6 space-y-6">
-            {/* Title / subtitle */}
-            <header className="space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-indigo-300">
-                Stats Peek
+    <main className="w-full min-h-screen flex justify-center px-4 py-10">
+      <section className="w-full max-w-md flex flex-col gap-6">
+        {/* Header like "Stats Peek" */}
+        <header className="text-center space-y-2">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-300/80">
+            BaseBlocks
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Your onchain identity in a Base cube
+          </h1>
+          <p className="text-sm text-slate-300/80 max-w-sm mx-auto">
+            One evolving cube per wallet. Track your age, prestige, and primary
+            token in a single onchain identity.
+          </p>
+        </header>
+
+        {/* Main stats card */}
+        <div className="stats-card stats-appear px-5 py-6 sm:px-6 sm:py-7">
+          {/* Top: cube + user row */}
+          <div className="flex items-center gap-4">
+            {/* Faux cube avatar */}
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-500 shadow-lg shadow-sky-900/70 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg border border-white/60 bg-sky-100/90" />
+              <div className="absolute -inset-[2px] rounded-2xl border border-cyan-300/40 opacity-60" />
+            </div>
+
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold leading-tight">
+                  {demoProfile.name}
+                </h2>
+                <span className="pill bg-sky-500/15 text-sky-200 border border-sky-500/40">
+                  Cube Active
+                </span>
+              </div>
+              <p className="text-xs text-slate-300/90">
+                {demoProfile.handle} · FID: {demoProfile.fid}
               </p>
-              <h1 className="text-2xl font-semibold leading-tight">
-                Your Farcaster community snapshot
-              </h1>
-              <p className="text-xs text-slate-300">
-                Quick view of your presence on Base & Farcaster.
+              <p className="text-xs text-slate-400">
+                BaseBlocks ID <span className="font-mono">{demoProfile.cubeId}</span>
               </p>
-            </header>
-
-            {/* User info right after title */}
-            <section className="flex items-center gap-4 rounded-2xl bg-slate-900/80 p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 text-2xl">
-                🟩
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold">{user.name}</p>
-                <p className="text-xs text-slate-300">{user.handle}</p>
-                <p className="text-[11px] text-slate-400">FID {user.fid}</p>
-              </div>
-              <a
-                href="https://warpcast.com/jarno12-base"
-                target="_blank"
-                rel="noreferrer"
-                className="text-[11px] font-medium text-cyan-300 underline underline-offset-2"
-              >
-                View profile
-              </a>
-            </section>
-
-            {/* Featured drop card – similar to top card in screenshot */}
-            <section className="rounded-2xl bg-gradient-to-br from-purple-700/80 via-fuchsia-600/80 to-indigo-600/80 p-[1px]">
-              <div className="flex gap-4 rounded-[18px] bg-slate-950/95 p-4">
-                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-300 to-pink-400 shadow-md" />
-                <div className="flex-1 space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-200">
-                    New Artist Drop
-                  </p>
-                  <p className="text-sm font-semibold">
-                    BaseBlocks Identity Cubes
-                  </p>
-                  <p className="text-[11px] text-slate-200">
-                    Mint an evolving on-chain cube tied to your wallet and
-                    Farcaster identity.
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    0.00016 ETH • Tap to mint
-                  </p>
-                </div>
-                <a
-                  href="https://basescan.org/address/0xaa27a2f268bf92e533166fba559f09eef4d84c60"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="self-center rounded-full bg-pink-500 px-3 py-1 text-xs font-semibold text-slate-950 shadow-md hover:bg-pink-400"
-                >
-                  View
-                </a>
-              </div>
-            </section>
-
-            {/* Stats grid – no Neynar badge, just simple boxes */}
-            <section className="space-y-4 rounded-2xl bg-slate-900/80 p-4">
-              <div className="grid grid-cols-2 gap-3 text-center text-sm">
-                <div className="rounded-xl bg-slate-950/80 p-3">
-                  <div className="text-[11px] uppercase tracking-wide text-slate-400">
-                    Followers
-                  </div>
-                  <div className="mt-1 text-lg font-semibold">
-                    {user.followers}
-                  </div>
-                </div>
-                <div className="rounded-xl bg-slate-950/80 p-3">
-                  <div className="text-[11px] uppercase tracking-wide text-slate-400">
-                    Following
-                  </div>
-                  <div className="mt-1 text-lg font-semibold">
-                    {user.following}
-                  </div>
-                </div>
-                <div className="rounded-xl bg-slate-950/80 p-3">
-                  <div className="text-[11px] uppercase tracking-wide text-slate-400">
-                    Casts
-                  </div>
-                  <div className="mt-1 text-lg font-semibold">
-                    {user.casts}
-                  </div>
-                </div>
-                <div className="rounded-xl bg-slate-950/80 p-3">
-                  <div className="text-[11px] uppercase tracking-wide text-slate-400">
-                    OpenRank
-                  </div>
-                  <div className="mt-1 text-lg font-semibold">
-                    {user.openRank}
-                  </div>
-                </div>
-              </div>
-
-              {/* Link pills at bottom */}
-              <div className="mt-2 flex flex-wrap gap-2">
-                <a
-                  href="https://basescan.org/address/0xaa27a2f268bf92e533166fba559f09eef4d84c60"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full border border-slate-700/80 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
-                >
-                  BaseBlocks contract
-                </a>
-                <a
-                  href="https://warpcast.com/~/compose"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full border border-slate-700/80 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
-                >
-                  Cast about your stats
-                </a>
-                <a
-                  href="https://warpcast.com/miniapps"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full border border-slate-700/80 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
-                >
-                  Explore more mini apps
-                </a>
-              </div>
-            </section>
+            </div>
           </div>
-        </section>
-      </div>
+
+          {/* Divider */}
+          <div className="mt-5 mb-4">
+            <hr className="hr-soft" />
+          </div>
+
+          {/* “Identity Score” row (no Neynar text) */}
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
+                Identity Snapshot
+              </p>
+              <p className="text-sm text-slate-300/90">
+                Your BaseBlocks cube will evolve over time as you stay onchain.
+              </p>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-2xl font-semibold leading-none">—</span>
+              <span className="text-[10px] text-slate-400 mt-1">
+                Score coming soon
+              </span>
+            </div>
+          </div>
+
+          {/* Stat grid like Stats Peek */}
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 px-3 py-3">
+              <p className="text-[11px] text-slate-400 mb-1">Followers</p>
+              <p className="text-lg font-semibold">{demoProfile.followers}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 px-3 py-3">
+              <p className="text-[11px] text-slate-400 mb-1">Following</p>
+              <p className="text-lg font-semibold">{demoProfile.following}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 px-3 py-3">
+              <p className="text-[11px] text-slate-400 mb-1">Casts</p>
+              <p className="text-lg font-semibold">{demoProfile.casts}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 px-3 py-3">
+              <p className="text-[11px] text-slate-400 mb-1">OpenRank</p>
+              <p className="text-lg font-semibold">{demoProfile.rank}</p>
+            </div>
+          </div>
+
+          {/* Links row */}
+          <div className="mt-5 flex flex-col gap-2">
+            <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+              Links
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {/* Replace these hrefs with your real links */}
+              <a
+                href="#"
+                className="text-xs px-3 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/40 text-sky-100 hover:bg-sky-500/25 transition"
+              >
+                View cube on Base
+              </a>
+              <a
+                href="#"
+                className="text-xs px-3 py-1.5 rounded-full bg-slate-900/70 border border-slate-600 text-slate-100 hover:bg-slate-800/90 transition"
+              >
+                Open Farcaster profile
+              </a>
+              <a
+                href="#"
+                className="text-xs px-3 py-1.5 rounded-full bg-slate-900/70 border border-slate-600 text-slate-100 hover:bg-slate-800/90 transition"
+              >
+                Visit BaseBlocks site
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
