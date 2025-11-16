@@ -1,0 +1,91 @@
+/* app/globals.css */
+
+/* Tailwind layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+/* Base page background + typography */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, #1e293b 0, transparent 55%),
+    radial-gradient(circle at bottom right, #020617 0, transparent 55%),
+    linear-gradient(135deg, #020617, #020617 30%, #020617 60%, #020617);
+  color: #e5e7eb;
+}
+
+/* Smooth scrolling + font rendering */
+html {
+  scroll-behavior: smooth;
+}
+
+body,
+button,
+input,
+textarea {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Optional: subtle divider line */
+.hr-soft {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(148, 163, 184, 0.35),
+    transparent
+  );
+}
+
+/* Utility for the main stats card */
+.stats-card {
+  background: radial-gradient(circle at top left, #111827 0, #020617 52%);
+  border-radius: 1.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(22px);
+}
+
+/* Small pill badge style */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Fade-in animation for the card */
+@keyframes fade-up-soft {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-appear {
+  animation: fade-up-soft 0.4s ease-out both;
+}
