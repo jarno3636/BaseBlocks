@@ -1,4 +1,3 @@
-// lib/miniapp.ts
 /** Low-level Farcaster/Base Mini interop (no React hooks) */
 
 type MiniAppSdk = {
@@ -98,15 +97,19 @@ export function buildFarcasterComposeUrl({
 
 /* ---------------- SDK loaders ---------------- */
 
+/** FIXED VERSION — safe dynamic import without TS conflicts */
 export async function getMiniSdk(): Promise<MiniAppSdk | null> {
   if (typeof window === "undefined") return null;
+
   try {
-    const mod = (await import("@farcaster/miniapp-sdk")) as {
-      sdk?: MiniAppSdk;
-      default?: MiniAppSdk;
-    };
-    const fromModule = mod?.sdk ?? mod?.default;
-    if (fromModule) return fromModule;
+    // Looser type to avoid TS structural mismatch errors
+    const imported: any = await import("@farcaster/miniapp-sdk");
+
+    // Support both "sdk" and "default" exports
+    const fromModule = imported?.sdk ?? imported?.default;
+    if (fromModule) return fromModule as MiniAppSdk;
+
+    // Global fallback
     const g = window as any;
     return (g?.farcaster?.miniapp?.sdk || g?.sdk || null) as MiniAppSdk | null;
   } catch {
@@ -200,8 +203,10 @@ export async function composeCast({
 } = {}): Promise<boolean> {
   const normalizedEmbeds = (embeds || []).map((e) => toAbsoluteUrl(e, SITE_URL));
 
+  // Base MiniKit
   if (await tryBaseComposeCast({ text, embeds: normalizedEmbeds })) return true;
 
+  // Farcaster SDK
   const sdk = await getMiniSdk();
   if (sdk?.actions?.composeCast && isFarcasterUA()) {
     try {
