@@ -81,17 +81,56 @@ function prestigeLabel(prestige: number): string {
   return `Prestige ${prestige}`;
 }
 
-// Re-usable blue cube avatar (used for recent + featured cubes)
+// Small circular avatar used in lists (recent / featured)
 function BlueCubeAvatar({ size = 40 }: { size?: number }) {
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-white shadow-sm shadow-sky-900/30"
+      className="flex items-center justify-center rounded-full bg-slate-900 shadow-sm shadow-sky-900/40"
       style={{ width: size, height: size }}
     >
       <div
-        className="rounded-md bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600"
-        style={{ width: size * 0.56, height: size * 0.56 }}
+        className="rounded-[10px] bg-gradient-to-br from-sky-400 via-sky-500 to-blue-700 shadow-inner shadow-sky-900/60"
+        style={{ width: size * 0.6, height: size * 0.6 }}
       />
+    </div>
+  );
+}
+
+// Larger “NFT-style” cube render for the main cube / latest cube
+function CubeVisual({
+  tokenId,
+  label = "Base cube",
+  size = 120,
+}: {
+  tokenId?: number;
+  label?: string;
+  size?: number;
+}) {
+  return (
+    <div
+      className="relative rounded-3xl border border-sky-400/40 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
+      style={{ width: size * 1.5 }}
+    >
+      {/* glow */}
+      <div className="pointer-events-none absolute -inset-10 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.35),transparent_55%)] opacity-70" />
+      <div className="relative flex flex-col items-center gap-3 px-4 pt-4 pb-4">
+        <div
+          className="flex items-center justify-center rounded-3xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 shadow-2xl shadow-sky-900/70"
+          style={{ width: size, height: size }}
+        >
+          <div className="w-[70%] h-[70%] rounded-2xl border border-white/70 bg-sky-50/95 shadow-inner shadow-sky-900/40" />
+        </div>
+        <div className="w-full flex items-center justify-between text-[11px] text-slate-100/90">
+          <span className="font-medium uppercase tracking-[0.16em]">
+            {label}
+          </span>
+          {tokenId !== undefined && (
+            <span className="rounded-full bg-slate-900/70 px-2 py-0.5 border border-sky-400/40 text-[10px]">
+              #{tokenId}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -100,7 +139,7 @@ export default function Home() {
   const { address, isConnected } = useAccount();
   const { writeContractAsync, isPending: isWriting } = useWriteContract();
 
-  // --- Onchain reads ---
+  // ---------- Onchain reads ----------
 
   const { data: cubeIdData } = useReadContract({
     address: BASEBLOCKS_ADDRESS,
@@ -153,7 +192,7 @@ export default function Home() {
     functionName: "promoMintsRemaining",
   });
 
-  // --- Recently minted: last up to 5 cubes by tokenId ---
+  // ---------- Recent mints ----------
 
   const recentTokenIds = useMemo(() => {
     if (!nextTokenIdData || nextTokenIdData <= 1n) return [] as bigint[];
@@ -213,7 +252,7 @@ export default function Home() {
     return out;
   }, [recentResults, recentTokenIds]);
 
-  // --- Derived values for current user ---
+  // ---------- Derived for current cube ----------
 
   const {
     ageDays,
@@ -259,7 +298,7 @@ export default function Home() {
   const notConnected = !isConnected;
   const noCubeYet = isConnected && !hasCube;
 
-  // --- Local state for primary token form ---
+  // ---------- Local state ----------
 
   const [primaryTokenInput, setPrimaryTokenInput] = useState("");
   const [primarySymbolInput, setPrimarySymbolInput] = useState("");
@@ -318,7 +357,7 @@ export default function Home() {
     }
   }
 
-  // --- Share helpers ---
+  // ---------- Share helpers ----------
 
   function handleShareX() {
     if (!hasCube) return;
@@ -357,15 +396,17 @@ export default function Home() {
   const latestCube = recentCubes[0];
   const otherRecent = recentCubes.slice(1);
 
+  // ---------- UI ----------
+
   return (
-    <section className="w-full max-w-lg mx-auto flex flex-col gap-6">
+    <section className="w-full max-w-xl mx-auto flex flex-col gap-6">
       {/* Hero header */}
       <header className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 rounded-full bg-sky-500/15 border border-sky-400/50 px-3 py-1 text-[11px] font-medium text-sky-100 uppercase tracking-[0.16em]">
+        <div className="inline-flex items-center gap-2 rounded-full bg-sky-500/15 border border-sky-400/60 px-3 py-1 text-[11px] font-medium text-sky-100 uppercase tracking-[0.16em] shadow-sm shadow-sky-900/40">
           <span className="text-base">🟦</span>
           <span>BaseBlocks Identity</span>
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight">
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-50">
           Your blockchain identity in a Base cube
         </h1>
         <p className="text-sm text-slate-200/85 max-w-sm mx-auto">
@@ -374,56 +415,53 @@ export default function Home() {
         </p>
       </header>
 
-      {/* Main stats card */}
-      <div className="stats-card stats-appear relative overflow-hidden px-5 py-6 sm:px-6 sm:py-7 bg-gradient-to-b from-slate-900/90 via-slate-900/95 to-slate-950 border border-slate-700/70 shadow-2xl shadow-sky-900/50">
-        {/* Soft glow background */}
-        <div className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.4),transparent_60%)] opacity-70" />
+      {/* Main wrapper card */}
+      <div className="stats-card stats-appear relative overflow-hidden px-5 py-6 sm:px-6 sm:py-7 bg-gradient-to-b from-[#05091a] via-slate-950 to-black border border-slate-700/70 shadow-[0_0_60px_rgba(15,23,42,0.9)] rounded-[26px]">
+        {/* soft background glow */}
+        <div className="pointer-events-none absolute inset-x-0 -top-32 h-56 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-80" />
 
-        {/* Top row: cube + status + connect */}
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative w-16 h-16 rounded-3xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-500 shadow-xl shadow-sky-900/70 flex items-center justify-center">
-              <div className="w-9 h-9 rounded-lg border border-white/80 bg-sky-50/95 shadow-sm shadow-sky-900/40" />
-              <div className="pointer-events-none absolute -inset-[2px] rounded-3xl border border-cyan-200/70 opacity-80" />
-            </div>
-
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base font-semibold leading-tight">
-                  {hasCube ? `Cube #${cubeId}` : "No cube yet"}
-                </h2>
+        <div className="relative space-y-5">
+          {/* Top row: cube visual + wallet */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-4">
+              <CubeVisual
+                tokenId={hasCube ? cubeId : undefined}
+                label={hasCube ? "Your cube" : "Base cube"}
+                size={112}
+              />
+              <div className="flex flex-col justify-center gap-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-semibold leading-tight text-slate-50">
+                    {hasCube ? `Cube #${cubeId}` : "No cube yet"}
+                  </h2>
+                  {hasCube && (
+                    <span className="pill bg-sky-500/20 text-sky-50 border border-sky-400/70">
+                      {seasonName} season
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-200/90">
+                  {address ? truncateAddress(address) : "Connect wallet to begin"}
+                </p>
                 {hasCube && (
-                  <span className="pill bg-sky-500/15 text-sky-100 border border-sky-400/60">
-                    {seasonName} season
-                  </span>
+                  <p className="text-xs text-slate-300/85">
+                    Minted{" "}
+                    <span className="font-medium text-slate-50">
+                      {mintedAtDate}
+                    </span>
+                  </p>
                 )}
               </div>
+            </div>
 
-              <p className="text-xs text-slate-200/90">
-                {address ? truncateAddress(address) : "Connect wallet to begin"}
-              </p>
-
-              {hasCube && (
-                <p className="text-xs text-slate-300/80">
-                  Minted <span className="font-medium">{mintedAtDate}</span>
-                </p>
-              )}
+            <div className="self-start sm:self-center">
+              <ConnectButton chainStatus="none" showBalance={false} />
             </div>
           </div>
 
-          {/* Connect button */}
-          <div className="self-start sm:self-center">
-            <ConnectButton chainStatus="none" showBalance={false} />
-          </div>
-        </div>
-
-        {/* Spacing divider */}
-        <div className="mt-5" />
-
-        <div className="relative space-y-4">
-          {/* Connection / intro message */}
+          {/* Connection notice */}
           {(notConnected || noCubeYet) && (
-            <div className="rounded-2xl bg-slate-950/70 border border-slate-800 px-4 py-3.5 text-xs text-slate-200/90">
+            <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-3.5 text-xs text-slate-100/90">
               {notConnected && (
                 <p>
                   Connect your Base wallet to see your BaseBlocks cube stats and
@@ -431,7 +469,7 @@ export default function Home() {
                 </p>
               )}
               {noCubeYet && (
-                <p>
+                <p className="mt-1.5">
                   You don&apos;t have a cube yet. Mint one on Base to start
                   building your onchain identity.
                 </p>
@@ -441,8 +479,8 @@ export default function Home() {
 
           {/* Identity snapshot */}
           {hasCube && (
-            <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-4">
-              <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4 space-y-4">
+              <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                     Identity snapshot
@@ -452,7 +490,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-semibold text-slate-50">
                     {prestigeLabel(prestigeLevel)}
                   </span>
                   <span className="text-[10px] text-slate-400 mt-0.5">
@@ -461,41 +499,45 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-1">
+              <div className="grid grid-cols-2 gap-3">
                 {/* Age */}
-                <div className="rounded-2xl bg-slate-900/75 border border-slate-700/80 px-3 py-3">
+                <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
                   <p className="text-[11px] text-slate-400 mb-1">Age</p>
-                  <p className="text-lg font-semibold">
+                  <p className="text-lg font-semibold text-slate-50">
                     {ageDays}
                     <span className="text-xs text-slate-400 ml-1">days</span>
                   </p>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
+                  <p className="text-[11px] text-slate-200 mt-0.5">
                     {ageTier.label}
                   </p>
                 </div>
 
                 {/* Season */}
-                <div className="rounded-2xl bg-slate-900/75 border border-slate-700/80 px-3 py-3">
+                <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
                   <p className="text-[11px] text-slate-400 mb-1">Season</p>
-                  <p className="text-lg font-semibold">{seasonName}</p>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
+                  <p className="text-lg font-semibold text-slate-50">
+                    {seasonName}
+                  </p>
+                  <p className="text-[11px] text-slate-200 mt-0.5">
                     {ageTier.subtitle}
                   </p>
                 </div>
 
                 {/* Prestige */}
-                <div className="rounded-2xl bg-slate-900/75 border border-slate-700/80 px-3 py-3">
+                <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
                   <p className="text-[11px] text-slate-400 mb-1">Prestige</p>
-                  <p className="text-lg font-semibold">{prestigeLevel}</p>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
+                  <p className="text-lg font-semibold text-slate-50">
+                    {prestigeLevel}
+                  </p>
+                  <p className="text-[11px] text-slate-200 mt-0.5">
                     {prestigeLabel(prestigeLevel)}
                   </p>
                 </div>
 
                 {/* Primary token */}
-                <div className="rounded-2xl bg-slate-900/75 border border-slate-700/80 px-3 py-3">
+                <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
                   <p className="text-[11px] text-slate-400 mb-1">Primary token</p>
-                  <p className="text-sm font-semibold">
+                  <p className="text-sm font-semibold text-slate-50">
                     {primarySymbol || "Not set"}
                   </p>
                   <p className="text-[11px] text-slate-300 mt-0.5">
@@ -507,25 +549,25 @@ export default function Home() {
           )}
 
           {/* Mint overview */}
-          <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-4">
+          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
             <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
               Mint overview
             </p>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
+              <div className="rounded-2xl bg-slate-900/85 border border-slate-700 px-3 py-3">
                 <p className="text-[11px] text-slate-400 mb-1">
                   Minted / Max supply
                 </p>
-                <p className="font-semibold">
+                <p className="font-semibold text-slate-50">
                   {mintedCount}{" "}
                   <span className="text-slate-400 text-xs">
                     / {maxSupply || "100000"}
                   </span>
                 </p>
               </div>
-              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
+              <div className="rounded-2xl bg-slate-900/85 border border-slate-700 px-3 py-3">
                 <p className="text-[11px] text-slate-400 mb-1">Mint price</p>
-                <p className="font-semibold">
+                <p className="font-semibold text-slate-50">
                   {mintPriceEth}{" "}
                   <span className="text-slate-400 text-xs">ETH</span>
                 </p>
@@ -537,8 +579,8 @@ export default function Home() {
           </div>
 
           {/* Mint & manage */}
-          <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-4">
-            <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
               <div>
                 <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
                   Mint & manage
@@ -557,7 +599,7 @@ export default function Home() {
               ${
                 !isConnected || hasCube || !mintPriceData
                   ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
-                  : "bg-sky-500/20 border-sky-400/70 text-sky-50 hover:bg-sky-500/35"
+                  : "bg-sky-500/20 border-sky-400/80 text-sky-50 hover:bg-sky-500/35"
               }`}
             >
               {!isConnected
@@ -572,7 +614,7 @@ export default function Home() {
             {hasCube && (
               <form
                 onSubmit={handleSetPrimaryToken}
-                className="mt-4 space-y-2.5 rounded-2xl bg-slate-900/85 border border-slate-800 px-3 py-3.5"
+                className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 border border-slate-800 px-3 py-3.5"
               >
                 <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
                   Primary token
@@ -590,7 +632,7 @@ export default function Home() {
                       placeholder="0x..."
                       value={primaryTokenInput}
                       onChange={(e) => setPrimaryTokenInput(e.target.value)}
-                      className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -605,7 +647,7 @@ export default function Home() {
                         setPrimarySymbolInput(e.target.value.toUpperCase())
                       }
                       maxLength={8}
-                      className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 tracking-[0.12em]"
+                      className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 tracking-[0.12em]"
                     />
                   </div>
                 </div>
@@ -634,7 +676,7 @@ export default function Home() {
           </div>
 
           {/* Links */}
-          <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-4">
+          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
             <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
               Links
             </p>
@@ -643,7 +685,7 @@ export default function Home() {
                 href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs px-3 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/40 text-sky-100 hover:bg-sky-500/25 transition"
+                className="text-xs px-3 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/50 text-sky-50 hover:bg-sky-500/30 transition"
               >
                 View contract on BaseScan
               </a>
@@ -652,14 +694,14 @@ export default function Home() {
                   href={`https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${cubeId}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs px-3 py-1.5 rounded-full bg-slate-900/80 border border-slate-600 text-slate-100 hover:bg-slate-800/90 transition"
+                  className="text-xs px-3 py-1.5 rounded-full bg-slate-900/85 border border-slate-600 text-slate-100 hover:bg-slate-800/95 transition"
                 >
                   View cube #{cubeId} on Base
                 </a>
               )}
               <a
                 href="#"
-                className="text-xs px-3 py-1.5 rounded-full bg-slate-900/80 border border-slate-600 text-slate-100 hover:bg-slate-800/90 transition"
+                className="text-xs px-3 py-1.5 rounded-full bg-slate-900/85 border border-slate-600 text-slate-100 hover:bg-slate-800/95 transition"
               >
                 Visit BaseBlocks site
               </a>
@@ -667,7 +709,7 @@ export default function Home() {
           </div>
 
           {/* Share CTA */}
-          <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-4">
+          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
             <div className="flex items-center justify-between gap-2 mb-3">
               <div>
                 <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
@@ -686,7 +728,7 @@ export default function Home() {
                 onClick={handleShareFarcaster}
                 className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
                   hasCube
-                    ? "bg-violet-500/15 border-violet-400/50 text-violet-100 hover:bg-violet-500/25"
+                    ? "bg-violet-500/20 border-violet-400/60 text-violet-50 hover:bg-violet-500/30"
                     : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
                 }`}
               >
@@ -714,8 +756,8 @@ export default function Home() {
             )}
           </div>
 
-          {/* Freshly forged cubes (recent mints) */}
-          <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-4">
+          {/* Freshly forged cubes */}
+          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
             <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
               Freshly forged cubes
             </p>
@@ -726,16 +768,16 @@ export default function Home() {
               </p>
             ) : (
               <div className="space-y-3">
-                {/* Highlight latest cube */}
                 {latestCube && (
-                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-sky-500/25 via-blue-500/20 to-slate-900/90 border border-sky-400/60 px-3.5 py-3 shadow-md shadow-sky-900/40">
+                  <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-sky-500/25 via-blue-500/20 to-slate-900/90 border border-sky-400/70 px-3.5 py-3 shadow-md shadow-sky-900/50">
                     <div className="flex items-center gap-3">
-                      <BlueCubeAvatar size={40} />
+                      <CubeVisual
+                        tokenId={latestCube.tokenId}
+                        label="Latest cube"
+                        size={80}
+                      />
                       <div className="flex flex-col">
-                        <span className="text-xs font-semibold">
-                          Latest cube · #{latestCube.tokenId}
-                        </span>
-                        <span className="text-[11px] text-slate-100/90">
+                        <span className="text-xs font-semibold text-slate-50">
                           Owner: {truncateAddress(latestCube.owner)}
                         </span>
                       </div>
@@ -749,18 +791,17 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* The rest */}
                 {otherRecent.length > 0 && (
                   <div className="flex flex-col gap-2">
                     {otherRecent.map((item) => (
                       <div
                         key={item.tokenId}
-                        className="flex items-center justify-between gap-3 rounded-xl bg-slate-900/85 border border-slate-800 px-3 py-2.5"
+                        className="flex items-center justify-between gap-3 rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-2.5"
                       >
                         <div className="flex items-center gap-2.5">
                           <BlueCubeAvatar size={30} />
                           <div className="flex flex-col">
-                            <span className="text-xs font-semibold">
+                            <span className="text-xs font-semibold text-slate-50">
                               Cube #{item.tokenId}
                             </span>
                             <span className="text-[11px] text-slate-400">
@@ -783,7 +824,7 @@ export default function Home() {
           </div>
 
           {/* Featured cubes */}
-          <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-4">
+          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
             <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
               Featured cubes
             </p>
@@ -795,11 +836,13 @@ export default function Home() {
               {[0, 1, 2, 3].map((idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 rounded-2xl bg-slate-900/85 border border-slate-800 px-3 py-3"
+                  className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-slate-800 px-3 py-3"
                 >
                   <BlueCubeAvatar size={32} />
                   <div className="flex flex-col">
-                    <span className="text-xs font-semibold">Coming soon</span>
+                    <span className="text-xs font-semibold text-slate-50">
+                      Coming soon
+                    </span>
                     <span className="text-[11px] text-slate-400">
                       Curated Base cube
                     </span>
