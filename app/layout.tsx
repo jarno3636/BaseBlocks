@@ -7,14 +7,13 @@ import AppReady from "@/components/AppReady";
 
 /** ---- Dynamic metadata (absolute URLs + mini app embed) ---- */
 export async function generateMetadata(): Promise<Metadata> {
-  const origin =
-    (
-      process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-        ? `https://${(
-            process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-          )!.replace(/\/$/, "")}`
-        : "https://example.com"
-    ).replace(/\/$/, "");
+  const origin = (
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+      ? `https://${(
+          process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+        )!.replace(/\/$/, "")}`
+      : "https://example.com"
+  ).replace(/\/$/, "");
 
   const image = `${origin}/share.PNG`;
 
@@ -62,12 +61,12 @@ export default function RootLayout({
       <body className="bg-[#020617] text-slate-50 antialiased">
         <MiniAppBoot>
           <Providers>
-            <AppReady>
-              {/* Clean mini-app shell – child page handles the card UI */}
-              <main className="min-h-screen flex items-center justify-center px-4">
-                {children}
-              </main>
-            </AppReady>
+            {/* AppReady stays as a hook-style component with no children */}
+            <AppReady />
+            {/* Clean mini-app shell – child page handles the card UI */}
+            <main className="min-h-screen flex items-center justify-center px-4">
+              {children}
+            </main>
           </Providers>
         </MiniAppBoot>
       </body>
