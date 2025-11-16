@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import {
   useAccount,
   useReadContract,
@@ -81,17 +82,60 @@ function prestigeLabel(prestige: number): string {
   return `Prestige ${prestige}`;
 }
 
+/**
+ * Try to extract an image URL from a tokenURI.
+ * - If it's data:application/json;base64, decode and pull `image`
+ * - Otherwise, treat the URI itself as the image URL.
+ */
+function extractImageFromTokenUri(uri?: string | null): string | undefined {
+  if (!uri) return undefined;
+
+  if (uri.startsWith("data:application/json")) {
+    try {
+      const [, base64] = uri.split(",");
+      if (!base64) return undefined;
+      const jsonStr = typeof atob === "function" ? atob(base64) : "";
+      if (!jsonStr) return undefined;
+      const meta = JSON.parse(jsonStr);
+      if (meta && typeof meta.image === "string") {
+        return meta.image as string;
+      }
+    } catch {
+      return undefined;
+    }
+  }
+
+  // Fallback – assume it's already a usable URL (IPFS, HTTPS, etc.)
+  return uri;
+}
+
 // Small circular avatar used in lists (recent / featured)
-function BlueCubeAvatar({ size = 40 }: { size?: number }) {
+function BlueCubeAvatar({
+  size = 40,
+  imageSrc,
+}: {
+  size?: number;
+  imageSrc?: string;
+}) {
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-slate-900 shadow-sm shadow-sky-900/40"
+      className="flex items-center justify-center rounded-full bg-slate-900/80 shadow-sm shadow-sky-900/40 overflow-hidden"
       style={{ width: size, height: size }}
     >
-      <div
-        className="rounded-[10px] bg-gradient-to-br from-sky-400 via-sky-500 to-blue-700 shadow-inner shadow-sky-900/60"
-        style={{ width: size * 0.6, height: size * 0.6 }}
-      />
+      {imageSrc ? (
+        <Image
+          src={imageSrc}
+          alt="BaseBlox cube"
+          width={size}
+          height={size}
+          className="object-cover"
+        />
+      ) : (
+        <div
+          className="rounded-[10px] bg-gradient-to-br from-sky-400 via-sky-500 to-blue-700 shadow-inner shadow-sky-900/60"
+          style={{ width: size * 0.6, height: size * 0.6 }}
+        />
+      )}
     </div>
   );
 }
@@ -101,24 +145,38 @@ function CubeVisual({
   tokenId,
   label = "Base cube",
   size = 120,
+  imageSrc,
 }: {
   tokenId?: number;
   label?: string;
   size?: number;
+  imageSrc?: string;
 }) {
+  const cardWidth = size * 1.5;
+
   return (
     <div
-      className="relative rounded-3xl border border-sky-400/40 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
-      style={{ width: size * 1.5 }}
+      className="relative rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
+      style={{ width: cardWidth }}
     >
       {/* glow */}
-      <div className="pointer-events-none absolute -inset-10 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.35),transparent_55%)] opacity-70" />
+      <div className="pointer-events-none absolute -inset-16 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.55),transparent_60%)] opacity-70" />
       <div className="relative flex flex-col items-center gap-3 px-4 pt-4 pb-4">
         <div
-          className="flex items-center justify-center rounded-3xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 shadow-2xl shadow-sky-900/70"
+          className="relative flex items-center justify-center rounded-3xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 shadow-2xl shadow-sky-900/70 overflow-hidden"
           style={{ width: size, height: size }}
         >
-          <div className="w-[70%] h-[70%] rounded-2xl border border-white/70 bg-sky-50/95 shadow-inner shadow-sky-900/40" />
+          {imageSrc ? (
+            <Image
+              src={imageSrc}
+              alt={label}
+              width={size}
+              height={size}
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-[70%] h-[70%] rounded-2xl border border-white/70 bg-sky-50/95 shadow-inner shadow-sky-900/40" />
+          )}
         </div>
         <div className="w-full flex items-center justify-between text-[11px] text-slate-100/90">
           <span className="font-medium uppercase tracking-[0.16em]">
@@ -192,6 +250,15 @@ export default function Home() {
     functionName: "promoMintsRemaining",
   });
 
+  // Main cube tokenURI (for NFT art)
+  const { data: mainTokenUriData } = useReadContract({
+    address: BASEBLOCKS_ADDRESS,
+    abi: BASEBLOCKS_ABI,
+    functionName: "tokenURI",
+    args: hasCube ? [cubeIdData!] : undefined,
+    query: { enabled: hasCube },
+  });
+
   // ---------- Recent mints ----------
 
   const recentTokenIds = useMemo(() => {
@@ -217,6 +284,12 @@ export default function Home() {
         functionName: "getCubeData",
         args: [id],
       } as const,
+      {
+        address: BASEBLOCKS_ADDRESS,
+        abi: BASEBLOCKS_ABI,
+        functionName: "tokenURI",
+        args: [id],
+      } as const,
     ]),
     query: { enabled: recentTokenIds.length > 0 },
   });
@@ -227,17 +300,21 @@ export default function Home() {
       tokenId: number;
       owner: string | undefined;
       mintedAtDate: string;
+      imageUrl?: string;
     }[] = [];
 
     for (let i = 0; i < recentTokenIds.length; i++) {
       const tokenId = Number(recentTokenIds[i]);
-      const ownerRes = recentResults[i * 2];
-      const cubeRes = recentResults[i * 2 + 1];
+      const ownerRes = recentResults[i * 3];
+      const cubeRes = recentResults[i * 3 + 1];
+      const tokenUriRes = recentResults[i * 3 + 2];
 
       const owner = ownerRes?.result as string | undefined;
       const cube = cubeRes?.result as any | undefined;
-      const mintedAtSeconds: number = cube ? Number(cube.mintedAt) : 0;
+      const tokenUri = tokenUriRes?.result as string | undefined;
+      const imageUrl = extractImageFromTokenUri(tokenUri);
 
+      const mintedAtSeconds: number = cube ? Number(cube.mintedAt) : 0;
       const mintedAt =
         mintedAtSeconds > 0
           ? new Date(mintedAtSeconds * 1000).toLocaleDateString("en-US", {
@@ -246,7 +323,7 @@ export default function Home() {
             })
           : "—";
 
-      out.push({ tokenId, owner, mintedAtDate: mintedAt });
+      out.push({ tokenId, owner, mintedAtDate: mintedAt, imageUrl });
     }
 
     return out;
@@ -298,6 +375,10 @@ export default function Home() {
   const notConnected = !isConnected;
   const noCubeYet = isConnected && !hasCube;
 
+  const mainCubeImage = extractImageFromTokenUri(
+    mainTokenUriData as string | undefined,
+  );
+
   // ---------- Local state ----------
 
   const [primaryTokenInput, setPrimaryTokenInput] = useState("");
@@ -319,7 +400,7 @@ export default function Home() {
         value: mintPriceData as bigint,
       });
       setManageSuccess(
-        "Mint submitted. Your cube will appear once the transaction confirms."
+        "Mint submitted. Your cube will appear once the transaction confirms.",
       );
     } catch (err: any) {
       setManageError(err?.shortMessage || err?.message || "Mint failed.");
@@ -364,14 +445,14 @@ export default function Home() {
     const url =
       typeof window !== "undefined"
         ? window.location.href
-        : "https://baseblocks.xyz";
+        : "https://baseblox.xyz";
     const text = encodeURIComponent(
-      `My BaseBlocks cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabel(
-        prestigeLevel
-      )}, ${seasonName} season.`
+      `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabel(
+        prestigeLevel,
+      )}, ${seasonName} season.`,
     );
     const shareUrl = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(
-      url
+      url,
     )}`;
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
@@ -381,14 +462,14 @@ export default function Home() {
     const url =
       typeof window !== "undefined"
         ? window.location.href
-        : "https://baseblocks.xyz";
+        : "https://baseblox.xyz";
     const text = encodeURIComponent(
-      `Checking in with my BaseBlocks cube #${cubeId} — ${ageDays} days old, ${prestigeLabel(
-        prestigeLevel
-      )}, ${seasonName} season.`
+      `Checking in with my BaseBlox cube #${cubeId} — ${ageDays} days old, ${prestigeLabel(
+        prestigeLevel,
+      )}, ${seasonName} season.`,
     );
     const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(
-      url
+      url,
     )}`;
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
@@ -399,26 +480,50 @@ export default function Home() {
   // ---------- UI ----------
 
   return (
-    <section className="w-full max-w-xl mx-auto flex flex-col gap-6">
-      {/* Hero header */}
-      <header className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 rounded-full bg-sky-500/15 border border-sky-400/60 px-3 py-1 text-[11px] font-medium text-sky-100 uppercase tracking-[0.16em] shadow-sm shadow-sky-900/40">
-          <span className="text-base">🟦</span>
-          <span>BaseBlocks Identity</span>
+    <section className="relative w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-10 sm:py-12 md:py-16 flex flex-col gap-8 text-slate-50">
+      {/* soft page-level glow */}
+      <div className="pointer-events-none absolute inset-x-0 -top-40 h-64 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-70" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.30),transparent_60%)] opacity-60" />
+
+      {/* Hero header card */}
+      <header className="relative overflow-hidden rounded-3xl border border-sky-400/35 bg-gradient-to-br from-slate-900/90 via-sky-900/60 to-blue-950/90 px-5 py-6 sm:px-7 sm:py-7 shadow-[0_0_50px_rgba(15,23,42,0.9)]">
+        <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-70" />
+        <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-60" />
+
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-3 max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-sky-500/15 border border-sky-400/60 px-3 py-1 text-[11px] font-medium text-sky-100 uppercase tracking-[0.16em] shadow-sm shadow-sky-900/40">
+              <span className="text-base">🟦</span>
+              <span>BaseBlox Identity</span>
+            </div>
+            <h1 className="text-3xl sm:text-[2.1rem] font-semibold tracking-tight">
+              <span className="bg-gradient-to-r from-sky-300 via-cyan-200 to-indigo-300 bg-clip-text text-transparent">
+                BaseBlox
+              </span>{" "}
+              – your onchain identity cube
+            </h1>
+            <p className="text-sm sm:text-[0.95rem] text-slate-200/90">
+              One evolving cube per wallet. Age, prestige, season, and your
+              primary token — all etched onchain on Base. Mint once and let your
+              cube tell your story.
+            </p>
+          </div>
+
+          <div className="flex justify-center md:justify-end">
+            <CubeVisual
+              tokenId={hasCube ? cubeId : undefined}
+              label={hasCube ? "Your BaseBlox cube" : "BaseBlox cube"}
+              size={132}
+              imageSrc={mainCubeImage}
+            />
+          </div>
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-50">
-          Your blockchain identity in a Base cube
-        </h1>
-        <p className="text-sm text-slate-200/85 max-w-sm mx-auto">
-          One evolving cube per wallet. Age, prestige, season, and your primary
-          token — all etched onchain on Base.
-        </p>
       </header>
 
       {/* Main wrapper card */}
-      <div className="stats-card stats-appear relative overflow-hidden px-5 py-6 sm:px-6 sm:py-7 bg-gradient-to-b from-[#05091a] via-slate-950 to-black border border-slate-700/70 shadow-[0_0_60px_rgba(15,23,42,0.9)] rounded-[26px]">
+      <div className="stats-card stats-appear relative overflow-hidden px-5 py-6 sm:px-6 sm:py-7 bg-gradient-to-b from-slate-900/85 via-slate-950/90 to-black/95 border border-slate-700/60 shadow-[0_0_60px_rgba(15,23,42,0.85)] rounded-[26px]">
         {/* soft background glow */}
-        <div className="pointer-events-none absolute inset-x-0 -top-32 h-56 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-80" />
+        <div className="pointer-events-none absolute inset-x-0 -top-32 h-56 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-70" />
 
         <div className="relative space-y-5">
           {/* Top row: cube visual + wallet */}
@@ -428,6 +533,7 @@ export default function Home() {
                 tokenId={hasCube ? cubeId : undefined}
                 label={hasCube ? "Your cube" : "Base cube"}
                 size={112}
+                imageSrc={mainCubeImage}
               />
               <div className="flex flex-col justify-center gap-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -464,7 +570,7 @@ export default function Home() {
             <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-3.5 text-xs text-slate-100/90">
               {notConnected && (
                 <p>
-                  Connect your Base wallet to see your BaseBlocks cube stats and
+                  Connect your Base wallet to see your BaseBlox cube stats and
                   identity.
                 </p>
               )}
@@ -599,7 +705,7 @@ export default function Home() {
               ${
                 !isConnected || hasCube || !mintPriceData
                   ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
-                  : "bg-sky-500/20 border-sky-400/80 text-sky-50 hover:bg-sky-500/35"
+                  : "bg-sky-500/25 border-sky-400/80 text-sky-50 hover:bg-sky-500/40"
               }`}
             >
               {!isConnected
@@ -703,7 +809,7 @@ export default function Home() {
                 href="#"
                 className="text-xs px-3 py-1.5 rounded-full bg-slate-900/85 border border-slate-600 text-slate-100 hover:bg-slate-800/95 transition"
               >
-                Visit BaseBlocks site
+                Visit BaseBlox site
               </a>
             </div>
           </div>
@@ -716,7 +822,7 @@ export default function Home() {
                   Share your cube
                 </p>
                 <p className="text-xs text-slate-200/85">
-                  Cast or tweet your BaseBlocks stats as a flex.
+                  Cast or tweet your BaseBlox stats as a flex.
                 </p>
               </div>
             </div>
@@ -764,7 +870,7 @@ export default function Home() {
 
             {recentCubes.length === 0 ? (
               <p className="text-xs text-slate-400">
-                No cubes have been forged yet. Be the first mint on BaseBlocks.
+                No cubes have been forged yet. Be the first mint on BaseBlox.
               </p>
             ) : (
               <div className="space-y-3">
@@ -775,6 +881,7 @@ export default function Home() {
                         tokenId={latestCube.tokenId}
                         label="Latest cube"
                         size={80}
+                        imageSrc={latestCube.imageUrl}
                       />
                       <div className="flex flex-col">
                         <span className="text-xs font-semibold text-slate-50">
@@ -799,7 +906,7 @@ export default function Home() {
                         className="flex items-center justify-between gap-3 rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-2.5"
                       >
                         <div className="flex items-center gap-2.5">
-                          <BlueCubeAvatar size={30} />
+                          <BlueCubeAvatar size={30} imageSrc={item.imageUrl} />
                           <div className="flex flex-col">
                             <span className="text-xs font-semibold text-slate-50">
                               Cube #{item.tokenId}
@@ -829,7 +936,7 @@ export default function Home() {
               Featured cubes
             </p>
             <p className="text-xs text-slate-200/85 mb-3">
-              Spotlighted BaseBlocks identities. For now, just blue cube vibes. 🟦
+              Spotlighted BaseBlox identities. For now, just blue cube vibes. 🟦
             </p>
 
             <div className="grid grid-cols-2 gap-3">
