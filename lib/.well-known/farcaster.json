@@ -1,0 +1,28 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjExMjExOTMsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhmNTYwMzNDMTkxYjY2NTA0QWQ0Q0Y4NzMyM0E3NzNGRDg2RGM1MGFkIn0",
+    "payload": "eyJkb21haW4iOiJiYXNlYmxveC52ZXJjZWwuYXBwIn0",
+    "signature": "B3Fw0rWMcR5pbO1ygvIX1QIsC3YRRWAxPrW4K5ve8ClYWe/i82t+qGEU0RNfP1NQ2eWzlfmdfR6kdcb7yRDD1hw="
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "BaseBlox",
+    "subtitle": "Your Onchain Identity Cube",
+    "description": "Mint your BaseBlox identity cube and track your evolving onchain prestige.",
+    "iconUrl": "https://baseblox.vercel.app/icon.png",
+    "homeUrl": "https://baseblox.vercel.app",
+    "screenshotUrls": [
+      "https://baseblox.vercel.app/screenshot-portrait.png"
+    ],
+    "imageUrl": "https://baseblox.vercel.app/image.png",
+    "splashImageUrl": "https://baseblox.vercel.app/splash.png",
+    "splashBackgroundColor": "#eeccff",
+    "webhookUrl": "https://baseblox.vercel.app/api/webhook",
+    "primaryCategory": "social",
+    "tags": ["base", "identity", "blocks"],
+    "heroImageUrl": "https://baseblox.vercel.app/splash.png",
+    "ogTitle": "BaseBlox – Onchain Identity Cubes",
+    "ogDescription": "Mint and evolve your BaseBlox identity cube.",
+    "ogImageUrl": "https://baseblox.vercel.app/share.png"
+  }
+}
