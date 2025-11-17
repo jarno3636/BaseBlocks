@@ -12,6 +12,7 @@ import {
 import { formatEther } from "viem";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { BASEBLOCKS_ADDRESS, BASEBLOCKS_ABI } from "@/lib/baseblocksAbi";
+import ShareSection from "@/components/ShareSection";
 
 function truncateAddress(addr?: string | null) {
   if (!addr) return "Not set";
@@ -178,19 +179,6 @@ function CubeVisual({
       </div>
     </div>
   );
-}
-
-/** Prefer native share sheet (mobile / Warpcast), fallback to URL. */
-function shareViaWebAPI(title: string, text: string, url: string): boolean {
-  if (typeof navigator !== "undefined" && (navigator as any).share) {
-    (navigator as any)
-      .share({ title, text, url })
-      .catch(() => {
-        // ignore user cancellation / errors
-      });
-    return true;
-  }
-  return false;
 }
 
 export default function Home() {
@@ -433,14 +421,6 @@ export default function Home() {
   const prestigeCooldownDays =
     hasCube && ageDays < 180 ? 180 - ageDays : 0;
 
-  // --------- Sharing URLs (STATIC so OG/share.PNG are consistent) ----------
-
-  const SITE_URL = "https://baseblox.vercel.app" as const;
-
-  // Use a single canonical URL for embeds (root page with your metadata)
-  const cubeShareUrl = SITE_URL;
-  const projectShareUrl = SITE_URL;
-
   // ---------- Local state ----------
 
   const [primaryTokenInput, setPrimaryTokenInput] = useState("");
@@ -521,63 +501,11 @@ export default function Home() {
     }
   }
 
-  // ---------- Share helpers (cube-specific) ----------
-
-  function handleShareX() {
-    if (!hasCube) return;
-    const text = `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabel(
-      prestigeLevel,
-    )}.`;
-    const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
-      text,
-    )}&url=${encodeURIComponent(cubeShareUrl)}`;
-    if (typeof window !== "undefined") window.open(shareUrl, "_blank");
-  }
-
-  function handleShareFarcaster() {
-    if (!hasCube) return;
-    const text = `Checking in with my BaseBlox cube #${cubeId} — ${ageDays} days old, ${prestigeLabel(
-      prestigeLevel,
-    )}.`;
-
-    // 1) In mini-app / mobile → use Web Share (stays inside app / OS sheet)
-    if (shareViaWebAPI("BaseBlox cube", text, cubeShareUrl)) return;
-
-    // 2) Desktop fallback → open Warpcast compose in a new tab
-    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
-      text,
-    )}&embeds[]=${encodeURIComponent(cubeShareUrl)}`;
-    if (typeof window !== "undefined") window.open(shareUrl, "_blank");
-  }
-
-  // ---------- Share helpers (project-level CTA using share.PNG OG) ----------
-
-  function handleShareProjectX() {
-    const text =
-      "Mint your BaseBlox identity cube on Base and let your onchain age & prestige show.";
-    const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
-      text,
-    )}&url=${encodeURIComponent(projectShareUrl)}`;
-    if (typeof window !== "undefined") window.open(shareUrl, "_blank");
-  }
-
-  function handleShareProjectFarcaster() {
-    const text =
-      "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.";
-
-    // 1) In mini-app / mobile
-    if (shareViaWebAPI("BaseBlox", text, projectShareUrl)) return;
-
-    // 2) Desktop fallback
-    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
-      text,
-    )}&embeds[]=${encodeURIComponent(projectShareUrl)}`;
-    if (typeof window !== "undefined") window.open(shareUrl, "_blank");
-  }
-
   const latestCube = recentCubes[0];
   const otherRecent = recentCubes.slice(1);
   const gridRecent = otherRecent.slice(0, 4); // up to 4 in the 2x2 grid
+
+  const prestigeLabelText = prestigeLabel(prestigeLevel);
 
   // ---------- UI ----------
 
@@ -708,7 +636,7 @@ export default function Home() {
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-sm font-semibold text-slate-50">
-                      {prestigeLabel(prestigeLevel)}
+                      {prestigeLabelText}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5">
                       Prestige level
@@ -737,7 +665,7 @@ export default function Home() {
                       {prestigeLevel}
                     </p>
                     <p className="text-[11px] text-slate-200 mt-0.5">
-                      {prestigeLabel(prestigeLevel)}
+                      {prestigeLabelText}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Your badge upgrades over time — outlined stars first,
@@ -946,96 +874,13 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Share your cube */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <div>
-              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
-                Share your cube
-              </p>
-              <p className="text-xs text-slate-200/85">
-                Cast or tweet your BaseBlox stats as a flex.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={!hasCube}
-              onClick={handleShareFarcaster}
-              className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
-                hasCube
-                  ? "bg-violet-500/20 border-violet-400/60 text-violet-50 hover:bg-violet-500/30"
-                  : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
-              }`}
-            >
-              <span>Share on Farcaster</span>
-            </button>
-
-            <button
-              type="button"
-              disabled={!hasCube}
-              onClick={handleShareX}
-              className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
-                hasCube
-                  ? "bg-slate-900 border-slate-500 text-slate-100 hover:bg-black"
-                  : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
-              }`}
-            >
-              <span>Share on X</span>
-            </button>
-          </div>
-
-          {!hasCube && (
-            <p className="text-[10px] text-slate-400 mt-2">
-              Mint a cube first to unlock sharing.
-            </p>
-          )}
-        </div>
-
-        {/* Project-wide share CTA using share.PNG embed */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-1">
-              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
-                Share BaseBlox
-              </p>
-              <p className="text-xs text-slate-200/85 mb-3">
-                Boost the project itself. This uses{" "}
-                <span className="font-semibold">share.PNG</span> as the embed
-                image so the card looks like the BaseBlox hero.
-              </p>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={handleShareProjectFarcaster}
-                  className="text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 bg-violet-500/15 border-violet-400/60 text-violet-50 hover:bg-violet-500/25"
-                >
-                  <span>Cast about BaseBlox</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleShareProjectX}
-                  className="text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 bg-slate-900 border-slate-500 text-slate-100 hover:bg-black"
-                >
-                  <span>Tweet about BaseBlox</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 flex justify-center mt-3 md:mt-0">
-              <Image
-                src="/share.PNG"
-                alt="BaseBlox share preview"
-                width={260}
-                height={140}
-                className="rounded-xl shadow-lg shadow-sky-900/50 motion-safe:animate-pulse hover:-translate-y-1 transition-transform duration-700"
-              />
-            </div>
-          </div>
-        </div>
+        {/* ⬇️ New shared component: Share your cube + Share BaseBlox */}
+        <ShareSection
+          hasCube={hasCube}
+          cubeId={cubeId}
+          ageDays={ageDays}
+          prestigeLabelText={prestigeLabelText}
+        />
 
         {/* Freshly forged cubes – latest centered, then 2x2 grid */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
