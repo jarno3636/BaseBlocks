@@ -7,40 +7,47 @@ import AppReady from "@/components/AppReady";
 
 /** ---- Dynamic metadata (absolute URLs + mini app embed) ---- */
 export async function generateMetadata(): Promise<Metadata> {
-  const origin = (
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-      ? `https://${(
-          process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-        )!.replace(/\/$/, "")}`
-      : "https://example.com"
-  ).replace(/\/$/, "");
+  // Prefer explicit site URL, then Vercel URL, then hard-coded fallback
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL;
+
+  const origin = envUrl
+    ? `https://${envUrl.replace(/\/$/, "")}`
+    : "https://baseblox.vercel.app";
 
   const image = `${origin}/share.PNG`;
 
   return {
-    title: "BaseBlocks – Onchain Identity Cubes",
+    metadataBase: new URL(origin),
+    title: "BaseBlox – Onchain Identity Cubes",
     description:
-      "BaseBlocks identity cubes: one evolving onchain cube per wallet that tracks your age, prestige, and primary token on Base.",
+      "BaseBlox identity cubes: one evolving onchain cube per wallet that tracks your age, prestige, and primary token on Base.",
     openGraph: {
-      title: "BaseBlocks – Onchain Identity Cubes",
+      title: "BaseBlox – Onchain Identity Cubes",
       description:
-        "Mint a BaseBlocks identity cube and watch it evolve with your time onchain.",
+        "Mint a BaseBlox identity cube and watch it evolve with your time onchain.",
       type: "website",
       url: origin,
-      images: [{ url: image }],
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: "BaseBlox identity cube on Base",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "BaseBlocks – Onchain Identity Cubes",
+      title: "BaseBlox – Onchain Identity Cubes",
       description:
-        "Mint a BaseBlocks identity cube and watch it evolve with your time onchain.",
+        "Mint a BaseBlox identity cube and watch it evolve with your time onchain.",
       images: [image],
     },
     other: {
-      // Farcaster mini app embed (frame opens the same URL)
+      // Farcaster mini app / frame embed (card uses share.PNG)
       "fc:frame": "vNext",
       "fc:frame:image": image,
-      "fc:frame:button:1": "Open BaseBlocks",
+      "fc:frame:button:1": "Open BaseBlox",
       "fc:frame:button:1:action": "link",
       "fc:frame:button:1:target": origin,
     },
