@@ -180,6 +180,19 @@ function CubeVisual({
   );
 }
 
+// Helper: try Web Share API first; return true if used
+function shareViaWebAPI(title: string, text: string, url: string): boolean {
+  if (typeof navigator !== "undefined" && (navigator as any).share) {
+    (navigator as any)
+      .share({ title, text, url })
+      .catch(() => {
+        // ignore share cancellation or errors
+      });
+    return true;
+  }
+  return false;
+}
+
 export default function Home() {
   const { address, isConnected } = useAccount();
   const { writeContractAsync, isPending: isWriting } = useWriteContract();
@@ -515,49 +528,53 @@ export default function Home() {
 
   function handleShareX() {
     if (!hasCube) return;
-    const text = encodeURIComponent(
-      `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabel(
-        prestigeLevel,
-      )}.`,
-    );
-    const shareUrl = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(
-      cubeShareUrl,
-    )}`;
+    const text = `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabel(
+      prestigeLevel,
+    )}.`;
+    const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
+      text,
+    )}&url=${encodeURIComponent(cubeShareUrl)}`;
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
 
   function handleShareFarcaster() {
     if (!hasCube) return;
-    const text = encodeURIComponent(
-      `Checking in with my BaseBlox cube #${cubeId} — ${ageDays} days old, ${prestigeLabel(
-        prestigeLevel,
-      )}.`,
-    );
-    const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(
-      cubeShareUrl,
-    )}`;
+    const text = `Checking in with my BaseBlox cube #${cubeId} — ${ageDays} days old, ${prestigeLabel(
+      prestigeLevel,
+    )}.`;
+
+    // 1) Try native share sheet (works nicely inside Base app / mobile
+    if (shareViaWebAPI("BaseBlox cube", text, cubeShareUrl)) return;
+
+    // 2) Fallback to Warpcast compose in web
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
+      text,
+    )}&embeds[]=${encodeURIComponent(cubeShareUrl)}`;
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
 
   // ---------- Share helpers (project-level CTA using share.PNG OG) ----------
 
   function handleShareProjectX() {
-    const text = encodeURIComponent(
-      "Mint your BaseBlox identity cube on Base and let your onchain age & prestige show.",
-    );
-    const shareUrl = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(
-      projectShareUrl,
-    )}`;
+    const text =
+      "Mint your BaseBlox identity cube on Base and let your onchain age & prestige show.";
+    const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
+      text,
+    )}&url=${encodeURIComponent(projectShareUrl)}`;
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
 
   function handleShareProjectFarcaster() {
-    const text = encodeURIComponent(
-      "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.",
-    );
-    const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(
-      projectShareUrl,
-    )}`;
+    const text =
+      "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.";
+
+    // 1) Try native share sheet
+    if (shareViaWebAPI("BaseBlox", text, projectShareUrl)) return;
+
+    // 2) Fallback to Warpcast compose
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
+      text,
+    )}&embeds[]=${encodeURIComponent(projectShareUrl)}`;
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
 
@@ -633,7 +650,7 @@ export default function Home() {
                   <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                     Your cube
                   </p>
-                  <div className="mt-1 h-px w-16 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
+                  <div className="mt-1 mb-4 h-px w-16 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
                 </div>
 
                 <div className="flex items-start justify-between gap-3 flex-wrap">
