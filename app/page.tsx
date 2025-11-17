@@ -486,14 +486,18 @@ export default function Home() {
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-80" />
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-70" />
 
-        <div className="relative flex flex-col md:flex-row items-center gap-8">
+        <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10">
           <div className="flex-1 text-center md:text-left space-y-4">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
                 BaseBlox
               </span>
             </h1>
-            <p className="text-sm sm:text-base text-slate-200/90 max-w-xl">
+
+            {/* subtle divider between title and body */}
+            <div className="mt-3 mb-4 h-px w-24 mx-auto md:mx-0 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
+
+            <p className="text-sm sm:text-base text-slate-200/90 max-w-xl mx-auto md:mx-0">
               Your evolving onchain identity cube. One cube per wallet — age,
               prestige, season, and your primary token, all etched on Base.
               Mint once and let your cube tell your story.
@@ -513,7 +517,7 @@ export default function Home() {
       </div>
 
       {/* Content cards */}
-      <div className="relative mt-2 space-y-8 sm:space-y-10">
+      <div className="relative mt-2 space-y-10 sm:space-y-12 md:space-y-14">
         {/* Combined: your cube + identity snapshot */}
         <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-6">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
@@ -775,15 +779,9 @@ export default function Home() {
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Links
           </p>
+
+          {/* Top row: cube link only */}
           <div className="flex flex-wrap gap-2">
-            <a
-              href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs px-3 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/50 text-sky-50 hover:bg-sky-500/30 transition"
-            >
-              View contract on BaseScan
-            </a>
             {hasCube && (
               <a
                 href={`https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${cubeId}`}
@@ -794,11 +792,17 @@ export default function Home() {
                 View cube #{cubeId} on Base
               </a>
             )}
+          </div>
+
+          {/* Contract link anchored at the bottom */}
+          <div className="mt-3">
             <a
-              href="#"
-              className="text-xs px-3 py-1.5 rounded-full bg-slate-900/85 border border-slate-600 text-slate-100 hover:bg-slate-800/95 transition"
+              href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex text-xs px-3 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/50 text-sky-50 hover:bg-sky-500/30 transition"
             >
-              Visit BaseBlox site
+              View contract on BaseScan
             </a>
           </div>
         </div>
