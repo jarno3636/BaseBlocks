@@ -108,3 +108,22 @@ textarea {
 .stats-appear {
   animation: fade-up-soft 0.4s ease-out both;
 }
+
+/* ---------- Floating hero image ---------- */
+
+@keyframes hero-float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.floating-hero {
+  animation: hero-float 4s ease-in-out infinite;
+  will-change: transform;
+}
