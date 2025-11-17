@@ -180,6 +180,19 @@ function CubeVisual({
   );
 }
 
+/** Prefer native share sheet (mobile / Warpcast), fallback to URL. */
+function shareViaWebAPI(title: string, text: string, url: string): boolean {
+  if (typeof navigator !== "undefined" && (navigator as any).share) {
+    (navigator as any)
+      .share({ title, text, url })
+      .catch(() => {
+        // ignore user cancellation / errors
+      });
+    return true;
+  }
+  return false;
+}
+
 export default function Home() {
   const { address, isConnected } = useAccount();
   const { writeContractAsync, isPending: isWriting } = useWriteContract();
@@ -424,11 +437,8 @@ export default function Home() {
 
   const SITE_URL = "https://baseblox.vercel.app" as const;
 
-  // Per-cube link (optional query param so each share is unique)
-  const cubeShareUrl =
-    hasCube && cubeId ? `${SITE_URL}/?cube=${cubeId}` : SITE_URL;
-
-  // Project-level share link (homepage)
+  // Use a single canonical URL for embeds (root page with your metadata)
+  const cubeShareUrl = SITE_URL;
   const projectShareUrl = SITE_URL;
 
   // ---------- Local state ----------
@@ -530,7 +540,10 @@ export default function Home() {
       prestigeLevel,
     )}.`;
 
-    // Always open Warpcast compose directly (no native share sheet)
+    // 1) In mini-app / mobile → use Web Share (stays inside app / OS sheet)
+    if (shareViaWebAPI("BaseBlox cube", text, cubeShareUrl)) return;
+
+    // 2) Desktop fallback → open Warpcast compose in a new tab
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text,
     )}&embeds[]=${encodeURIComponent(cubeShareUrl)}`;
@@ -552,7 +565,10 @@ export default function Home() {
     const text =
       "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.";
 
-    // Always open Warpcast compose directly
+    // 1) In mini-app / mobile
+    if (shareViaWebAPI("BaseBlox", text, projectShareUrl)) return;
+
+    // 2) Desktop fallback
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text,
     )}&embeds[]=${encodeURIComponent(projectShareUrl)}`;
