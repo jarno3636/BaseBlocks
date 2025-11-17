@@ -180,19 +180,6 @@ function CubeVisual({
   );
 }
 
-// Helper: try Web Share API first; return true if used
-function shareViaWebAPI(title: string, text: string, url: string): boolean {
-  if (typeof navigator !== "undefined" && (navigator as any).share) {
-    (navigator as any)
-      .share({ title, text, url })
-      .catch(() => {
-        // ignore share cancellation or errors
-      });
-    return true;
-  }
-  return false;
-}
-
 export default function Home() {
   const { address, isConnected } = useAccount();
   const { writeContractAsync, isPending: isWriting } = useWriteContract();
@@ -425,8 +412,8 @@ export default function Home() {
     mainTokenUriData as string | undefined,
   );
 
-  // when no wallet connected, show fallback.PNG in the "my cube" section
-  const myCubeImageToShow = notConnected ? "/fallback.PNG" : mainCubeImage;
+  // when user does NOT have a cube (connected or not), show fallback.PNG.
+  const myCubeImageToShow = hasCube ? mainCubeImage : "/fallback.PNG";
 
   // prestige timing: 180 days between prestiges
   const canPrestige = hasCube && ageDays >= 180;
@@ -543,10 +530,7 @@ export default function Home() {
       prestigeLevel,
     )}.`;
 
-    // 1) Try native share sheet (works nicely inside Base app / mobile
-    if (shareViaWebAPI("BaseBlox cube", text, cubeShareUrl)) return;
-
-    // 2) Fallback to Warpcast compose in web
+    // Always open Warpcast compose directly (no native share sheet)
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text,
     )}&embeds[]=${encodeURIComponent(cubeShareUrl)}`;
@@ -568,10 +552,7 @@ export default function Home() {
     const text =
       "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.";
 
-    // 1) Try native share sheet
-    if (shareViaWebAPI("BaseBlox", text, projectShareUrl)) return;
-
-    // 2) Fallback to Warpcast compose
+    // Always open Warpcast compose directly
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text,
     )}&embeds[]=${encodeURIComponent(projectShareUrl)}`;
