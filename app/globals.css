@@ -65,7 +65,8 @@ textarea {
     rgba(15, 23, 42, 0.88);
   box-shadow:
     0 18px 45px rgba(15, 23, 42, 0.95),
-    0 0 0 1px rgba(15, 23, 42, 0.7);
+    0 0 0 1px rgba(15, 23, 42, 0.7),
+    0 0 90px rgba(56, 189, 248, 0.12); /* soft cyan glow for premium feel */
   backdrop-filter: blur(22px);
 }
 
