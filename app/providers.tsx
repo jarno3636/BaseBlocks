@@ -20,15 +20,23 @@ import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
 import { MiniContextProvider } from "@/lib/useMiniContext";
 
 /* ---------------- BigInt JSON polyfill ---------------- */
-declare global { interface BigInt { toJSON(): string } }
+declare global {
+  interface BigInt {
+    toJSON(): string;
+  }
+}
+
 if (typeof (BigInt.prototype as any).toJSON !== "function") {
-  (BigInt.prototype as any).toJSON = function () { return this.toString(); };
+  (BigInt.prototype as any).toJSON = function () {
+    return this.toString();
+  };
 }
 
 /* ---------------- React Query setup ------------------- */
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 10_000, refetchOnWindowFocus: false } },
 });
+
 function serializeData(data: unknown) {
   return typeof data === "bigint" ? data.toString() : data;
 }
@@ -36,19 +44,22 @@ function serializeData(data: unknown) {
 /* --------------- Auto-reconnect wallet ---------------- */
 function AutoReconnect() {
   const { reconnect } = useReconnect();
-  useEffect(() => { reconnect(); }, [reconnect]);
+  useEffect(() => {
+    reconnect();
+  }, [reconnect]);
   return null;
 }
 
 /* ---------- Neynar providers (lazy, safe load) ---------
-   - MiniAppProvider gives you the Farcaster mini-app context (FID, etc.) when opened in Warpcast/Merkle.
-   - NeynarProvider (optional) enables client SDK features if you provide NEXT_PUBLIC_NEYNAR_CLIENT_ID.
-   Both are loaded via require() to avoid breaking builds if the package isn’t installed server-side.
+   - MiniAppProvider gives you the Farcaster mini-app context (FID, etc.) when opened
+     in Warpcast/Merkle.
+   - NeynarProvider (optional) enables client SDK features if you provide
+     NEXT_PUBLIC_NEYNAR_CLIENT_ID.
+   Both are loaded via require() to avoid breaking builds if the package isn’t
+   installed server-side.
 -------------------------------------------------------- */
 function NeynarProviders({ children }: { children: ReactNode }) {
-  const clientId =
-    (typeof window !== "undefined" && process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID) ||
-    process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID;
+  const clientId = process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID;
 
   let MiniAppProvider: React.ComponentType<any> | null = null;
   let NeynarProvider: React.ComponentType<any> | null = null;
@@ -101,34 +112,51 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const dehydratedState = dehydrate(queryClient, { serializeData });
 
   // CDP/OnchainKit API key (fallback keeps old var working)
-  const onchainkitApiKey =
-    (process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ||
-      process.env.NEXT_PUBLIC_MINIKIT_PROJECT_ID ||
-      "") as string;
+  const onchainkitApiKey = (process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ||
+    process.env.NEXT_PUBLIC_MINIKIT_PROJECT_ID ||
+    "") as string;
+
+  // Inner tree: everything *after* RainbowKit
+  const innerTree = (
+    <>
+      <AutoReconnect />
+      {onchainkitApiKey ? (
+        // Full mini-app stack when OnchainKit is configured
+        <OnchainKitProvider apiKey={onchainkitApiKey} chain={base}>
+          <RainbowKitProvider
+            theme={theme}
+            initialChain={base}
+            modalSize="compact"
+            appInfo={{ appName: "BaseBlox" }}
+          >
+            {/* MiniKitProvider: mini-app notifications, etc. */}
+            <MiniKitProvider chain={base} notificationProxyUrl="/api/notification">
+              {/* Global Farcaster identity (fid/user) available everywhere */}
+              <MiniContextProvider>
+                {/* Neynar MiniAppProvider + (optional) NeynarProvider */}
+                <NeynarProviders>{children}</NeynarProviders>
+              </MiniContextProvider>
+            </MiniKitProvider>
+          </RainbowKitProvider>
+        </OnchainKitProvider>
+      ) : (
+        // Safe fallback: still have wagmi + RainbowKit even if OnchainKit isn’t configured
+        <RainbowKitProvider
+          theme={theme}
+          initialChain={base}
+          modalSize="compact"
+          appInfo={{ appName: "BaseBlox" }}
+        >
+          {children}
+        </RainbowKitProvider>
+      )}
+    </>
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
       <HydrationBoundary state={dehydratedState}>
-        <WagmiProvider config={wagmiConfig}>
-          <AutoReconnect />
-          <OnchainKitProvider apiKey={onchainkitApiKey} chain={base}>
-            <RainbowKitProvider
-              theme={theme}
-              initialChain={base}
-              modalSize="compact"
-              appInfo={{ appName: "Basebots" }}
-            >
-              {/* MiniKitProvider: no apiKey prop */}
-              <MiniKitProvider chain={base} notificationProxyUrl="/api/notification">
-                {/* Global Farcaster identity (fid/user) available everywhere */}
-                <MiniContextProvider>
-                  {/* Neynar MiniAppProvider + (optional) NeynarProvider */}
-                  <NeynarProviders>{children}</NeynarProviders>
-                </MiniContextProvider>
-              </MiniKitProvider>
-            </RainbowKitProvider>
-          </OnchainKitProvider>
-        </WagmiProvider>
+        <WagmiProvider config={wagmiConfig}>{innerTree}</WagmiProvider>
       </HydrationBoundary>
     </QueryClientProvider>
   );
