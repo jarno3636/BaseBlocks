@@ -420,11 +420,19 @@ export default function Home() {
   const prestigeCooldownDays =
     hasCube && ageDays < 180 ? 180 - ageDays : 0;
 
-  // cube-specific share URL (for Farcaster / X)
+  // --------- Sharing URLs (use your own site so OG = share.PNG) ----------
+
+  const baseUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://baseblox.vercel.app";
+
+  // Per-cube link (optional query param so each share is unique)
   const cubeShareUrl =
-    hasCube && cubeId
-      ? `https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${cubeId}`
-      : "https://baseblox.xyz";
+    hasCube && cubeId ? `${baseUrl}/?cube=${cubeId}` : baseUrl;
+
+  // Project-level share link (homepage)
+  const projectShareUrl = baseUrl;
 
   // ---------- Local state ----------
 
@@ -534,6 +542,28 @@ export default function Home() {
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
 
+  // ---------- Share helpers (project-level CTA using share.PNG OG) ----------
+
+  function handleShareProjectX() {
+    const text = encodeURIComponent(
+      "Mint your BaseBlox identity cube on Base and let your onchain age & prestige show.",
+    );
+    const shareUrl = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(
+      projectShareUrl,
+    )}`;
+    if (typeof window !== "undefined") window.open(shareUrl, "_blank");
+  }
+
+  function handleShareProjectFarcaster() {
+    const text = encodeURIComponent(
+      "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.",
+    );
+    const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(
+      projectShareUrl,
+    )}`;
+    if (typeof window !== "undefined") window.open(shareUrl, "_blank");
+  }
+
   const latestCube = recentCubes[0];
   const otherRecent = recentCubes.slice(1);
 
@@ -589,6 +619,7 @@ export default function Home() {
             {/* Top row: cube + wallet */}
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex justify-center sm:justify-start">
+                {/* NOTE: cube itself does NOT animate */}
                 <CubeVisual
                   tokenId={hasCube ? cubeId : undefined}
                   label={hasCube ? "Your BaseBlox cube" : "BaseBlox cube"}
@@ -903,7 +934,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Share CTA */}
+        {/* Share your cube */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
           <div className="flex items-center justify-between gap-2 mb-3">
             <div>
@@ -949,6 +980,49 @@ export default function Home() {
               Mint a cube first to unlock sharing.
             </p>
           )}
+        </div>
+
+        {/* Project-wide share CTA using share.PNG embed */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="flex-1">
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
+                Share BaseBlox
+              </p>
+              <p className="text-xs text-slate-200/85 mb-3">
+                Boost the project itself. This uses{" "}
+                <span className="font-semibold">share.PNG</span> as the embed
+                image so the card looks like the BaseBlox hero.
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleShareProjectFarcaster}
+                  className="text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 bg-violet-500/15 border-violet-400/60 text-violet-50 hover:bg-violet-500/25"
+                >
+                  <span>Cast about BaseBlox</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareProjectX}
+                  className="text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 bg-slate-900 border-slate-500 text-slate-100 hover:bg-black"
+                >
+                  <span>Tweet about BaseBlox</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 flex justify-center mt-3 md:mt-0">
+              <Image
+                src="/share.PNG"
+                alt="BaseBlox share preview"
+                width={260}
+                height={140}
+                className="rounded-xl shadow-lg shadow-sky-900/50 motion-safe:animate-pulse hover:-translate-y-1 transition-transform duration-700"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Freshly forged cubes – cube art + number only */}
