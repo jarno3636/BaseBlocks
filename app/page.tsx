@@ -84,8 +84,6 @@ function prestigeLabel(prestige: number): string {
 
 /**
  * Try to extract an image URL from a tokenURI.
- * - If it's data:application/json;base64, decode and pull `image`
- * - Otherwise, treat the URI itself as the image URL.
  */
 function extractImageFromTokenUri(uri?: string | null): string | undefined {
   if (!uri) return undefined;
@@ -105,7 +103,6 @@ function extractImageFromTokenUri(uri?: string | null): string | undefined {
     }
   }
 
-  // Fallback – assume it's already a usable URL (IPFS, HTTPS, etc.)
   return uri;
 }
 
@@ -159,7 +156,6 @@ function CubeVisual({
       className="relative rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
       style={{ width: cardWidth }}
     >
-      {/* glow */}
       <div className="pointer-events-none absolute -inset-16 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.55),transparent_60%)] opacity-70" />
       <div className="relative flex flex-col items-center gap-3 px-4 pt-4 pb-4">
         <div
@@ -481,7 +477,7 @@ export default function Home() {
 
   return (
     <section className="relative w-full max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 md:py-16 flex flex-col gap-8 text-slate-50">
-      {/* soft page-level glows (on top of the global bg) */}
+      {/* soft page-level glows */}
       <div className="pointer-events-none absolute inset-x-0 -top-40 h-64 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-70" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.30),transparent_60%)] opacity-60" />
 
@@ -490,7 +486,7 @@ export default function Home() {
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-80" />
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-70" />
 
-        <div className="relative flex flex-col md:flex-row items-center md:items-center gap-8">
+        <div className="relative flex flex-col md:flex-row items-center gap-8">
           <div className="flex-1 text-center md:text-left space-y-4">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
@@ -518,10 +514,11 @@ export default function Home() {
 
       {/* Content cards */}
       <div className="relative mt-2 space-y-8 sm:space-y-10">
-        {/* Overview: your cube + connect */}
-        <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
+        {/* Combined: your cube + identity snapshot */}
+        <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-6">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
           <div className="relative space-y-4">
+            {/* Top row: cube + wallet */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-4">
                 <CubeVisual
@@ -561,7 +558,7 @@ export default function Home() {
             </div>
 
             {(notConnected || noCubeYet) && (
-              <div className="rounded-2xl bg-slate-950/70 border border-slate-800 px-4 py-3.5 text-xs text-slate-100/90">
+              <div className="rounded-2xl bg-slate-950/70 px-4 py-3.5 text-xs text-slate-100/90">
                 {notConnected && (
                   <p>
                     Connect your Base wallet to see your BaseBlox cube stats and
@@ -576,79 +573,75 @@ export default function Home() {
                 )}
               </div>
             )}
+
+            {/* Identity snapshot inline in same card */}
+            {hasCube && (
+              <div className="mt-1 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                      Identity snapshot
+                    </p>
+                    <p className="text-xs text-slate-200/85">
+                      Your cube evolves over time as your onchain story unfolds.
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm font-semibold text-slate-50">
+                      {prestigeLabel(prestigeLevel)}
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">
+                      Prestige level
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
+                    <p className="text-[11px] text-slate-400 mb-1">Age</p>
+                    <p className="text-lg font-semibold text-slate-50">
+                      {ageDays}
+                      <span className="text-xs text-slate-400 ml-1">days</span>
+                    </p>
+                    <p className="text-[11px] text-slate-200 mt-0.5">
+                      {ageTier.label}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
+                    <p className="text-[11px] text-slate-400 mb-1">Season</p>
+                    <p className="text-lg font-semibold text-slate-50">
+                      {seasonName}
+                    </p>
+                    <p className="text-[11px] text-slate-200 mt-0.5">
+                      {ageTier.subtitle}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
+                    <p className="text-[11px] text-slate-400 mb-1">Prestige</p>
+                    <p className="text-lg font-semibold text-slate-50">
+                      {prestigeLevel}
+                    </p>
+                    <p className="text-[11px] text-slate-200 mt-0.5">
+                      {prestigeLabel(prestigeLevel)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
+                    <p className="text-[11px] text-slate-400 mb-1">Primary token</p>
+                    <p className="text-sm font-semibold text-slate-50">
+                      {primarySymbol || "Not set"}
+                    </p>
+                    <p className="text-[11px] text-slate-300 mt-0.5">
+                      {truncateAddress(primaryToken)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Identity snapshot */}
-        {hasCube && (
-          <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                  Identity snapshot
-                </p>
-                <p className="text-xs text-slate-200/85">
-                  Your cube evolves over time as your onchain story unfolds.
-                </p>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-sm font-semibold text-slate-50">
-                  {prestigeLabel(prestigeLevel)}
-                </span>
-                <span className="text-[10px] text-slate-400 mt-0.5">
-                  Prestige level
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Age */}
-              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
-                <p className="text-[11px] text-slate-400 mb-1">Age</p>
-                <p className="text-lg font-semibold text-slate-50">
-                  {ageDays}
-                  <span className="text-xs text-slate-400 ml-1">days</span>
-                </p>
-                <p className="text-[11px] text-slate-200 mt-0.5">
-                  {ageTier.label}
-                </p>
-              </div>
-
-              {/* Season */}
-              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
-                <p className="text-[11px] text-slate-400 mb-1">Season</p>
-                <p className="text-lg font-semibold text-slate-50">
-                  {seasonName}
-                </p>
-                <p className="text-[11px] text-slate-200 mt-0.5">
-                  {ageTier.subtitle}
-                </p>
-              </div>
-
-              {/* Prestige */}
-              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
-                <p className="text-[11px] text-slate-400 mb-1">Prestige</p>
-                <p className="text-lg font-semibold text-slate-50">
-                  {prestigeLevel}
-                </p>
-                <p className="text-[11px] text-slate-200 mt-0.5">
-                  {prestigeLabel(prestigeLevel)}
-                </p>
-              </div>
-
-              {/* Primary token */}
-              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
-                <p className="text-[11px] text-slate-400 mb-1">Primary token</p>
-                <p className="text-sm font-semibold text-slate-50">
-                  {primarySymbol || "Not set"}
-                </p>
-                <p className="text-[11px] text-slate-300 mt-0.5">
-                  {truncateAddress(primaryToken)}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Mint overview */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
@@ -656,7 +649,7 @@ export default function Home() {
             Mint overview
           </p>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-2xl bg-slate-900/85 border border-slate-700 px-3 py-3">
+            <div className="rounded-2xl bg-slate-900/85 px-3 py-3">
               <p className="text-[11px] text-slate-400 mb-1">
                 Minted / Max supply
               </p>
@@ -667,7 +660,7 @@ export default function Home() {
                 </span>
               </p>
             </div>
-            <div className="rounded-2xl bg-slate-900/85 border border-slate-700 px-3 py-3">
+            <div className="rounded-2xl bg-slate-900/85 px-3 py-3">
               <p className="text-[11px] text-slate-400 mb-1">Mint price</p>
               <p className="font-semibold text-slate-50">
                 {mintPriceEth}{" "}
@@ -716,7 +709,7 @@ export default function Home() {
           {hasCube && (
             <form
               onSubmit={handleSetPrimaryToken}
-              className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 border border-slate-800 px-3 py-3.5"
+              className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 px-3 py-3.5"
             >
               <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
                 Primary token
@@ -734,7 +727,7 @@ export default function Home() {
                     placeholder="0x..."
                     value={primaryTokenInput}
                     onChange={(e) => setPrimaryTokenInput(e.target.value)}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400"
+                    className="w-full rounded-lg bg-slate-950 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 border border-slate-700/70"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -749,7 +742,7 @@ export default function Home() {
                       setPrimarySymbolInput(e.target.value.toUpperCase())
                     }
                     maxLength={8}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 tracking-[0.12em]"
+                    className="w-full rounded-lg bg-slate-950 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 tracking-[0.12em] border border-slate-700/70"
                   />
                 </div>
               </div>
@@ -858,7 +851,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Freshly forged cubes */}
+        {/* Freshly forged cubes – cube art + number only */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Freshly forged cubes
@@ -871,26 +864,13 @@ export default function Home() {
           ) : (
             <div className="space-y-3">
               {latestCube && (
-                <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-sky-500/25 via-blue-500/20 to-slate-900/90 border border-sky-400/70 px-3.5 py-3 shadow-md shadow-sky-900/50">
-                  <div className="flex items-center gap-3">
-                    <CubeVisual
-                      tokenId={latestCube.tokenId}
-                      label="Latest cube"
-                      size={80}
-                      imageSrc={latestCube.imageUrl}
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-50">
-                        Owner: {truncateAddress(latestCube.owner)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[11px] text-slate-100/80">Minted</p>
-                    <p className="text-xs font-medium text-slate-50">
-                      {latestCube.mintedAtDate}
-                    </p>
-                  </div>
+                <div className="flex items-center gap-3 rounded-2xl bg-slate-900/90 px-3.5 py-3">
+                  <CubeVisual
+                    tokenId={latestCube.tokenId}
+                    label={`Cube #${latestCube.tokenId}`}
+                    size={80}
+                    imageSrc={latestCube.imageUrl}
+                  />
                 </div>
               )}
 
@@ -899,25 +879,12 @@ export default function Home() {
                   {otherRecent.map((item) => (
                     <div
                       key={item.tokenId}
-                      className="flex items-center justify-between gap-3 rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-2.5"
+                      className="flex items-center gap-3 rounded-xl bg-slate-900/90 px-3 py-2.5"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <BlueCubeAvatar size={30} imageSrc={item.imageUrl} />
-                        <div className="flex flex-col">
-                          <span className="text-xs font-semibold text-slate-50">
-                            Cube #{item.tokenId}
-                          </span>
-                          <span className="text-[11px] text-slate-400">
-                            Owner: {truncateAddress(item.owner)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[11px] text-slate-400">Minted</p>
-                        <p className="text-xs text-slate-200">
-                          {item.mintedAtDate}
-                        </p>
-                      </div>
+                      <BlueCubeAvatar size={30} imageSrc={item.imageUrl} />
+                      <span className="text-xs font-semibold text-slate-50">
+                        Cube #{item.tokenId}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -939,7 +906,7 @@ export default function Home() {
             {[0, 1, 2, 3].map((idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-slate-800 px-3 py-3"
+                className="flex items-center gap-2 rounded-2xl bg-slate-900/90 px-3 py-3"
               >
                 <BlueCubeAvatar size={32} />
                 <div className="flex flex-col">
