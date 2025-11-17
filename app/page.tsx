@@ -480,483 +480,462 @@ export default function Home() {
   // ---------- UI ----------
 
   return (
-    <section className="relative w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-10 sm:py-12 md:py-16 flex flex-col gap-8 text-slate-50">
-      {/* soft page-level glow */}
+    <section className="relative w-full max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 md:py-16 flex flex-col gap-6 text-slate-50">
+      {/* soft page-level glows (on top of the global bg) */}
       <div className="pointer-events-none absolute inset-x-0 -top-40 h-64 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-70" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.30),transparent_60%)] opacity-60" />
 
-      {/* Hero header card */}
-      <header className="relative overflow-hidden rounded-3xl border border-sky-400/35 bg-gradient-to-br from-slate-900/90 via-sky-900/60 to-blue-950/90 px-5 py-6 sm:px-7 sm:py-7 shadow-[0_0_50px_rgba(15,23,42,0.9)]">
-        <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-70" />
-        <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-60" />
-
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-3 max-w-xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-sky-500/15 border border-sky-400/60 px-3 py-1 text-[11px] font-medium text-sky-100 uppercase tracking-[0.16em] shadow-sm shadow-sky-900/40">
-              <span className="text-base">🟦</span>
-              <span>BaseBlox Identity</span>
-            </div>
-            <h1 className="text-3xl sm:text-[2.1rem] font-semibold tracking-tight">
-              <span className="bg-gradient-to-r from-sky-300 via-cyan-200 to-indigo-300 bg-clip-text text-transparent">
-                BaseBlox
-              </span>{" "}
-              – your onchain identity cube
-            </h1>
-            <p className="text-sm sm:text-[0.95rem] text-slate-200/90">
-              One evolving cube per wallet. Age, prestige, season, and your
-              primary token — all etched onchain on Base. Mint once and let your
-              cube tell your story.
-            </p>
-          </div>
-
-          <div className="flex justify-center md:justify-end">
-            <CubeVisual
-              tokenId={hasCube ? cubeId : undefined}
-              label={hasCube ? "Your BaseBlox cube" : "BaseBlox cube"}
-              size={132}
-              imageSrc={mainCubeImage}
-            />
-          </div>
-        </div>
+      {/* Clean hero header – no pill/border, just title + explainer */}
+      <header className="relative max-w-2xl mx-auto md:mx-0 text-center md:text-left space-y-3">
+        <h1 className="text-3xl sm:text-[2.3rem] font-semibold tracking-tight">
+          <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
+            BaseBlox
+          </span>{" "}
+          — your onchain identity cube
+        </h1>
+        <p className="text-sm sm:text-[0.95rem] text-slate-200/90">
+          One evolving cube per wallet. Age, prestige, season, and your primary
+          token — all etched onchain on Base. Mint once and let your cube tell
+          your story.
+        </p>
       </header>
 
-      {/* Main wrapper card */}
-      <div className="stats-card stats-appear relative overflow-hidden px-5 py-6 sm:px-6 sm:py-7 bg-gradient-to-b from-slate-900/85 via-slate-950/90 to-black/95 border border-slate-700/60 shadow-[0_0_60px_rgba(15,23,42,0.85)] rounded-[26px]">
-        {/* soft background glow */}
-        <div className="pointer-events-none absolute inset-x-0 -top-32 h-56 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-70" />
-
-        <div className="relative space-y-5">
-          {/* Top row: cube visual + wallet */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-4">
-              <CubeVisual
-                tokenId={hasCube ? cubeId : undefined}
-                label={hasCube ? "Your cube" : "Base cube"}
-                size={112}
-                imageSrc={mainCubeImage}
-              />
-              <div className="flex flex-col justify-center gap-1.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base font-semibold leading-tight text-slate-50">
-                    {hasCube ? `Cube #${cubeId}` : "No cube yet"}
-                  </h2>
+      {/* Content cards */}
+      <div className="relative mt-2 space-y-5 sm:space-y-6">
+        {/* Overview: your cube + connect */}
+        <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
+          <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
+          <div className="relative space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-4">
+                <CubeVisual
+                  tokenId={hasCube ? cubeId : undefined}
+                  label={hasCube ? "Your BaseBlox cube" : "BaseBlox cube"}
+                  size={112}
+                  imageSrc={mainCubeImage}
+                />
+                <div className="flex flex-col justify-center gap-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-base font-semibold leading-tight text-slate-50">
+                      {hasCube ? `Cube #${cubeId}` : "No cube yet"}
+                    </h2>
+                    {hasCube && (
+                      <span className="pill bg-sky-500/20 text-sky-50 border border-sky-400/70">
+                        {seasonName} season
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-200/90">
+                    {address ? truncateAddress(address) : "Connect a Base wallet to begin"}
+                  </p>
                   {hasCube && (
-                    <span className="pill bg-sky-500/20 text-sky-50 border border-sky-400/70">
-                      {seasonName} season
-                    </span>
+                    <p className="text-xs text-slate-300/85">
+                      Minted{" "}
+                      <span className="font-medium text-slate-50">
+                        {mintedAtDate}
+                      </span>
+                    </p>
                   )}
                 </div>
-                <p className="text-xs text-slate-200/90">
-                  {address ? truncateAddress(address) : "Connect wallet to begin"}
-                </p>
-                {hasCube && (
-                  <p className="text-xs text-slate-300/85">
-                    Minted{" "}
-                    <span className="font-medium text-slate-50">
-                      {mintedAtDate}
-                    </span>
+              </div>
+
+              <div className="self-start sm:self-center">
+                <ConnectButton chainStatus="none" showBalance={false} />
+              </div>
+            </div>
+
+            {(notConnected || noCubeYet) && (
+              <div className="rounded-2xl bg-slate-950/70 border border-slate-800 px-4 py-3.5 text-xs text-slate-100/90">
+                {notConnected && (
+                  <p>
+                    Connect your Base wallet to see your BaseBlox cube stats and
+                    identity.
+                  </p>
+                )}
+                {noCubeYet && (
+                  <p className="mt-1.5">
+                    You don&apos;t have a cube yet. Mint one on Base to start
+                    building your onchain identity.
                   </p>
                 )}
               </div>
-            </div>
-
-            <div className="self-start sm:self-center">
-              <ConnectButton chainStatus="none" showBalance={false} />
-            </div>
+            )}
           </div>
+        </div>
 
-          {/* Connection notice */}
-          {(notConnected || noCubeYet) && (
-            <div className="rounded-2xl bg-slate-950/80 border border-slate-800 px-4 py-3.5 text-xs text-slate-100/90">
-              {notConnected && (
-                <p>
-                  Connect your Base wallet to see your BaseBlox cube stats and
-                  identity.
-                </p>
-              )}
-              {noCubeYet && (
-                <p className="mt-1.5">
-                  You don&apos;t have a cube yet. Mint one on Base to start
-                  building your onchain identity.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Identity snapshot */}
-          {hasCube && (
-            <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4 space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                    Identity snapshot
-                  </p>
-                  <p className="text-xs text-slate-200/85">
-                    Your cube evolves over time as your onchain story unfolds.
-                  </p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-sm font-semibold text-slate-50">
-                    {prestigeLabel(prestigeLevel)}
-                  </span>
-                  <span className="text-[10px] text-slate-400 mt-0.5">
-                    Prestige level
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {/* Age */}
-                <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
-                  <p className="text-[11px] text-slate-400 mb-1">Age</p>
-                  <p className="text-lg font-semibold text-slate-50">
-                    {ageDays}
-                    <span className="text-xs text-slate-400 ml-1">days</span>
-                  </p>
-                  <p className="text-[11px] text-slate-200 mt-0.5">
-                    {ageTier.label}
-                  </p>
-                </div>
-
-                {/* Season */}
-                <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
-                  <p className="text-[11px] text-slate-400 mb-1">Season</p>
-                  <p className="text-lg font-semibold text-slate-50">
-                    {seasonName}
-                  </p>
-                  <p className="text-[11px] text-slate-200 mt-0.5">
-                    {ageTier.subtitle}
-                  </p>
-                </div>
-
-                {/* Prestige */}
-                <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
-                  <p className="text-[11px] text-slate-400 mb-1">Prestige</p>
-                  <p className="text-lg font-semibold text-slate-50">
-                    {prestigeLevel}
-                  </p>
-                  <p className="text-[11px] text-slate-200 mt-0.5">
-                    {prestigeLabel(prestigeLevel)}
-                  </p>
-                </div>
-
-                {/* Primary token */}
-                <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
-                  <p className="text-[11px] text-slate-400 mb-1">Primary token</p>
-                  <p className="text-sm font-semibold text-slate-50">
-                    {primarySymbol || "Not set"}
-                  </p>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
-                    {truncateAddress(primaryToken)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Mint overview */}
-          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
-            <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
-              Mint overview
-            </p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-2xl bg-slate-900/85 border border-slate-700 px-3 py-3">
-                <p className="text-[11px] text-slate-400 mb-1">
-                  Minted / Max supply
-                </p>
-                <p className="font-semibold text-slate-50">
-                  {mintedCount}{" "}
-                  <span className="text-slate-400 text-xs">
-                    / {maxSupply || "100000"}
-                  </span>
-                </p>
-              </div>
-              <div className="rounded-2xl bg-slate-900/85 border border-slate-700 px-3 py-3">
-                <p className="text-[11px] text-slate-400 mb-1">Mint price</p>
-                <p className="font-semibold text-slate-50">
-                  {mintPriceEth}{" "}
-                  <span className="text-slate-400 text-xs">ETH</span>
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Promo mints left: {promoRemaining}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Mint & manage */}
-          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4 space-y-3">
-            <div className="flex items-center justify-between gap-2">
+        {/* Identity snapshot */}
+        {hasCube && (
+          <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+            <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
-                  Mint & manage
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                  Identity snapshot
                 </p>
                 <p className="text-xs text-slate-200/85">
-                  Forge your cube or set your primary token.
+                  Your cube evolves over time as your onchain story unfolds.
                 </p>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-sm font-semibold text-slate-50">
+                  {prestigeLabel(prestigeLevel)}
+                </span>
+                <span className="text-[10px] text-slate-400 mt-0.5">
+                  Prestige level
+                </span>
               </div>
             </div>
 
-            <button
-              type="button"
-              disabled={!isConnected || hasCube || isWriting || !mintPriceData}
-              onClick={handleMint}
-              className={`w-full text-xs sm:text-sm px-4 py-2.5 rounded-xl border font-medium transition
+            <div className="grid grid-cols-2 gap-3">
+              {/* Age */}
+              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
+                <p className="text-[11px] text-slate-400 mb-1">Age</p>
+                <p className="text-lg font-semibold text-slate-50">
+                  {ageDays}
+                  <span className="text-xs text-slate-400 ml-1">days</span>
+                </p>
+                <p className="text-[11px] text-slate-200 mt-0.5">
+                  {ageTier.label}
+                </p>
+              </div>
+
+              {/* Season */}
+              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
+                <p className="text-[11px] text-slate-400 mb-1">Season</p>
+                <p className="text-lg font-semibold text-slate-50">
+                  {seasonName}
+                </p>
+                <p className="text-[11px] text-slate-200 mt-0.5">
+                  {ageTier.subtitle}
+                </p>
+              </div>
+
+              {/* Prestige */}
+              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
+                <p className="text-[11px] text-slate-400 mb-1">Prestige</p>
+                <p className="text-lg font-semibold text-slate-50">
+                  {prestigeLevel}
+                </p>
+                <p className="text-[11px] text-slate-200 mt-0.5">
+                  {prestigeLabel(prestigeLevel)}
+                </p>
+              </div>
+
+              {/* Primary token */}
+              <div className="rounded-2xl bg-slate-900/80 border border-slate-700 px-3 py-3">
+                <p className="text-[11px] text-slate-400 mb-1">Primary token</p>
+                <p className="text-sm font-semibold text-slate-50">
+                  {primarySymbol || "Not set"}
+                </p>
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  {truncateAddress(primaryToken)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mint overview */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
+            Mint overview
+          </p>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="rounded-2xl bg-slate-900/85 border border-slate-700 px-3 py-3">
+              <p className="text-[11px] text-slate-400 mb-1">
+                Minted / Max supply
+              </p>
+              <p className="font-semibold text-slate-50">
+                {mintedCount}{" "}
+                <span className="text-slate-400 text-xs">
+                  / {maxSupply || "100000"}
+                </span>
+              </p>
+            </div>
+            <div className="rounded-2xl bg-slate-900/85 border border-slate-700 px-3 py-3">
+              <p className="text-[11px] text-slate-400 mb-1">Mint price</p>
+              <p className="font-semibold text-slate-50">
+                {mintPriceEth}{" "}
+                <span className="text-slate-400 text-xs">ETH</span>
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Promo mints left: {promoRemaining}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Mint & manage */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+                Mint & manage
+              </p>
+              <p className="text-xs text-slate-200/85">
+                Forge your cube or set your primary token.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={!isConnected || hasCube || isWriting || !mintPriceData}
+            onClick={handleMint}
+            className={`w-full text-xs sm:text-sm px-4 py-2.5 rounded-xl border font-medium transition
               ${
                 !isConnected || hasCube || !mintPriceData
                   ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
                   : "bg-sky-500/25 border-sky-400/80 text-sky-50 hover:bg-sky-500/40"
               }`}
+          >
+            {!isConnected
+              ? "Connect wallet to mint"
+              : hasCube
+              ? "One cube per wallet (already minted)"
+              : isWriting
+              ? "Minting..."
+              : `Mint your cube for ${mintPriceEth} ETH`}
+          </button>
+
+          {hasCube && (
+            <form
+              onSubmit={handleSetPrimaryToken}
+              className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 border border-slate-800 px-3 py-3.5"
             >
-              {!isConnected
-                ? "Connect wallet to mint"
-                : hasCube
-                ? "One cube per wallet (already minted)"
-                : isWriting
-                ? "Minting..."
-                : `Mint your cube for ${mintPriceEth} ETH`}
-            </button>
-
-            {hasCube && (
-              <form
-                onSubmit={handleSetPrimaryToken}
-                className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 border border-slate-800 px-3 py-3.5"
-              >
-                <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
-                  Primary token
-                </p>
-                <p className="text-[11px] text-slate-200/80 mb-1.5">
-                  Link a token you&apos;re known for. Symbol is etched on the cube.
-                </p>
-                <div className="space-y-2">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[11px] text-slate-400">
-                      Token address (Base)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="0x..."
-                      value={primaryTokenInput}
-                      onChange={(e) => setPrimaryTokenInput(e.target.value)}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[11px] text-slate-400">
-                      Token symbol (max 8 chars)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. POT, TOBY"
-                      value={primarySymbolInput}
-                      onChange={(e) =>
-                        setPrimarySymbolInput(e.target.value.toUpperCase())
-                      }
-                      maxLength={8}
-                      className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 tracking-[0.12em]"
-                    />
-                  </div>
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
+                Primary token
+              </p>
+              <p className="text-[11px] text-slate-200/80 mb-1.5">
+                Link a token you&apos;re known for. Symbol is etched on the cube.
+              </p>
+              <div className="space-y-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] text-slate-400">
+                    Token address (Base)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="0x..."
+                    value={primaryTokenInput}
+                    onChange={(e) => setPrimaryTokenInput(e.target.value)}
+                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400"
+                  />
                 </div>
-                <button
-                  type="submit"
-                  disabled={isWriting}
-                  className={`mt-2 inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-lg border transition ${
-                    isWriting
-                      ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
-                      : "bg-slate-900 border-slate-600 text-slate-100 hover:bg-slate-800/90"
-                  }`}
-                >
-                  {isWriting ? "Updating..." : "Set primary token"}
-                </button>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] text-slate-400">
+                    Token symbol (max 8 chars)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. POT, TOBY"
+                    value={primarySymbolInput}
+                    onChange={(e) =>
+                      setPrimarySymbolInput(e.target.value.toUpperCase())
+                    }
+                    maxLength={8}
+                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 tracking-[0.12em]"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={isWriting}
+                className={`mt-2 inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-lg border transition ${
+                  isWriting
+                    ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-900 border-slate-600 text-slate-100 hover:bg-slate-800/90"
+                }`}
+              >
+                {isWriting ? "Updating..." : "Set primary token"}
+              </button>
 
-                {manageError && (
-                  <p className="text-[11px] text-rose-400 mt-1">{manageError}</p>
-                )}
-                {manageSuccess && (
-                  <p className="text-[11px] text-emerald-400 mt-1">
-                    {manageSuccess}
-                  </p>
-                )}
-              </form>
-            )}
-          </div>
+              {manageError && (
+                <p className="text-[11px] text-rose-400 mt-1">{manageError}</p>
+              )}
+              {manageSuccess && (
+                <p className="text-[11px] text-emerald-400 mt-1">
+                  {manageSuccess}
+                </p>
+              )}
+            </form>
+          )}
+        </div>
 
-          {/* Links */}
-          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
-            <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
-              Links
-            </p>
-            <div className="flex flex-wrap gap-2">
+        {/* Links */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
+            Links
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs px-3 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/50 text-sky-50 hover:bg-sky-500/30 transition"
+            >
+              View contract on BaseScan
+            </a>
+            {hasCube && (
               <a
-                href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
+                href={`https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${cubeId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs px-3 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/50 text-sky-50 hover:bg-sky-500/30 transition"
-              >
-                View contract on BaseScan
-              </a>
-              {hasCube && (
-                <a
-                  href={`https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${cubeId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs px-3 py-1.5 rounded-full bg-slate-900/85 border border-slate-600 text-slate-100 hover:bg-slate-800/95 transition"
-                >
-                  View cube #{cubeId} on Base
-                </a>
-              )}
-              <a
-                href="#"
                 className="text-xs px-3 py-1.5 rounded-full bg-slate-900/85 border border-slate-600 text-slate-100 hover:bg-slate-800/95 transition"
               >
-                Visit BaseBlox site
+                View cube #{cubeId} on Base
               </a>
-            </div>
-          </div>
-
-          {/* Share CTA */}
-          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <div>
-                <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
-                  Share your cube
-                </p>
-                <p className="text-xs text-slate-200/85">
-                  Cast or tweet your BaseBlox stats as a flex.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={!hasCube}
-                onClick={handleShareFarcaster}
-                className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
-                  hasCube
-                    ? "bg-violet-500/20 border-violet-400/60 text-violet-50 hover:bg-violet-500/30"
-                    : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
-                }`}
-              >
-                <span>Share on Farcaster</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={!hasCube}
-                onClick={handleShareX}
-                className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
-                  hasCube
-                    ? "bg-slate-900 border-slate-500 text-slate-100 hover:bg-black"
-                    : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
-                }`}
-              >
-                <span>Share on X</span>
-              </button>
-            </div>
-
-            {!hasCube && (
-              <p className="text-[10px] text-slate-400 mt-2">
-                Mint a cube first to unlock sharing.
-              </p>
             )}
+            <a
+              href="#"
+              className="text-xs px-3 py-1.5 rounded-full bg-slate-900/85 border border-slate-600 text-slate-100 hover:bg-slate-800/95 transition"
+            >
+              Visit BaseBlox site
+            </a>
+          </div>
+        </div>
+
+        {/* Share CTA */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+                Share your cube
+              </p>
+              <p className="text-xs text-slate-200/85">
+                Cast or tweet your BaseBlox stats as a flex.
+              </p>
+            </div>
           </div>
 
-          {/* Freshly forged cubes */}
-          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
-            <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
-              Freshly forged cubes
-            </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={!hasCube}
+              onClick={handleShareFarcaster}
+              className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
+                hasCube
+                  ? "bg-violet-500/20 border-violet-400/60 text-violet-50 hover:bg-violet-500/30"
+                  : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
+              }`}
+            >
+              <span>Share on Farcaster</span>
+            </button>
 
-            {recentCubes.length === 0 ? (
-              <p className="text-xs text-slate-400">
-                No cubes have been forged yet. Be the first mint on BaseBlox.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {latestCube && (
-                  <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-sky-500/25 via-blue-500/20 to-slate-900/90 border border-sky-400/70 px-3.5 py-3 shadow-md shadow-sky-900/50">
-                    <div className="flex items-center gap-3">
-                      <CubeVisual
-                        tokenId={latestCube.tokenId}
-                        label="Latest cube"
-                        size={80}
-                        imageSrc={latestCube.imageUrl}
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-slate-50">
-                          Owner: {truncateAddress(latestCube.owner)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[11px] text-slate-100/80">Minted</p>
-                      <p className="text-xs font-medium text-slate-50">
-                        {latestCube.mintedAtDate}
-                      </p>
+            <button
+              type="button"
+              disabled={!hasCube}
+              onClick={handleShareX}
+              className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
+                hasCube
+                  ? "bg-slate-900 border-slate-500 text-slate-100 hover:bg-black"
+                  : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
+              }`}
+            >
+              <span>Share on X</span>
+            </button>
+          </div>
+
+          {!hasCube && (
+            <p className="text-[10px] text-slate-400 mt-2">
+              Mint a cube first to unlock sharing.
+            </p>
+          )}
+        </div>
+
+        {/* Freshly forged cubes */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
+            Freshly forged cubes
+          </p>
+
+          {recentCubes.length === 0 ? (
+            <p className="text-xs text-slate-400">
+              No cubes have been forged yet. Be the first mint on BaseBlox.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {latestCube && (
+                <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-sky-500/25 via-blue-500/20 to-slate-900/90 border border-sky-400/70 px-3.5 py-3 shadow-md shadow-sky-900/50">
+                  <div className="flex items-center gap-3">
+                    <CubeVisual
+                      tokenId={latestCube.tokenId}
+                      label="Latest cube"
+                      size={80}
+                      imageSrc={latestCube.imageUrl}
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-slate-50">
+                        Owner: {truncateAddress(latestCube.owner)}
+                      </span>
                     </div>
                   </div>
-                )}
-
-                {otherRecent.length > 0 && (
-                  <div className="flex flex-col gap-2">
-                    {otherRecent.map((item) => (
-                      <div
-                        key={item.tokenId}
-                        className="flex items-center justify-between gap-3 rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-2.5"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <BlueCubeAvatar size={30} imageSrc={item.imageUrl} />
-                          <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-slate-50">
-                              Cube #{item.tokenId}
-                            </span>
-                            <span className="text-[11px] text-slate-400">
-                              Owner: {truncateAddress(item.owner)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] text-slate-400">Minted</p>
-                          <p className="text-xs text-slate-200">
-                            {item.mintedAtDate}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Featured cubes */}
-          <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 px-4 py-4">
-            <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
-              Featured cubes
-            </p>
-            <p className="text-xs text-slate-200/85 mb-3">
-              Spotlighted BaseBlox identities. For now, just blue cube vibes. 🟦
-            </p>
-
-            <div className="grid grid-cols-2 gap-3">
-              {[0, 1, 2, 3].map((idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-slate-800 px-3 py-3"
-                >
-                  <BlueCubeAvatar size={32} />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-50">
-                      Coming soon
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      Curated Base cube
-                    </span>
+                  <div className="text-right">
+                    <p className="text-[11px] text-slate-100/80">Minted</p>
+                    <p className="text-xs font-medium text-slate-50">
+                      {latestCube.mintedAtDate}
+                    </p>
                   </div>
                 </div>
-              ))}
+              )}
+
+              {otherRecent.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {otherRecent.map((item) => (
+                    <div
+                      key={item.tokenId}
+                      className="flex items-center justify-between gap-3 rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-2.5"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <BlueCubeAvatar size={30} imageSrc={item.imageUrl} />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-semibold text-slate-50">
+                            Cube #{item.tokenId}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            Owner: {truncateAddress(item.owner)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] text-slate-400">Minted</p>
+                        <p className="text-xs text-slate-200">
+                          {item.mintedAtDate}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+          )}
+        </div>
+
+        {/* Featured cubes */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
+            Featured cubes
+          </p>
+          <p className="text-xs text-slate-200/85 mb-3">
+            Spotlighted BaseBlox identities. For now, just blue cube vibes. 🟦
+          </p>
+
+          <div className="grid grid-cols-2 gap-3">
+            {[0, 1, 2, 3].map((idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-slate-800 px-3 py-3"
+              >
+                <BlueCubeAvatar size={32} />
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold text-slate-50">
+                    Coming soon
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Curated Base cube
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
