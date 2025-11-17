@@ -37,13 +37,15 @@ const walletGroups = [
 ];
 
 const rkConnectors = connectorsForWallets(walletGroups, {
-  appName: "TamaBot",
+  appName: "BaseBlox",
   projectId,
 });
 
 export const wagmiConfig = createConfig({
   chains: [base],
-  transports: { [base.id]: http(process.env.NEXT_PUBLIC_BASE_RPC_URL || undefined) },
+  transports: {
+    [base.id]: http(process.env.NEXT_PUBLIC_BASE_RPC_URL || undefined),
+  },
   connectors: [
     miniAppConnector(),
     injected({ target: "coinbaseWallet", shimDisconnect: true }),
