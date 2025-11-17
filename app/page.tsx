@@ -480,28 +480,44 @@ export default function Home() {
   // ---------- UI ----------
 
   return (
-    <section className="relative w-full max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 md:py-16 flex flex-col gap-6 text-slate-50">
+    <section className="relative w-full max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 md:py-16 flex flex-col gap-8 text-slate-50">
       {/* soft page-level glows (on top of the global bg) */}
       <div className="pointer-events-none absolute inset-x-0 -top-40 h-64 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-70" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.30),transparent_60%)] opacity-60" />
 
-      {/* Clean hero header – no pill/border, just title + explainer */}
-      <header className="relative max-w-2xl mx-auto md:mx-0 text-center md:text-left space-y-3">
-        <h1 className="text-3xl sm:text-[2.3rem] font-semibold tracking-tight">
-          <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
-            BaseBlox
-          </span>{" "}
-          — your onchain identity cube
-        </h1>
-        <p className="text-sm sm:text-[0.95rem] text-slate-200/90">
-          One evolving cube per wallet. Age, prestige, season, and your primary
-          token — all etched onchain on Base. Mint once and let your cube tell
-          your story.
-        </p>
-      </header>
+      {/* HERO CARD */}
+      <div className="glass-card stats-appear overflow-hidden px-6 py-8 sm:px-8 sm:py-10">
+        <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-80" />
+        <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-70" />
+
+        <div className="relative flex flex-col md:flex-row items-center md:items-center gap-8">
+          <div className="flex-1 text-center md:text-left space-y-4">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight tracking-tight">
+              <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
+                BaseBlox
+              </span>
+            </h1>
+            <p className="text-sm sm:text-base text-slate-200/90 max-w-xl">
+              Your evolving onchain identity cube. One cube per wallet — age,
+              prestige, season, and your primary token, all etched on Base.
+              Mint once and let your cube tell your story.
+            </p>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <Image
+              src="/hero.PNG"
+              alt="BaseBlox hero"
+              width={360}
+              height={360}
+              className="w-full max-w-xs sm:max-w-sm rounded-2xl shadow-xl shadow-sky-900/50"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Content cards */}
-      <div className="relative mt-2 space-y-5 sm:space-y-6">
+      <div className="relative mt-2 space-y-8 sm:space-y-10">
         {/* Overview: your cube + connect */}
         <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
