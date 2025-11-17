@@ -1,7 +1,7 @@
 // lib/baseblocksAbi.ts
 
 export const BASEBLOCKS_ADDRESS =
-  "0xaa27a2f268bf92e533166fba559f09eef4d84c60" as const;
+  "0xa59a3709f6c11256e89C0644fd40f1f32aD6e881" as const;
 
 export const BASEBLOCKS_ABI = [
   {
