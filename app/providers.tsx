@@ -106,15 +106,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         borderRadius: "large",
         overlayBlur: "small",
       }),
-    []
+    [],
   );
 
   const dehydratedState = dehydrate(queryClient, { serializeData });
 
-  // CDP/OnchainKit API key (fallback keeps old var working)
-  const onchainkitApiKey = (process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ||
-    process.env.NEXT_PUBLIC_MINIKIT_PROJECT_ID ||
-    "") as string;
+  // CDP/OnchainKit API key – if not present, we gracefully fall back to RainbowKit only
+  const onchainkitApiKey = (process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY || "") as string;
 
   // Inner tree: everything *after* RainbowKit
   const innerTree = (
