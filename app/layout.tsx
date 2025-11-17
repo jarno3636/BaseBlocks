@@ -2,7 +2,6 @@
 import "./globals.css";
 import Providers from "./providers";
 import type { Metadata, Viewport } from "next";
-import MiniAppBoot from "@/components/MiniAppBoot";
 import AppReady from "@/components/AppReady";
 
 /** ---- Dynamic metadata (absolute URLs + mini app embed) ---- */
@@ -66,16 +65,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#020617] text-slate-50 antialiased">
-        <MiniAppBoot>
-          <Providers>
-            {/* AppReady stays as a hook-style component with no children */}
-            <AppReady />
-            {/* Clean mini-app shell – child page handles the card UI */}
-            <main className="min-h-screen flex items-center justify-center px-4">
-              {children}
-            </main>
-          </Providers>
-        </MiniAppBoot>
+        {/* Notify Farcaster as soon as the app is usable */}
+        <AppReady />
+
+        {/* wagmi / RainbowKit / etc */}
+        <Providers>
+          <main className="min-h-screen flex items-center justify-center px-4">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   );
