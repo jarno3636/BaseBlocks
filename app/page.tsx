@@ -316,6 +316,53 @@ export default function Home() {
     return out;
   }, [recentResults, recentTokenIds]);
 
+  // ---------- Featured promo cubes (tokenIds 2–5 once minted) ----------
+
+  const featuredTokenIds = useMemo(() => {
+    const ids: bigint[] = [];
+    if (!nextTokenIdData) return ids;
+    // token is minted if id < nextTokenId
+    for (let id = 2; id <= 5; id++) {
+      const bid = BigInt(id);
+      if (bid < nextTokenIdData) ids.push(bid);
+    }
+    return ids;
+  }, [nextTokenIdData]);
+
+  const { data: featuredResults } = useReadContracts({
+    contracts: featuredTokenIds.flatMap((id) => [
+      {
+        address: BASEBLOCKS_ADDRESS,
+        abi: BASEBLOCKS_ABI,
+        functionName: "getCubeData",
+        args: [id],
+      } as const,
+      {
+        address: BASEBLOCKS_ADDRESS,
+        abi: BASEBLOCKS_ABI,
+        functionName: "tokenURI",
+        args: [id],
+      } as const,
+    ]),
+    query: { enabled: featuredTokenIds.length > 0 },
+  });
+
+  const featuredCubes = useMemo(() => {
+    if (!featuredResults || featuredResults.length === 0) return [];
+    const out: { tokenId: number; imageUrl?: string }[] = [];
+
+    for (let i = 0; i < featuredTokenIds.length; i++) {
+      const tokenId = Number(featuredTokenIds[i]);
+      const tokenUriRes = featuredResults[i * 2 + 1];
+      const tokenUri = tokenUriRes?.result as string | undefined;
+      const imageUrl = extractImageFromTokenUri(tokenUri);
+
+      out.push({ tokenId, imageUrl });
+    }
+
+    return out;
+  }, [featuredResults, featuredTokenIds]);
+
   // ---------- Derived for current cube ----------
 
   const {
@@ -365,10 +412,19 @@ export default function Home() {
     mainTokenUriData as string | undefined,
   );
 
+  // when no wallet connected, show fallback.PNG in the "my cube" section
+  const myCubeImageToShow = notConnected ? "/fallback.PNG" : mainCubeImage;
+
   // prestige timing: 180 days between prestiges
   const canPrestige = hasCube && ageDays >= 180;
   const prestigeCooldownDays =
     hasCube && ageDays < 180 ? 180 - ageDays : 0;
+
+  // cube-specific share URL (for Farcaster / X)
+  const cubeShareUrl =
+    hasCube && cubeId
+      ? `https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${cubeId}`
+      : "https://baseblox.xyz";
 
   // ---------- Local state ----------
 
@@ -450,38 +506,30 @@ export default function Home() {
     }
   }
 
-  // ---------- Share helpers ----------
+  // ---------- Share helpers (cube-specific) ----------
 
   function handleShareX() {
     if (!hasCube) return;
-    const url =
-      typeof window !== "undefined"
-        ? window.location.href
-        : "https://baseblox.xyz";
     const text = encodeURIComponent(
       `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabel(
         prestigeLevel,
       )}.`,
     );
     const shareUrl = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(
-      url,
+      cubeShareUrl,
     )}`;
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
 
   function handleShareFarcaster() {
     if (!hasCube) return;
-    const url =
-      typeof window !== "undefined"
-        ? window.location.href
-        : "https://baseblox.xyz";
     const text = encodeURIComponent(
       `Checking in with my BaseBlox cube #${cubeId} — ${ageDays} days old, ${prestigeLabel(
         prestigeLevel,
       )}.`,
     );
     const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(
-      url,
+      cubeShareUrl,
     )}`;
     if (typeof window !== "undefined") window.open(shareUrl, "_blank");
   }
@@ -504,7 +552,7 @@ export default function Home() {
 
         <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10">
           <div className="flex-1 text-center md:text-left space-y-4">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight tracking-tight">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
                 BaseBlox
               </span>
@@ -526,7 +574,7 @@ export default function Home() {
               alt="BaseBlox hero"
               width={360}
               height={360}
-              className="w-full max-w-xs sm:max-w-sm rounded-2xl shadow-xl shadow-sky-900/50"
+              className="w-full max-w-xs sm:max-w-sm rounded-2xl shadow-xl shadow-sky-900/50 motion-safe:animate-pulse hover:-translate-y-1 transition-transform duration-700"
             />
           </div>
         </div>
@@ -544,8 +592,8 @@ export default function Home() {
                 <CubeVisual
                   tokenId={hasCube ? cubeId : undefined}
                   label={hasCube ? "Your BaseBlox cube" : "BaseBlox cube"}
-                  size={336} // ≈ 3× bigger
-                  imageSrc={mainCubeImage}
+                  size={336} // big hero cube
+                  imageSrc={myCubeImageToShow}
                   showMeta={false}
                 />
               </div>
@@ -836,7 +884,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Links (no contract here anymore) */}
+        {/* Links */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Links
@@ -945,33 +993,39 @@ export default function Home() {
           )}
         </div>
 
-        {/* Featured cubes */}
+        {/* Featured cubes (promo mints 2–5) */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Featured cubes
           </p>
           <p className="text-xs text-slate-200/85 mb-3">
-            Spotlighted BaseBlox identities. For now, just blue cube vibes. 🟦
+            Promo BaseBlox cubes. Early identity cards forged via promo mints.
           </p>
 
-          <div className="grid grid-cols-2 gap-3">
-            {[0, 1, 2, 3].map((idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-2 rounded-2xl bg-slate-900/90 px-3 py-3"
-              >
-                <BlueCubeAvatar size={32} />
-                <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-slate-50">
-                    Coming soon
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    Curated Base cube
-                  </span>
+          {featuredCubes.length === 0 ? (
+            <p className="text-xs text-slate-400">
+              Promo cubes #2 – #5 will appear here once they are minted.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {featuredCubes.map((item) => (
+                <div
+                  key={item.tokenId}
+                  className="flex items-center gap-2 rounded-2xl bg-slate-900/90 px-3 py-3"
+                >
+                  <BlueCubeAvatar size={32} imageSrc={item.imageUrl} />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-slate-50">
+                      Cube #{item.tokenId}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Promo mint identity
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Contract link at very bottom of page */}
