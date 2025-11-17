@@ -420,19 +420,16 @@ export default function Home() {
   const prestigeCooldownDays =
     hasCube && ageDays < 180 ? 180 - ageDays : 0;
 
-  // --------- Sharing URLs (use your own site so OG = share.PNG) ----------
+  // --------- Sharing URLs (STATIC so OG/share.PNG are consistent) ----------
 
-  const baseUrl =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "https://baseblox.vercel.app";
+  const SITE_URL = "https://baseblox.vercel.app" as const;
 
   // Per-cube link (optional query param so each share is unique)
   const cubeShareUrl =
-    hasCube && cubeId ? `${baseUrl}/?cube=${cubeId}` : baseUrl;
+    hasCube && cubeId ? `${SITE_URL}/?cube=${cubeId}` : SITE_URL;
 
   // Project-level share link (homepage)
-  const projectShareUrl = baseUrl;
+  const projectShareUrl = SITE_URL;
 
   // ---------- Local state ----------
 
@@ -566,6 +563,7 @@ export default function Home() {
 
   const latestCube = recentCubes[0];
   const otherRecent = recentCubes.slice(1);
+  const gridRecent = otherRecent.slice(0, 4); // up to 4 in the 2x2 grid
 
   // ---------- UI ----------
 
@@ -1025,7 +1023,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Freshly forged cubes – cube art + number only */}
+        {/* Freshly forged cubes – latest centered, then 2x2 grid */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Freshly forged cubes
@@ -1036,26 +1034,32 @@ export default function Home() {
               No cubes have been forged yet. Be the first mint on BaseBlox.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {latestCube && (
-                <div className="flex items-center gap-3 rounded-2xl bg-slate-900/90 px-3.5 py-3">
+                <div className="flex justify-center">
                   <CubeVisual
                     tokenId={latestCube.tokenId}
                     label={`Cube #${latestCube.tokenId}`}
-                    size={80}
+                    size={96}
                     imageSrc={latestCube.imageUrl}
                   />
                 </div>
               )}
 
-              {otherRecent.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  {otherRecent.map((item) => (
+              {gridRecent.length > 0 && (
+                <div className="grid grid-cols-2 gap-3">
+                  {gridRecent.map((item) => (
                     <div
                       key={item.tokenId}
-                      className="flex items-center gap-3 rounded-xl bg-slate-900/90 px-3 py-2.5"
+                      className="rounded-2xl bg-slate-900/90 px-3 py-3 flex flex-col items-center gap-2"
                     >
-                      <BlueCubeAvatar size={30} imageSrc={item.imageUrl} />
+                      <CubeVisual
+                        tokenId={item.tokenId}
+                        label={`Cube #${item.tokenId}`}
+                        size={80}
+                        imageSrc={item.imageUrl}
+                        showMeta={false}
+                      />
                       <span className="text-xs font-semibold text-slate-50">
                         Cube #{item.tokenId}
                       </span>
