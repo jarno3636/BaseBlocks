@@ -21,7 +21,7 @@
     "primaryCategory": "social",
     "tags": ["base", "identity", "blocks"],
     "heroImageUrl": "https://baseblox.vercel.app/splash.png",
-    "ogTitle": "BaseBlox – Onchain Identity Cubes",
+    "ogTitle": "BaseBlox: Identity Cubes",
     "ogDescription": "Mint and evolve your BaseBlox identity cube.",
     "ogImageUrl": "https://baseblox.vercel.app/share.PNG"
   }
