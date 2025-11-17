@@ -10,7 +10,7 @@
     "subtitle": "Your Onchain Identity Cube",
     "description": "Mint your BaseBlox identity cube and track your evolving onchain prestige.",
     "iconUrl": "https://baseblox.vercel.app/icon.png",
-    "homeUrl": "https://baseblox.vercel.app",
+    "homeUrl": "https://baseblox.vercel.app/farcaster/miniapp",
     "screenshotUrls": [
       "https://baseblox.vercel.app/screenshot-portrait.png"
     ],
