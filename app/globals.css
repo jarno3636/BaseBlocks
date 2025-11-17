@@ -20,10 +20,13 @@ body {
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     "Segoe UI", sans-serif;
+
+  /* Lighter, more premium blue/navy gradient background */
   background:
-    radial-gradient(circle at top left, #1e293b 0, transparent 55%),
-    radial-gradient(circle at bottom right, #020617 0, transparent 55%),
-    linear-gradient(135deg, #020617, #020617 30%, #020617 60%, #020617);
+    radial-gradient(circle at top left, #1d4ed8 0, transparent 55%),
+    radial-gradient(circle at bottom right, #4f46e5 0, transparent 55%),
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.38) 0, transparent 60%),
+    linear-gradient(145deg, #020617 0, #020617 40%, #020617 100%);
   color: #e5e7eb;
 }
 
@@ -51,7 +54,22 @@ textarea {
   );
 }
 
-/* Utility for the main stats card */
+/* Primary glass card style used throughout the app */
+.glass-card {
+  position: relative;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background:
+    radial-gradient(circle at top left, rgba(148, 163, 184, 0.22), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.18), transparent 55%),
+    rgba(15, 23, 42, 0.88);
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.95),
+    0 0 0 1px rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(22px);
+}
+
+/* Legacy stats card (if used elsewhere) */
 .stats-card {
   background: radial-gradient(circle at top left, #111827 0, #020617 52%);
   border-radius: 1.75rem;
@@ -74,7 +92,7 @@ textarea {
   letter-spacing: 0.08em;
 }
 
-/* Fade-in animation for the card */
+/* Fade-in animation for cards */
 @keyframes fade-up-soft {
   from {
     opacity: 0;
