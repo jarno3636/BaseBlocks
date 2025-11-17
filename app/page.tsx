@@ -36,11 +36,8 @@ function encodeBytes8Symbol(sym: string): `0x${string}` {
   const trimmed = sym.trim().slice(0, 8);
   const bytes: number[] = [];
   for (let i = 0; i < 8; i++) {
-    if (i < trimmed.length) {
-      bytes.push(trimmed.charCodeAt(i));
-    } else {
-      bytes.push(0);
-    }
+    if (i < trimmed.length) bytes.push(trimmed.charCodeAt(i));
+    else bytes.push(0);
   }
   let hex = "0x";
   for (const b of bytes) {
@@ -82,9 +79,7 @@ function prestigeLabel(prestige: number): string {
   return `Prestige ${prestige}`;
 }
 
-/**
- * Try to extract an image URL from a tokenURI.
- */
+/** Try to extract an image URL from a tokenURI. */
 function extractImageFromTokenUri(uri?: string | null): string | undefined {
   if (!uri) return undefined;
 
@@ -137,17 +132,19 @@ function BlueCubeAvatar({
   );
 }
 
-// Larger “NFT-style” cube render for the main cube / latest cube
+// Larger “NFT-style” cube render
 function CubeVisual({
   tokenId,
   label = "Base cube",
   size = 120,
   imageSrc,
+  showMeta = true,
 }: {
   tokenId?: number;
   label?: string;
   size?: number;
   imageSrc?: string;
+  showMeta?: boolean;
 }) {
   const cardWidth = size * 1.5;
 
@@ -174,16 +171,19 @@ function CubeVisual({
             <div className="w-[70%] h-[70%] rounded-2xl border border-white/70 bg-sky-50/95 shadow-inner shadow-sky-900/40" />
           )}
         </div>
-        <div className="w-full flex items-center justify-between text-[11px] text-slate-100/90">
-          <span className="font-medium uppercase tracking-[0.16em]">
-            {label}
-          </span>
-          {tokenId !== undefined && (
-            <span className="rounded-full bg-slate-900/70 px-2 py-0.5 border border-sky-400/40 text-[10px]">
-              #{tokenId}
+
+        {showMeta && (
+          <div className="w-full flex items-center justify-between text-[11px] text-slate-100/90">
+            <span className="font-medium uppercase tracking-[0.16em]">
+              {label}
             </span>
-          )}
-        </div>
+            {tokenId !== undefined && (
+              <span className="rounded-full bg-slate-900/70 px-2 py-0.5 border border-sky-400/40 text-[10px]">
+                #{tokenId}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -517,47 +517,63 @@ export default function Home() {
       </div>
 
       {/* Content cards */}
-      <div className="relative mt-2 space-y-10 sm:space-y-12 md:space-y-14">
+      <div className="relative mt-8 space-y-12 sm:space-y-14 md:space-y-16">
         {/* Combined: your cube + identity snapshot */}
         <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-6">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
           <div className="relative space-y-4">
             {/* Top row: cube + wallet */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-4">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex justify-center sm:justify-start">
                 <CubeVisual
                   tokenId={hasCube ? cubeId : undefined}
                   label={hasCube ? "Your BaseBlox cube" : "BaseBlox cube"}
-                  size={112}
+                  size={336}                // ~3× bigger than before
                   imageSrc={mainCubeImage}
+                  showMeta={false}          // hide label / # under NFT
                 />
-                <div className="flex flex-col justify-center gap-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-base font-semibold leading-tight text-slate-50">
-                      {hasCube ? `Cube #${cubeId}` : "No cube yet"}
-                    </h2>
-                    {hasCube && (
-                      <span className="pill bg-sky-500/20 text-sky-50 border border-sky-400/70">
-                        {seasonName} season
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-200/90">
-                    {address ? truncateAddress(address) : "Connect a Base wallet to begin"}
-                  </p>
-                  {hasCube && (
-                    <p className="text-xs text-slate-300/85">
-                      Minted{" "}
-                      <span className="font-medium text-slate-50">
-                        {mintedAtDate}
-                      </span>
-                    </p>
-                  )}
-                </div>
               </div>
 
-              <div className="self-start sm:self-center">
-                <ConnectButton chainStatus="none" showBalance={false} />
+              <div className="flex-1 flex flex-col gap-3">
+                {/* "Your cube" title + line */}
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                    Your cube
+                  </p>
+                  <div className="mt-1 h-px w-16 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
+                </div>
+
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-base sm:text-lg font-semibold leading-tight text-slate-50">
+                        {hasCube ? `Cube #${cubeId}` : "No cube yet"}
+                      </h2>
+                      {hasCube && (
+                        <span className="pill bg-sky-500/20 text-sky-50 border border-sky-400/70">
+                          {seasonName} season
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-200/90">
+                      {address
+                        ? truncateAddress(address)
+                        : "Connect a Base wallet to begin"}
+                    </p>
+                    {hasCube && (
+                      <p className="text-xs text-slate-300/85">
+                        Minted{" "}
+                        <span className="font-medium text-slate-50">
+                          {mintedAtDate}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="self-start">
+                    <ConnectButton chainStatus="none" showBalance={false} />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -774,13 +790,11 @@ export default function Home() {
           )}
         </div>
 
-        {/* Links */}
+        {/* Links (no contract here anymore) */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Links
           </p>
-
-          {/* Top row: cube link only */}
           <div className="flex flex-wrap gap-2">
             {hasCube && (
               <a
@@ -792,18 +806,6 @@ export default function Home() {
                 View cube #{cubeId} on Base
               </a>
             )}
-          </div>
-
-          {/* Contract link anchored at the bottom */}
-          <div className="mt-3">
-            <a
-              href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex text-xs px-3 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/50 text-sky-50 hover:bg-sky-500/30 transition"
-            >
-              View contract on BaseScan
-            </a>
           </div>
         </div>
 
@@ -924,6 +926,18 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Contract link at very bottom of page */}
+        <div className="mt-6 mb-2 flex justify-center">
+          <a
+            href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs sm:text-sm px-4 py-2 rounded-full bg-sky-500/20 border border-sky-500/60 text-sky-50 hover:bg-sky-500/30 transition"
+          >
+            View BaseBlox contract on BaseScan
+          </a>
         </div>
       </div>
     </section>
