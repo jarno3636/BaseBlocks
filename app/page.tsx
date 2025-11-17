@@ -46,28 +46,13 @@ function encodeBytes8Symbol(sym: string): `0x${string}` {
   return hex as `0x${string}`;
 }
 
-function seasonNameFromNow(): string {
-  const now = Date.now();
-  const seconds = Math.floor(now / 1000);
-  const yearSeconds = 365 * 24 * 60 * 60;
-  const t = seconds % yearSeconds;
-  const winterCutoff = 90 * 24 * 60 * 60;
-  const springCutoff = 180 * 24 * 60 * 60;
-  const summerCutoff = 270 * 24 * 60 * 60;
-
-  if (t < winterCutoff) return "Winter";
-  if (t < springCutoff) return "Spring";
-  if (t < summerCutoff) return "Summer";
-  return "Autumn";
-}
-
 function ageTierLabel(ageDays: number): { label: string; subtitle: string } {
   if (ageDays < 7) return { label: "Fresh Mint", subtitle: "Newly forged cube" };
   if (ageDays < 30) return { label: "Settling In", subtitle: "Finding its place" };
   if (ageDays < 90) return { label: "Seasoned", subtitle: "Building history" };
   if (ageDays < 180) return { label: "Established", subtitle: "Recognized identity" };
   if (ageDays < 365) return { label: "Veteran", subtitle: "Deep onchain roots" };
-  if (ageDays < 730) return { label: "Elder Cube", subtitle: "Years in the Base-verse" };
+  if (ageDays < 730) return { label: "Elder Cube", subtitle: "Years on Base" };
   return { label: "Ancient Block", subtitle: "A true onchain relic" };
 }
 
@@ -76,6 +61,12 @@ function prestigeLabel(prestige: number): string {
   if (prestige === 1) return "Prestige I";
   if (prestige === 2) return "Prestige II";
   if (prestige === 3) return "Prestige III";
+  if (prestige === 4) return "Prestige IV";
+  if (prestige === 5) return "Prestige V";
+  if (prestige === 6) return "Prestige VI";
+  if (prestige === 7) return "Prestige VII";
+  if (prestige === 8) return "Prestige VIII";
+  if (prestige === 9) return "Prestige IX";
   return `Prestige ${prestige}`;
 }
 
@@ -362,7 +353,6 @@ export default function Home() {
     };
   }, [ageSecondsData, cubeData]);
 
-  const seasonName = seasonNameFromNow();
   const mintedCount = nextTokenIdData ? Number(nextTokenIdData) - 1 : 0;
   const maxSupply = maxSupplyData ? Number(maxSupplyData) : 0;
   const promoRemaining = promoRemainingData ? Number(promoRemainingData) : 0;
@@ -374,6 +364,11 @@ export default function Home() {
   const mainCubeImage = extractImageFromTokenUri(
     mainTokenUriData as string | undefined,
   );
+
+  // prestige timing: 180 days between prestiges
+  const canPrestige = hasCube && ageDays >= 180;
+  const prestigeCooldownDays =
+    hasCube && ageDays < 180 ? 180 - ageDays : 0;
 
   // ---------- Local state ----------
 
@@ -434,6 +429,27 @@ export default function Home() {
     }
   }
 
+  async function handlePrestige() {
+    if (!hasCube || !cubeIdData) return;
+    setManageError(null);
+    setManageSuccess(null);
+
+    try {
+      await writeContractAsync({
+        address: BASEBLOCKS_ADDRESS,
+        abi: BASEBLOCKS_ABI,
+        functionName: "prestige",
+        args: [cubeIdData],
+      });
+
+      setManageSuccess(
+        "Prestige submitted. When it confirms, your badge and card visuals will level up.",
+      );
+    } catch (err: any) {
+      setManageError(err?.shortMessage || err?.message || "Prestige failed.");
+    }
+  }
+
   // ---------- Share helpers ----------
 
   function handleShareX() {
@@ -445,7 +461,7 @@ export default function Home() {
     const text = encodeURIComponent(
       `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabel(
         prestigeLevel,
-      )}, ${seasonName} season.`,
+      )}.`,
     );
     const shareUrl = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(
       url,
@@ -462,7 +478,7 @@ export default function Home() {
     const text = encodeURIComponent(
       `Checking in with my BaseBlox cube #${cubeId} — ${ageDays} days old, ${prestigeLabel(
         prestigeLevel,
-      )}, ${seasonName} season.`,
+      )}.`,
     );
     const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(
       url,
@@ -499,7 +515,7 @@ export default function Home() {
 
             <p className="text-sm sm:text-base text-slate-200/90 max-w-xl mx-auto md:mx-0">
               Your evolving onchain identity cube. One cube per wallet — age,
-              prestige, season, and your primary token, all etched on Base.
+              prestige level, and your primary token, all etched on Base.
               Mint once and let your cube tell your story.
             </p>
           </div>
@@ -517,7 +533,7 @@ export default function Home() {
       </div>
 
       {/* Content cards */}
-      <div className="relative mt-8 space-y-12 sm:space-y-14 md:space-y-16">
+      <div className="relative mt-8 flex flex-col gap-8 sm:gap-10 md:gap-12">
         {/* Combined: your cube + identity snapshot */}
         <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-6">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
@@ -528,9 +544,9 @@ export default function Home() {
                 <CubeVisual
                   tokenId={hasCube ? cubeId : undefined}
                   label={hasCube ? "Your BaseBlox cube" : "BaseBlox cube"}
-                  size={336}                // ~3× bigger than before
+                  size={336} // ≈ 3× bigger
                   imageSrc={mainCubeImage}
-                  showMeta={false}          // hide label / # under NFT
+                  showMeta={false}
                 />
               </div>
 
@@ -545,16 +561,9 @@ export default function Home() {
 
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-base sm:text-lg font-semibold leading-tight text-slate-50">
-                        {hasCube ? `Cube #${cubeId}` : "No cube yet"}
-                      </h2>
-                      {hasCube && (
-                        <span className="pill bg-sky-500/20 text-sky-50 border border-sky-400/70">
-                          {seasonName} season
-                        </span>
-                      )}
-                    </div>
+                    <h2 className="text-base sm:text-lg font-semibold leading-tight text-slate-50">
+                      {hasCube ? `Cube #${cubeId}` : "No cube yet"}
+                    </h2>
                     <p className="mt-1 text-xs text-slate-200/90">
                       {address
                         ? truncateAddress(address)
@@ -616,7 +625,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
                     <p className="text-[11px] text-slate-400 mb-1">Age</p>
                     <p className="text-lg font-semibold text-slate-50">
@@ -626,15 +635,8 @@ export default function Home() {
                     <p className="text-[11px] text-slate-200 mt-0.5">
                       {ageTier.label}
                     </p>
-                  </div>
-
-                  <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
-                    <p className="text-[11px] text-slate-400 mb-1">Season</p>
-                    <p className="text-lg font-semibold text-slate-50">
-                      {seasonName}
-                    </p>
-                    <p className="text-[11px] text-slate-200 mt-0.5">
-                      {ageTier.subtitle}
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Prestige unlocks roughly every 180 days.
                     </p>
                   </div>
 
@@ -646,10 +648,16 @@ export default function Home() {
                     <p className="text-[11px] text-slate-200 mt-0.5">
                       {prestigeLabel(prestigeLevel)}
                     </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Your badge upgrades over time — outlined stars first,
+                      then solid gold, then a gold ring at higher levels.
+                    </p>
                   </div>
 
                   <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
-                    <p className="text-[11px] text-slate-400 mb-1">Primary token</p>
+                    <p className="text-[11px] text-slate-400 mb-1">
+                      Primary token
+                    </p>
                     <p className="text-sm font-semibold text-slate-50">
                       {primarySymbol || "Not set"}
                     </p>
@@ -701,7 +709,7 @@ export default function Home() {
                 Mint & manage
               </p>
               <p className="text-xs text-slate-200/85">
-                Forge your cube or set your primary token.
+                Forge your cube, set a primary token, and prestige over time.
               </p>
             </div>
           </div>
@@ -725,6 +733,44 @@ export default function Home() {
               ? "Minting..."
               : `Mint your cube for ${mintPriceEth} ETH`}
           </button>
+
+          {/* Prestige section */}
+          {hasCube && (
+            <div className="mt-2 rounded-2xl bg-slate-900/90 px-3 py-3.5 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+                    Prestige
+                  </p>
+                  <p className="text-[11px] text-slate-200/80">
+                    Every ~6 months of age you can prestige, resetting your age
+                    and upgrading the badge on your card. Come back here when
+                    your cube is old enough to level up again.
+                  </p>
+                </div>
+                <span className="text-xs text-slate-300">
+                  Level {prestigeLevel}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePrestige}
+                disabled={!canPrestige || isWriting}
+                className={`w-full inline-flex items-center justify-center text-xs px-3 py-1.75 rounded-lg border transition ${
+                  !canPrestige || isWriting
+                    ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
+                    : "bg-amber-500/15 border-amber-400/70 text-amber-100 hover:bg-amber-500/25"
+                }`}
+              >
+                {isWriting
+                  ? "Submitting..."
+                  : canPrestige
+                  ? "Prestige your cube"
+                  : `Prestige available in ${prestigeCooldownDays} days`}
+              </button>
+            </div>
+          )}
 
           {hasCube && (
             <form
