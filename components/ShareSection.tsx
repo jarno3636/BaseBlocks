@@ -8,11 +8,13 @@ type ShareSectionProps = {
   cubeId: number;
   ageDays: number;
   prestigeLabelText: string;
+  /** Optional path like "/cube/123" for cube-specific shares */
+  cubePath?: string;
 };
 
 const SITE_URL = "https://baseblox.vercel.app" as const;
 
-// ✅ Farcaster mini app URL (env can override if needed)
+// ✅ Farcaster mini app URL
 const FARCASTER_MINIAPP_URL =
   process.env.NEXT_PUBLIC_FARCASTER_MINIAPP_URL ??
   "https://farcaster.xyz/miniapps/N_U7EfeREI4I/baseblox";
@@ -22,16 +24,21 @@ export default function ShareSection({
   cubeId,
   ageDays,
   prestigeLabelText,
+  cubePath,
 }: ShareSectionProps) {
+  // Cube-specific URL (falls back to root)
+  const cubeUrl = cubePath ? `${SITE_URL}${cubePath}` : SITE_URL;
+
   // ---------- Share helpers (cube-specific) ----------
 
   function handleShareX() {
     if (!hasCube) return;
 
     const text = `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabelText}.`;
+
     const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
       text,
-    )}&url=${encodeURIComponent(SITE_URL)}`;
+    )}&url=${encodeURIComponent(cubeUrl)}`;
 
     if (typeof window !== "undefined") {
       window.open(shareUrl, "_blank");
@@ -51,7 +58,7 @@ export default function ShareSection({
 
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text,
-    )}&embeds[]=${encodeURIComponent(SITE_URL)}`;
+    )}&embeds[]=${encodeURIComponent(cubeUrl)}`;
 
     if (typeof window !== "undefined") {
       window.open(shareUrl, "_blank");
