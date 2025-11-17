@@ -12,10 +12,10 @@ type ShareSectionProps = {
 
 const SITE_URL = "https://baseblox.vercel.app" as const;
 
-// Set this in your env: NEXT_PUBLIC_FARCASTER_MINIAPP_URL
+// ✅ Farcaster mini app URL (env can override if needed)
 const FARCASTER_MINIAPP_URL =
   process.env.NEXT_PUBLIC_FARCASTER_MINIAPP_URL ??
-  "https://warpcast.com/miniapps/YOUR_MINIAPP_SLUG_HERE";
+  "https://farcaster.xyz/miniapps/N_U7EfeREI4I/baseblox";
 
 export default function ShareSection({
   hasCube,
