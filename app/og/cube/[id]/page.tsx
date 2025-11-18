@@ -1,3 +1,4 @@
+// app/og/cube/[id]/page.tsx
 import type { Metadata } from "next";
 
 type Params = { id: string };
@@ -6,17 +7,26 @@ export const dynamic = "force-static";
 export const revalidate = 300;
 
 function baseUrl() {
-  const env = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL;
-  if (env) {
-    return `https://${env.replace(/\/$/, "")}`;
+  const raw =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_URL ||
+    process.env.VERCEL_URL;
+
+  if (!raw) {
+    return "https://baseblox.vercel.app";
   }
-  return "https://baseblox.vercel.app";
+
+  if (raw.startsWith("http://") || raw.startsWith("https://")) {
+    return raw.replace(/\/$/, "");
+  }
+
+  return `https://${raw.replace(/\/$/, "")}`;
 }
 
 export async function generateMetadata(
-  { params }: { params: Promise<Params> }
+  { params }: { params: Params }
 ): Promise<Metadata> {
-  const { id } = await params;
+  const { id } = params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
   const base = baseUrl();
 
@@ -27,7 +37,6 @@ export async function generateMetadata(
     ? `BaseBlox identity cube #${clean} on Base. Age, prestige, and primary token onchain.`
     : "BaseBlox identity cube on Base.";
 
-  // Use your existing share.PNG as the card image
   const image = `${base}/share.PNG`;
   const url = clean ? `${base}/og/cube/${clean}` : `${base}/og/cube`;
 
@@ -57,10 +66,8 @@ export async function generateMetadata(
   };
 }
 
-export default async function Page(
-  { params }: { params: Promise<Params> }
-) {
-  const { id } = await params;
+export default function Page({ params }: { params: Params }) {
+  const { id } = params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
 
   return (
