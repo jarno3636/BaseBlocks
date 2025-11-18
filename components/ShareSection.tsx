@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMiniApp } from "@farcaster/miniapp-sdk";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 type ShareSectionProps = {
   hasCube: boolean;
@@ -27,34 +27,30 @@ export default function ShareSection({
   prestigeLabelText,
   cubePath,
 }: ShareSectionProps) {
-  const { sdk, isMiniApp } = useMiniApp();
-
   // Cube-specific URL (falls back to root)
   const cubeUrl = cubePath ? `${SITE_URL}${cubePath}` : SITE_URL;
 
   // ---- Generic helper to share to Farcaster ----
   async function shareToFarcaster(text: string, embedUrl?: string) {
-    // Inside Farcaster mini app -> use SDK composeCast
-    if (isMiniApp && sdk) {
+    // Try mini app SDK first
+    try {
       await sdk.actions.composeCast({
         text,
-        // ✅ SDK expects string[] like ['https://...'], not [{ url: ... }]
+        // ✅ SDK expects string[] like ['https://...']
         embeds: embedUrl ? [embedUrl] : [],
       });
       return;
-    }
+    } catch {
+      // If we're not in a mini app / SDK fails, fall back to Warpcast compose URL
+      const composeUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
+        text,
+      )}${
+        embedUrl ? `&embeds[]=${encodeURIComponent(embedUrl)}` : ""
+      }`;
 
-    // 🌐 Browser fallback -> open Warpcast compose with embeds[]
-    const composeUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
-      text,
-    )}${
-      embedUrl
-        ? `&embeds[]=${encodeURIComponent(embedUrl)}`
-        : ""
-    }`;
-
-    if (typeof window !== "undefined") {
-      window.open(composeUrl, "_blank");
+      if (typeof window !== "undefined") {
+        window.open(composeUrl, "_blank");
+      }
     }
   }
 
@@ -124,12 +120,7 @@ export default function ShareSection({
             <p className="text-xs text-slate-200/85">
               Cast or tweet your BaseBlox stats as a flex.
             </p>
-            {isMiniApp && (
-              <p className="text-[10px] text-emerald-400 mt-1">
-                You&apos;re in the Farcaster mini app — sharing opens a compose
-                screen in-app.
-              </p>
-            )}
+            {/* We’re not trying to detect mini app here anymore; SDK handles it or we fallback */}
           </div>
         </div>
 
