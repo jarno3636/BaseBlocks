@@ -544,7 +544,7 @@ export default function Home() {
               alt="BaseBlox hero"
               width={360}
               height={360}
-              className="w-full max-w-xs sm:max-w-sm rounded-2xl shadow-xl shadow-sky-900/50 motion-safe:animate-pulse hover:-translate-y-1 transition-transform duration-700"
+              className="hero-float w-full max-w-xs sm:max-w-sm rounded-2xl shadow-xl shadow-sky-900/50"
             />
           </div>
         </div>
