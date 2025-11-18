@@ -47,17 +47,27 @@ export const metadata: Metadata = (() => {
   };
 })();
 
-type MiniAppPageProps = {
-  searchParams: { [key: string]: string | string[] | undefined };
-};
+// Let Next 15's PageProps do its thing by loosening the type here
+export default function MiniAppPage({
+  searchParams,
+}: {
+  searchParams: any;
+}) {
+  // Resolve searchParams into a plain object (handles both plain object & Promise-ish cases)
+  const resolved =
+    searchParams && typeof searchParams === "object"
+      ? searchParams
+      : {};
 
-export default function MiniAppPage({ searchParams }: MiniAppPageProps) {
-  // Preserve all query params (fc_fid, fc_os, etc.) when redirecting to "/"
   const params = new URLSearchParams();
 
-  for (const [key, value] of Object.entries(searchParams)) {
+  for (const [key, value] of Object.entries(resolved)) {
     if (typeof value === "string") {
       params.append(key, value);
+    } else if (Array.isArray(value)) {
+      for (const v of value) {
+        if (typeof v === "string") params.append(key, v);
+      }
     }
   }
 
