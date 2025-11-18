@@ -1062,6 +1062,7 @@ export default function Home() {
           ageDays={activeAgeDays}
           prestigeLabelText={activePrestigeLabelText}
           primarySymbol={activePrimarySymbol}
+          cubeImageUrl={activeCubeImage}   // 👈 add this line
         />
 
         {/* Freshly forged cubes – latest centered, then 2x2 grid */}
