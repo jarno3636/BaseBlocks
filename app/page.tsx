@@ -695,12 +695,19 @@ export default function Home() {
                           : "Connect a Base wallet to begin"}
                       </p>
                       {effectiveCubeId != null && (
-                        <p className="text-xs text-slate-300/85">
-                          Minted{" "}
-                          <span className="font-medium text-slate-50">
-                            {activeMintedAtDate}
-                          </span>
-                        </p>
+                        <>
+                          <p className="text-xs text-slate-300/85">
+                            Minted{" "}
+                            <span className="font-medium text-slate-50">
+                              {activeMintedAtDate}
+                            </span>
+                          </p>
+                          {/* NEW: identity label */}
+                          <p className="text-[10px] text-sky-200/90 mt-0.5">
+                            Using cube #{effectiveCubeId} as your identity on this
+                            page.
+                          </p>
+                        </>
                       )}
                     </div>
 
