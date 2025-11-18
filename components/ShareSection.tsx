@@ -34,30 +34,11 @@ const MINI_APP_LINK =
   process.env.NEXT_PUBLIC_FC_MINIAPP_URL ||
   "";
 
-// Safer copy helper (works in SSR + browser)
+// Copy helper
 function copyToClipboard(text: string) {
   if (!text) return;
-
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(text).catch(() => {});
-    return;
-  }
-
-  if (typeof document !== "undefined") {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.left = "-9999px";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    try {
-      document.execCommand("copy");
-    } catch {
-      // ignore
-    } finally {
-      document.body.removeChild(textarea);
-    }
   }
 }
 
@@ -71,36 +52,34 @@ export default function ShareSection({
   const origin = resolveOrigin();
 
   // -------------------------------------------------------
-  //  1) CORRECT OG URL (no params; OG pipeline pulls data)
+  //  URLs
+  //  - cubeOgUrl: HTML page with OG tags (used for X cards)
+  //  - cubeImageUrl: direct image for Farcaster embeds
   // -------------------------------------------------------
   const cubeOgUrl = hasCube ? `${origin}/og/cube/${cubeId}` : origin;
+  const cubeImageUrl = hasCube
+    ? `${origin}/api/baseblox/card/${cubeId}`
+    : `${origin}/share.PNG`;
 
-  // ----------- Share text ------------
-  let details: string | null = null;
-  if (hasCube) {
-    const parts: string[] = [];
-    parts.push(`${ageDays} days old`);
-    parts.push(prestigeLabelText);
-    if (primarySymbol) {
-      parts.push(`primary token: ${primarySymbol}`);
-    }
-    details = parts.join(", ");
-  }
-
+  // Base text about the cube
   const cubeBaseText = hasCube
-    ? `My BaseBlox cube #${cubeId} on Base – ${details}.`
+    ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}.`
     : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
 
-  const cubeFcText = `${cubeBaseText} #BaseBlox #Onchain`;
+  // You can bake your mini-app or site link directly into the text
+  const miniAppHref = MINI_APP_LINK || origin;
+  const cubeFcText = `${cubeBaseText} Mint / manage here: ${miniAppHref} #BaseBlox #Onchain`;
   const cubeTweetText = `${cubeBaseText} #BaseBlox #Base`;
 
+  // X should point at the OG page, not the raw image
   const cubeTweetUrl = buildTweetUrl({
     text: cubeTweetText,
     url: cubeOgUrl,
   });
 
   // ------------------ App share ------------------
-  const appShareUrl = MINI_APP_LINK || origin;
+  const appShareUrl = miniAppHref;
+  const appImageUrl = `${origin}/share.PNG`;
 
   const appFcText =
     "Mint a BaseBlox on Base and let your cube track age, prestige & your primary token.";
@@ -127,7 +106,8 @@ export default function ShareSection({
 
         <div className="flex flex-wrap gap-2">
           {hasCube ? (
-            <ShareToFarcaster text={cubeFcText} url={cubeOgUrl} />
+            // 👇 Farcaster gets the *image* URL directly as the embed
+            <ShareToFarcaster text={cubeFcText} url={cubeImageUrl} />
           ) : (
             <button
               type="button"
@@ -139,6 +119,7 @@ export default function ShareSection({
             </button>
           )}
 
+          {/* X uses the OG page, not the raw image */}
           <a
             href={disabledCubeShare ? "#" : cubeTweetUrl}
             target={disabledCubeShare ? undefined : "_blank"}
@@ -186,7 +167,9 @@ export default function ShareSection({
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <ShareToFarcaster text={appFcText} url={appShareUrl} />
+          {/* Farcaster: share hero card as an image embed */}
+          <ShareToFarcaster text={appFcText} url={appImageUrl} />
+          {/* X: share app URL with OG using share.PNG */}
           <a
             href={appTweetUrl}
             target="_blank"
