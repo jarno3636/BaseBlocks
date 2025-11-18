@@ -57,9 +57,11 @@ export default function ShareToFarcaster({
     const message = text || "";
 
     try {
-      // ✅ Proper mini-app share: open cast composer with embeds
-      if (sdk?.actions?.openCastComposer) {
-        await sdk.actions.openCastComposer({
+      // Cast to any so TS doesn't complain about openCastComposer
+      const fc = sdk as any;
+
+      if (fc?.actions?.openCastComposer) {
+        await fc.actions.openCastComposer({
           text: message,
           embeds,
         });
