@@ -24,9 +24,10 @@ function baseUrl() {
 }
 
 export async function generateMetadata(
-  { params }: { params: Params }
+  { params }: { params: Promise<Params> }
 ): Promise<Metadata> {
-  const { id } = params;
+  // Next 15 passes params as a Promise in the type defs
+  const { id } = await params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
   const base = baseUrl();
 
@@ -37,7 +38,10 @@ export async function generateMetadata(
     ? `BaseBlox identity cube #${clean} on Base. Age, prestige, and primary token onchain.`
     : "BaseBlox identity cube on Base.";
 
+  // This is the image that X / Warpcast should use
   const image = `${base}/share.PNG`;
+
+  // Canonical URL for this OG page
   const url = clean ? `${base}/og/cube/${clean}` : `${base}/og/cube`;
 
   return {
@@ -66,8 +70,11 @@ export async function generateMetadata(
   };
 }
 
-export default function Page({ params }: { params: Params }) {
-  const { id } = params;
+export default async function Page(
+  { params }: { params: Promise<Params> }
+) {
+  // Same Promise<Params> pattern here to satisfy Next's PageProps
+  const { id } = await params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
 
   return (
@@ -81,7 +88,9 @@ export default function Page({ params }: { params: Params }) {
     >
       <h1>BaseBlox cube #{clean || "—"}</h1>
       <p>This page exists to provide rich previews on Farcaster/X.</p>
-      <p>Preview image: <code>/share.PNG</code></p>
+      <p>
+        Preview image: <code>/share.PNG</code>
+      </p>
     </main>
   );
 }
