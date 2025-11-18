@@ -1,124 +1,302 @@
 // app/api/baseblox/card/[id]/route.ts
-import { NextResponse } from "next/server";
-import sharp from "sharp";
+import { ImageResponse } from "next/og";
+import { BASEBLOCKS_ADDRESS, BASEBLOCKS_ABI } from "@/lib/baseblocksAbi";
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
-import { BASEBLOCKS_ABI, BASEBLOCKS_ADDRESS } from "@/lib/baseblocksAbi";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const revalidate = 300;
+const client = createPublicClient({
+  chain: base,
+  transport: http(
+    process.env.NEXT_PUBLIC_BASE_RPC_URL ||
+      "https://mainnet.base.org"
+  ),
+});
 
-function decodeTokenJSON(uri: string): any | null {
-  if (!uri?.startsWith?.("data:application/json;base64,")) return null;
-  try {
-    const b64 = uri.split(",")[1] || "";
-    const jsonStr = Buffer.from(b64, "base64").toString("utf8");
-    return JSON.parse(jsonStr);
-  } catch {
-    return null;
-  }
+export const runtime = "nodejs"; // easier for Buffer / viem
+
+function prestigeLabel(prestige: number): string {
+  if (prestige === 0) return "Unprestiged";
+  if (prestige === 1) return "Prestige I";
+  if (prestige === 2) return "Prestige II";
+  if (prestige === 3) return "Prestige III";
+  if (prestige === 4) return "Prestige IV";
+  if (prestige === 5) return "Prestige V";
+  if (prestige === 6) return "Prestige VI";
+  if (prestige === 7) return "Prestige VII";
+  if (prestige === 8) return "Prestige VIII";
+  if (prestige === 9) return "Prestige IX";
+  return `Prestige ${prestige}`;
 }
 
-export async function GET(_req: Request, ctx: any) {
-  const idStr = String(ctx?.params?.id ?? "");
-  const idNum = Number(idStr);
-  if (!Number.isInteger(idNum) || idNum <= 0) {
-    return NextResponse.json({ error: "bad id" }, { status: 400 });
+function decodeBytes8Symbol(sym?: `0x${string}` | string): string {
+  if (!sym) return "";
+  if (!sym.toString().startsWith("0x")) return sym.toString();
+  const hex = sym.toString().slice(2);
+  let out = "";
+  for (let i = 0; i < hex.length; i += 2) {
+    const byte = parseInt(hex.slice(i, i + 2), 16);
+    if (byte === 0) break;
+    out += String.fromCharCode(byte);
+  }
+  return out;
+}
+
+function extractImageFromTokenUri(uri?: string | null): string | undefined {
+  if (!uri) return undefined;
+
+  if (uri.startsWith("data:application/json")) {
+    try {
+      const [, base64] = uri.split(",");
+      if (!base64) return undefined;
+      const jsonStr = Buffer.from(base64, "base64").toString("utf-8");
+      const meta = JSON.parse(jsonStr);
+      if (meta && typeof meta.image === "string") {
+        return meta.image as string;
+      }
+    } catch {
+      return undefined;
+    }
   }
 
-  const rpcUrl =
-    process.env.NEXT_PUBLIC_BASE_RPC ||
-    process.env.RPC_URL ||
-    "https://mainnet.base.org";
+  // If it's already an image / ipfs / https URL, just return as-is
+  return uri;
+}
 
-  const client = createPublicClient({ chain: base, transport: http(rpcUrl) });
+export async function GET(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  const clean = String(params.id ?? "").replace(/[^\d]/g, "");
+  if (!clean) {
+    return new Response("Missing id", { status: 400 });
+  }
 
-  try {
-    const tokenURI = await client.readContract({
+  const tokenId = BigInt(clean);
+
+  // Fetch cube data + age + tokenURI in parallel
+  const [cubeData, ageSeconds, tokenUri] = await Promise.all([
+    client.readContract({
+      address: BASEBLOCKS_ADDRESS,
+      abi: BASEBLOCKS_ABI,
+      functionName: "getCubeData",
+      args: [tokenId],
+    }) as Promise<any>,
+    client.readContract({
+      address: BASEBLOCKS_ADDRESS,
+      abi: BASEBLOCKS_ABI,
+      functionName: "getAge",
+      args: [tokenId],
+    }) as Promise<bigint>,
+    client.readContract({
       address: BASEBLOCKS_ADDRESS,
       abi: BASEBLOCKS_ABI,
       functionName: "tokenURI",
-      args: [BigInt(idNum)],
-    });
+      args: [tokenId],
+    }) as Promise<string>,
+  ]);
 
-    if (typeof tokenURI !== "string") throw new Error("no tokenURI");
-    const meta = decodeTokenJSON(tokenURI);
-    const imageField: string | undefined = meta?.image;
-    if (!imageField) {
-      return NextResponse.json({ error: "no image" }, { status: 404 });
+  const prestigeLevel = cubeData ? Number(cubeData.prestigeLevel) : 0;
+  const prestigeText = prestigeLabel(prestigeLevel);
+
+  const ageDays = Math.floor(Number(ageSeconds ?? 0n) / 86400);
+  const primarySymbol = decodeBytes8Symbol(
+    cubeData?.primarySymbol as `0x${string}` | undefined,
+  );
+
+  const imageUrl = extractImageFromTokenUri(tokenUri);
+
+  // Create simple prestige badge as stars (max 5 shown, with "+N" if more)
+  const maxStars = 5;
+  const starsToShow = Math.min(prestigeLevel, maxStars);
+  const extraStars = Math.max(prestigeLevel - maxStars, 0);
+
+  const starRow = Array.from({ length: starsToShow }, (_, i) => i);
+
+  const width = 1200;
+  const height = 630;
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background:
+            "radial-gradient(circle at 0 0, #1d4ed8 0, #020617 50%), radial-gradient(circle at 100% 100%, #4f46e5 0, #020617 50%)",
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif",
+        }}
+      >
+        {/* Left: actual cube art */}
+        <div
+          style={{
+            width: "520px",
+            height: "520px",
+            borderRadius: "48px",
+            background:
+              "linear-gradient(135deg, #1e293b 0%, #0b1120 40%, #1e293b 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 40px 80px rgba(0,0,0,0.65)",
+            marginRight: "48px",
+            overflow: "hidden",
+          }}
+        >
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={`BaseBlox cube #${clean}`}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "340px",
+                height: "340px",
+                borderRadius: "64px",
+                background: "linear-gradient(145deg, #8b5cf6, #6366f1)",
+                boxShadow:
+                  "0 0 80px rgba(129, 140, 248, 0.75), 0 40px 60px rgba(15,23,42,0.9)",
+              }}
+            />
+          )}
+        </div>
+
+        {/* Right: stats */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            color: "white",
+            maxWidth: "520px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 18,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              opacity: 0.7,
+            }}
+          >
+            BaseBlox cube
+          </div>
+          <div style={{ fontSize: 56, fontWeight: 700, marginTop: 8 }}>
+            #{clean}
+          </div>
+
+          {!!primarySymbol && (
+            <div
+              style={{
+                marginTop: 20,
+                fontSize: 20,
+                padding: "6px 14px",
+                borderRadius: 999,
+                border: "1px solid rgba(148,163,184,0.6)",
+                background: "rgba(15,23,42,0.8)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "999px",
+                  background:
+                    "radial-gradient(circle at 30% 30%, #4ade80, #16a34a)",
+                }}
+              />
+              <span>Primary token: {primarySymbol}</span>
+            </div>
+          )}
+
+          <div
+            style={{
+              marginTop: 24,
+              display: "flex",
+              gap: 16,
+              fontSize: 22,
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 18px",
+                borderRadius: 20,
+                background: "rgba(15,23,42,0.9)",
+                border: "1px solid rgba(148,163,184,0.6)",
+                minWidth: 170,
+              }}
+            >
+              <div style={{ fontSize: 13, opacity: 0.7 }}>Age</div>
+              <div style={{ fontSize: 28, fontWeight: 600 }}>
+                {ageDays} days
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: "14px 18px",
+                borderRadius: 20,
+                background: "rgba(15,23,42,0.9)",
+                border: "1px solid rgba(148,163,184,0.6)",
+                minWidth: 220,
+              }}
+            >
+              <div style={{ fontSize: 13, opacity: 0.7 }}>Prestige</div>
+              <div style={{ fontSize: 24, fontWeight: 600 }}>
+                {prestigeText}
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 18,
+                }}
+              >
+                {starRow.map((i) => (
+                  <span key={i}>⭐️</span>
+                ))}
+                {extraStars > 0 && (
+                  <span
+                    style={{
+                      fontSize: 14,
+                      opacity: 0.8,
+                    }}
+                  >
+                    +{extraStars}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 28,
+              fontSize: 18,
+              opacity: 0.75,
+            }}
+          >
+            Mint an evolving onchain identity cube on Base.
+          </div>
+        </div>
+      </div>
+    ),
+    {
+      width,
+      height,
     }
-
-    const TW_W = 1200;
-    const TW_H = 630;
-    const bg = { r: 2, g: 6, b: 23, alpha: 1 as const };
-
-    async function letterboxToCard(buf: Buffer) {
-      const fitted = await sharp(buf)
-        .resize(TW_W, TW_H, {
-          fit: "inside",
-          background: bg,
-        })
-        .toBuffer();
-
-      return sharp({
-        create: {
-          width: TW_W,
-          height: TW_H,
-          channels: 4,
-          background: bg,
-        },
-      })
-        .composite([{ input: fitted, gravity: "center" }])
-        .jpeg({ quality: 92 })
-        .toBuffer();
-    }
-
-    // SVG → PNG → card
-    if (imageField.startsWith("data:image/svg+xml")) {
-      const base64 = imageField.split(",")[1] || "";
-      const svgRaw = Buffer.from(base64, "base64");
-      const squarePng = await sharp(svgRaw)
-        .resize(1024, 1024, {
-          fit: "contain",
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
-        .png()
-        .toBuffer();
-
-      const finalCard = await letterboxToCard(squarePng);
-      return new NextResponse(finalCard, {
-        headers: {
-          "content-type": "image/jpeg",
-          "cache-control":
-            "public, max-age=300, s-maxage=300, stale-while-revalidate=86400",
-        },
-      });
-    }
-
-    // HTTP image → card
-    if (/^https?:\/\//i.test(imageField)) {
-      const r = await fetch(imageField);
-      if (!r.ok) throw new Error("fetch image failed");
-      const buf = Buffer.from(await r.arrayBuffer());
-      const finalCard = await letterboxToCard(buf);
-      return new NextResponse(finalCard, {
-        headers: {
-          "content-type": "image/jpeg",
-          "cache-control":
-            "public, max-age=300, s-maxage=300, stale-while-revalidate=86400",
-        },
-      });
-    }
-
-    return NextResponse.json(
-      { error: "unsupported image format" },
-      { status: 415 },
-    );
-  } catch (e: any) {
-    return NextResponse.json(
-      { error: e?.message || "failed" },
-      { status: 500 },
-    );
-  }
+  );
 }
