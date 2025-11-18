@@ -12,21 +12,17 @@ function baseUrl() {
     process.env.NEXT_PUBLIC_URL ||
     process.env.VERCEL_URL;
 
-  if (!raw) {
-    return "https://baseblox.vercel.app";
-  }
+  if (!raw) return "https://baseblox.vercel.app";
 
   if (raw.startsWith("http://") || raw.startsWith("https://")) {
     return raw.replace(/\/$/, "");
   }
-
   return `https://${raw.replace(/\/$/, "")}`;
 }
 
 export async function generateMetadata(
   { params }: { params: Promise<Params> }
 ): Promise<Metadata> {
-  // Next 15 passes params as a Promise in the type defs
   const { id } = await params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
   const base = baseUrl();
@@ -38,10 +34,14 @@ export async function generateMetadata(
     ? `BaseBlox identity cube #${clean} on Base. Age, prestige, and primary token onchain.`
     : "BaseBlox identity cube on Base.";
 
-  // This is the image that X / Warpcast should use
-  const image = `${base}/share.PNG`;
+  // Per-cube card for X / Warpcast, fallback to share.PNG if no id
+  const imgCard = clean
+    ? `${base}/api/baseblox/card/${clean}`
+    : `${base}/share.PNG`;
 
-  // Canonical URL for this OG page
+  // Tiny cache-buster to help X refresh
+  const cardWithBuster = `${imgCard}?v=${Date.now().toString().slice(-6)}`;
+
   const url = clean ? `${base}/og/cube/${clean}` : `${base}/og/cube`;
 
   return {
@@ -51,21 +51,14 @@ export async function generateMetadata(
       title,
       description: desc,
       url,
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: "BaseBlox identity cube on Base",
-        },
-      ],
+      images: [{ url: cardWithBuster, width: 1200, height: 630 }],
       type: "article",
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: desc,
-      images: [image],
+      images: [cardWithBuster],
     },
   };
 }
@@ -73,7 +66,6 @@ export async function generateMetadata(
 export default async function Page(
   { params }: { params: Promise<Params> }
 ) {
-  // Same Promise<Params> pattern here to satisfy Next's PageProps
   const { id } = await params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
 
@@ -89,7 +81,12 @@ export default async function Page(
       <h1>BaseBlox cube #{clean || "—"}</h1>
       <p>This page exists to provide rich previews on Farcaster/X.</p>
       <p>
-        Preview image: <code>/share.PNG</code>
+        Preview image:{" "}
+        <code>
+          {clean
+            ? `/api/baseblox/card/${clean}`
+            : "/share.PNG"}
+        </code>
       </p>
     </main>
   );
