@@ -19,9 +19,7 @@ function getOrigin(): string {
   const env =
     process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "";
   if (env) {
-    const withProto = /^https?:\/\//i.test(env)
-      ? env
-      : `https://${env}`;
+    const withProto = /^https?:\/\//i.test(env) ? env : `https://${env}`;
     return withProto.replace(/\/$/, "");
   }
 
@@ -44,11 +42,18 @@ export default function ShareToFarcaster({
   url,
   className = "",
 }: Props) {
+  // If you want: treat “no url + no default” as disabled
+  // Right now we always fall back to /share.PNG, so this is always false.
+  // Flip this logic if you ever want a real disabled state.
+  const isDisabled = false;
+
   const onClick = async () => {
+    if (isDisabled) return;
+
     // Default to the global share image if nothing else is provided
     const embedUrl = toAbs(url || "/share.PNG");
 
-    // 1) Try the official Mini App SDK composeCast (per docs)
+    // 1) Mini App SDK composeCast (inside mini-app)
     try {
       await sdk.actions.composeCast({
         text,
@@ -75,11 +80,12 @@ export default function ShareToFarcaster({
     <button
       type="button"
       onClick={onClick}
+      disabled={isDisabled}
       className={[
         "rounded-xl px-4 py-2 text-sm font-semibold",
-        "bg-[#8a66ff] hover:bg-[#7b58ef]",
-        "border border-white/20",
-        "shadow-[0_10px_24px_rgba(0,0,0,.35)]",
+        isDisabled
+          ? "bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
+          : "bg-[#8a66ff] hover:bg-[#7b58ef] border border-white/20 shadow-[0_10px_24px_rgba(0,0,0,.35)]",
         "transition-colors",
         className,
       ].join(" ")}
