@@ -10,6 +10,7 @@ type ShareSectionProps = {
   ageDays: number;
   prestigeLabelText: string;
   primarySymbol?: string;
+  cubeImageUrl?: string;           // 👈 NEW
 };
 
 function resolveOrigin(): string {
@@ -34,7 +35,6 @@ const MINI_APP_LINK =
   process.env.NEXT_PUBLIC_FC_MINIAPP_URL ||
   "";
 
-// Copy helper
 function copyToClipboard(text: string) {
   if (!text) return;
   navigator?.clipboard?.writeText(text).catch(() => {});
@@ -46,46 +46,47 @@ export default function ShareSection({
   ageDays,
   prestigeLabelText,
   primarySymbol,
+  cubeImageUrl,
 }: ShareSectionProps) {
   const origin = resolveOrigin();
 
-  // ✅ NFT image only — this URL should return a PNG/JPEG, not an HTML page.
-  const cubeImageUrl = hasCube
-    ? `${origin}/api/baseblox/card/${cubeId}`
-    : `${origin}/share.PNG`;
+  // ✅ NFT image: should be a direct https image URL (like your BaseBots robot art)
+  const nftImageUrl =
+    hasCube && cubeImageUrl && cubeImageUrl.startsWith("http")
+      ? cubeImageUrl
+      : undefined;
 
-  // ✅ App / mini-app link – this is what you want the "linked" image to point to.
+  // ✅ Mini-app URL
   const appShareUrl = MINI_APP_LINK || origin;
 
-  // ----------- Share text ------------
+  // ✅ Static share card for the app (like your BaseBots “MINT YOUR COURIER” image)
+  const appShareImageUrl = `${origin}/share.PNG`;
+
+  // --------- Text ----------
   const cubeBaseText = hasCube
     ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}.`
     : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
 
-  // Farcaster → clean text + mini-app URL in text
-  const cubeFcText = `${cubeBaseText} Mint/manage: ${appShareUrl} #BaseBlox #Onchain`;
-
-  // Twitter → attach image link
+  const cubeFcText = `${cubeBaseText} #BaseBlox #Onchain`;
   const cubeTweetText = `${cubeBaseText} #BaseBlox #Base`;
+
   const cubeTweetUrl = buildTweetUrl({
     text: cubeTweetText,
-    url: cubeImageUrl,
+    url: nftImageUrl || appShareUrl,
   });
 
-  // ------------------ App share ------------------
   const appFcText =
-    "Mint a BaseBlox on Base and let your cube track age, prestige & your primary token. " +
-    appShareUrl;
+    "Mint a BaseBlox on Base and let your cube track age, prestige & your primary token. #BaseBlox #Onchain";
 
   const appTweetText =
     "Mint a BaseBlox identity cube on Base — your evolving digital identity. #BaseBlox #Base";
 
   const appTweetUrl = buildTweetUrl({
     text: appTweetText,
-    url: `${origin}/share.PNG`,
+    url: appShareUrl,
   });
 
-  const disabledCubeShare = !hasCube;
+  const disabledCubeShare = !hasCube || !nftImageUrl;
 
   return (
     <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-4">
@@ -95,19 +96,11 @@ export default function ShareSection({
           Share your cube
         </p>
         <p className="text-[11px] text-slate-200/85 mb-2">
-          Post a dynamic card preview of your cube on Farcaster or X.
+          One cast with your cube image + your mini-app link.
         </p>
 
         <div className="flex flex-wrap gap-2">
-          {hasCube ? (
-            <ShareToFarcaster
-              text={cubeFcText}
-              // 👉 First embed: NFT card image (no app link, just the PNG URL)
-              url={cubeImageUrl}
-              // 👉 Second embed: mini-app / app URL (this one is the "linked" image)
-              extraUrl={appShareUrl}
-            />
-          ) : (
+          {disabledCubeShare ? (
             <button
               type="button"
               disabled
@@ -116,6 +109,12 @@ export default function ShareSection({
             >
               Share cube on Farcaster
             </button>
+          ) : (
+            <ShareToFarcaster
+              text={cubeFcText}
+              url={nftImageUrl}     // 🟩 IMAGE-ONLY CARD (like BaseBots art)
+              secondaryUrl={appShareUrl} // 🟦 MINI-APP CARD
+            />
           )}
 
           <a
@@ -133,15 +132,15 @@ export default function ShareSection({
           </a>
         </div>
 
-        {hasCube && (
+        {hasCube && nftImageUrl && (
           <button
             type="button"
-            onClick={() => copyToClipboard(cubeImageUrl)}
+            onClick={() => copyToClipboard(nftImageUrl)}
             className="mt-2 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
               bg-slate-900/70 border border-slate-600 text-slate-200
               hover:bg-slate-800/90 transition"
           >
-            Copy cube image link
+            Copy cube image URL
           </button>
         )}
 
@@ -161,12 +160,15 @@ export default function ShareSection({
           Share BaseBlox app
         </p>
         <p className="text-[11px] text-slate-200/85 mb-2">
-          Invite friends to forge their own evolving identity cubes.
+          One share image that opens your mini-app.
         </p>
 
         <div className="flex flex-wrap gap-2">
-          {/* Here we just share the app link itself */}
-          <ShareToFarcaster text={appFcText} url={appShareUrl} />
+          <ShareToFarcaster
+            text={appFcText}
+            url={appShareImageUrl} // image card
+            secondaryUrl={appShareUrl} // opens mini-app
+          />
 
           <a
             href={appTweetUrl}
@@ -187,7 +189,7 @@ export default function ShareSection({
             bg-slate-900/70 border border-slate-600 text-slate-200
             hover:bg-slate-800/90 transition"
         >
-          Copy app link
+          Copy mini-app link
         </button>
       </div>
     </div>
