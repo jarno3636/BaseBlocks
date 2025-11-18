@@ -5,8 +5,10 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
   text?: string;
-  /** Image URL to embed in the cast. */
+  /** Primary URL to embed (image or page). */
   url?: string;
+  /** Optional second URL to embed (e.g. mini-app link). */
+  extraUrl?: string;
   className?: string;
 };
 
@@ -38,57 +40,31 @@ function toAbs(u?: string): string {
 }
 
 export default function ShareToFarcaster({
-  text = "",
+  text,
   url,
-  className = "",
+  extraUrl,
+  className,
 }: Props) {
-  // We always have at least a fallback image.
-  const isDisabled = false;
+  const handleClick = () => {
+    const embeds: { url: string }[] = [];
 
-  const onClick = async () => {
-    if (isDisabled) return;
+    if (url) embeds.push({ url: toAbs(url) });
+    if (extraUrl) embeds.push({ url: toAbs(extraUrl) });
 
-    // Only ever embed an *image* URL (no app/OG pages).
-    const embedUrl = toAbs(url || "/share.PNG");
-
-    // For SDK: [] | [string]
-    const embedsForSdk: [] | [string] = embedUrl ? [embedUrl] : [];
-
-    // 1) Mini App SDK composeCast
-    try {
-      await sdk.actions.composeCast({
-        text,
-        embeds: embedsForSdk,
-      });
-      return;
-    } catch {
-      // fall through to web fallback
-    }
-
-    // 2) Web fallback – Warpcast composer
-    try {
-      const u = new URL("https://warpcast.com/~/compose");
-      if (text) u.searchParams.set("text", text);
-      if (embedUrl) u.searchParams.append("embeds[]", embedUrl);
-      window.open(u.toString(), "_blank", "noopener,noreferrer");
-    } catch {
-      window.location.href = "https://warpcast.com/~/compose";
-    }
+    sdk.actions.openShareSheet({
+      text: text ?? "",
+      embeds,
+    });
   };
 
   return (
     <button
       type="button"
-      onClick={onClick}
-      disabled={isDisabled}
-      className={[
-        "rounded-xl px-4 py-2 text-sm font-semibold",
-        isDisabled
-          ? "bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
-          : "bg-[#8a66ff] hover:bg-[#7b58ef] border border-white/20 shadow-[0_10px_24px_rgba(0,0,0,.35)]",
-        "transition-colors",
-        className,
-      ].join(" ")}
+      onClick={handleClick}
+      className={
+        className ??
+        "rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold bg-slate-900/80 border border-white/20 text-slate-50 hover:bg-slate-800/90 transition"
+      }
     >
       Share on Farcaster
     </button>
