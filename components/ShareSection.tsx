@@ -2,7 +2,8 @@
 "use client";
 
 import Image from "next/image";
-import { sdk } from "@farcaster/miniapp-sdk";
+import ShareToFarcaster from "@/components/ShareToFarcaster";
+import { buildTweetUrl, getRandomShareText, toAbs } from "@/lib/share";
 
 type ShareSectionProps = {
   hasCube: boolean;
@@ -13,12 +14,18 @@ type ShareSectionProps = {
   cubePath?: string;
 };
 
-const SITE_URL = "https://baseblox.vercel.app" as const;
-
-// ✅ Farcaster mini app URL (configurable)
-const FARCASTER_MINIAPP_URL =
+// Prefer explicit env miniapp link if set, else fall back to site
+const MINIAPP_URL: string =
+  process.env.NEXT_PUBLIC_FC_MINIAPP_LINK ??
   process.env.NEXT_PUBLIC_FARCASTER_MINIAPP_URL ??
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.NEXT_PUBLIC_URL ??
   "https://farcaster.xyz/miniapps/N_U7EfeREI4I/baseblox";
+
+const SITE_URL: string =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.NEXT_PUBLIC_URL ??
+  "https://baseblox.vercel.app";
 
 export default function ShareSection({
   hasCube,
@@ -27,86 +34,47 @@ export default function ShareSection({
   prestigeLabelText,
   cubePath,
 }: ShareSectionProps) {
-  // Cube-specific URL (falls back to root)
-  const cubeUrl = cubePath ? `${SITE_URL}${cubePath}` : SITE_URL;
+  // Cube-specific page (relative) -> absolute for embeds
+  const cubeUrl = cubePath ? toAbs(cubePath) : toAbs("/");
 
-  // ---- Generic helper to share to Farcaster ----
-  async function shareToFarcaster(text: string, embedUrl?: string) {
-    // Try mini app SDK first
-    try {
-      await sdk.actions.composeCast({
-        text,
-        // ✅ SDK expects string[] like ['https://...']
-        embeds: embedUrl ? [embedUrl] : [],
-      });
-      return;
-    } catch {
-      // If we're not in a mini app / SDK fails, fall back to Warpcast compose URL
-      const composeUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
-        text,
-      )}${
-        embedUrl ? `&embeds[]=${encodeURIComponent(embedUrl)}` : ""
-      }`;
+  // Project-level embed image: share.PNG OG hero
+  const projectEmbedUrl = toAbs("/share.PNG");
 
-      if (typeof window !== "undefined") {
-        window.open(composeUrl, "_blank");
-      }
-    }
-  }
-
-  // ---------- Share helpers (cube-specific) ----------
-
-  async function handleShareFarcasterCube() {
-    if (!hasCube) return;
-
-    const textLines = [
-      `Checking in with my BaseBlox cube #${cubeId} — ${ageDays} days old, ${prestigeLabelText}.`,
-      "",
-      `Mini app: ${FARCASTER_MINIAPP_URL}`,
-    ];
-
-    const text = textLines.join("\n");
-    await shareToFarcaster(text, cubeUrl);
-  }
+  // ---------- Helpers ----------
 
   function handleShareXCube() {
     if (!hasCube) return;
 
-    const text = `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabelText}.`;
-    const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
+    const text =
+      getRandomShareText("twitter") +
+      `\n\nCube #${cubeId} — ${ageDays} days old, ${prestigeLabelText}.`;
+
+    const tweetUrl = buildTweetUrl({
       text,
-    )}&url=${encodeURIComponent(cubeUrl)}`;
+      url: cubeUrl,
+    });
 
     if (typeof window !== "undefined") {
-      window.open(shareUrl, "_blank");
+      window.open(tweetUrl, "_blank", "noopener,noreferrer");
     }
-  }
-
-  // ---------- Project-level share (using share.PNG OG) ----------
-
-  async function handleShareProjectFarcaster() {
-    const textLines = [
-      "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.",
-      "",
-      `Mini app: ${FARCASTER_MINIAPP_URL}`,
-    ];
-    const text = textLines.join("\n");
-
-    await shareToFarcaster(text, SITE_URL);
   }
 
   function handleShareProjectX() {
     const text =
-      "Mint your BaseBlox identity cube on Base and let your onchain age & prestige show.";
+      getRandomShareText("twitter") +
+      "\n\nMint your BaseBlox identity cube on Base — one cube per wallet.";
 
-    const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
+    const tweetUrl = buildTweetUrl({
       text,
-    )}&url=${encodeURIComponent(SITE_URL)}`;
+      url: SITE_URL,
+    });
 
     if (typeof window !== "undefined") {
-      window.open(shareUrl, "_blank");
+      window.open(tweetUrl, "_blank", "noopener,noreferrer");
     }
   }
+
+  // ---------- Render ----------
 
   return (
     <>
@@ -120,23 +88,23 @@ export default function ShareSection({
             <p className="text-xs text-slate-200/85">
               Cast or tweet your BaseBlox stats as a flex.
             </p>
-            {/* We’re not trying to detect mini app here anymore; SDK handles it or we fallback */}
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={!hasCube}
-            onClick={handleShareFarcasterCube}
-            className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
+          <ShareToFarcaster
+            className={hasCube ? "" : "opacity-50 cursor-not-allowed"}
+            text={
               hasCube
-                ? "bg-violet-500/20 border-violet-400/60 text-violet-50 hover:bg-violet-500/30"
-                : "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
-            }`}
-          >
-            <span>Share on Farcaster</span>
-          </button>
+                ? [
+                    `Checking in with my BaseBlox cube #${cubeId} — ${ageDays} days old, ${prestigeLabelText}.`,
+                    "",
+                    `Mini app: ${MINIAPP_URL}`,
+                  ].join("\n")
+                : ""
+            }
+            url={hasCube ? cubeUrl : SITE_URL}
+          />
 
           <button
             type="button"
@@ -173,13 +141,17 @@ export default function ShareSection({
             </p>
 
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={handleShareProjectFarcaster}
-                className="text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 bg-violet-500/15 border-violet-400/60 text-violet-50 hover:bg-violet-500/25"
-              >
-                <span>Cast about BaseBlox</span>
-              </button>
+              <ShareToFarcaster
+                className="text-xs px-3 py-1.5 rounded-full"
+                text={[
+                  "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.",
+                  "",
+                  `Mini app: ${MINIAPP_URL}`,
+                ].join("\n")}
+                // Here we explicitly embed the share image so Warpcast gets a nice card
+                url={projectEmbedUrl}
+              />
+
               <button
                 type="button"
                 onClick={handleShareProjectX}
