@@ -1,9 +1,15 @@
+// lib/useMiniContext.tsx
 "use client";
 
 import React, {
-  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
 
 type MiniUser = {
   fid: number;
@@ -22,49 +28,84 @@ type MiniState = {
 
 const Ctx = createContext<MiniState | null>(null);
 
-export function MiniContextProvider({ children }: { children: React.ReactNode }) {
-  const { context } = useMiniKit(); // present when inside Mini
-  const [fid, setFid] = useState<number | null>(null);
-  const [user, setUser] = useState<MiniUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const first = useRef(true);
-
-  const readQueryFid = useCallback(() => {
-    if (typeof window === "undefined") return null;
+function readQueryFid(): number | null {
+  if (typeof window === "undefined") return null;
+  try {
     const u = new URL(window.location.href);
     const qfid = u.searchParams.get("fid");
     const n = qfid ? Number(qfid) : NaN;
     return Number.isFinite(n) && n > 0 ? n : null;
-  }, []);
+  } catch {
+    return null;
+  }
+}
+
+export function MiniContextProvider({ children }: { children: React.ReactNode }) {
+  const [fid, setFid] = useState<number | null>(null);
+  const [user, setUser] = useState<MiniUser | null>(null);
+  const [inMini, setInMini] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const first = useRef(true);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      // 1) Prefer MiniKit context when inside Mini
-      const miniUser = (context as any)?.user;
-      if (miniUser?.fid) {
-        const f = Number(miniUser.fid);
-        setFid(f);
-        setUser({
-          fid: f,
-          username: miniUser.username ?? null,
-          displayName: miniUser.displayName ?? miniUser.display_name ?? null,
-          pfpUrl: miniUser.pfpUrl ?? miniUser.pfp_url ?? null,
-        });
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem(
-            "fc:minUser",
-            JSON.stringify({
-              fid: f,
-              username: miniUser.username ?? null,
-              pfpUrl: miniUser.pfpUrl ?? miniUser.pfp_url ?? null,
-            }),
-          );
+      let resolved = false;
+
+      // 1) Try to detect Farcaster / mini environments from globals
+      if (typeof window !== "undefined") {
+        const w: any = window as any;
+
+        // Farcaster mini (via farcaster.miniapp or miniApp.context.user)
+        let miniUser: any =
+          w?.farcaster?.miniapp?.user ??
+          w?.miniApp?.context?.user ??
+          null;
+
+        if (miniUser?.fid) {
+          const f = Number(miniUser.fid);
+          setFid(f);
+          setUser({
+            fid: f,
+            username: miniUser.username ?? null,
+            displayName:
+              miniUser.displayName ??
+              miniUser.display_name ??
+              null,
+            pfpUrl: miniUser.pfpUrl ?? miniUser.pfp_url ?? null,
+          });
+          setInMini(true);
+          try {
+            localStorage.setItem(
+              "fc:minUser",
+              JSON.stringify({
+                fid: f,
+                username: miniUser.username ?? null,
+                pfpUrl: miniUser.pfpUrl ?? miniUser.pfp_url ?? null,
+              }),
+            );
+          } catch {
+            // ignore storage errors
+          }
+          resolved = true;
         }
+
+        // Base app style detection (very rough)
+        if (!resolved) {
+          const looksMini =
+            !!w?.farcaster?.miniapp ||
+            !!w?.miniApp ||
+            !!w?.coinbase?.miniKit ||
+            !!w?.MiniKit;
+          setInMini(looksMini);
+        }
+      }
+
+      if (resolved) {
         return;
       }
 
-      // 2) Fallback via query param (?fid=1234)
+      // 2) Fallback via ?fid= query param
       const qfid = readQueryFid();
       if (qfid) {
         setFid(qfid);
@@ -88,57 +129,63 @@ export function MiniContextProvider({ children }: { children: React.ReactNode })
         return;
       }
 
-      // 3) Persisted from a previous Mini session
-      if (typeof localStorage !== "undefined") {
-        const raw = localStorage.getItem("fc:minUser");
-        if (raw) {
-          try {
+      // 3) Persisted from previous session in localStorage
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("fc:minUser");
+          if (raw) {
             const v = JSON.parse(raw);
             if (v?.fid) {
-              setFid(Number(v.fid));
+              const f = Number(v.fid);
+              setFid(f);
               setUser({
-                fid: Number(v.fid),
+                fid: f,
                 username: v.username ?? null,
                 pfpUrl: v.pfpUrl ?? null,
               });
               return;
             }
-          } catch {}
+          }
+        } catch {
+          // ignore
         }
       }
 
+      // Nothing found
       setFid(null);
       setUser(null);
     } finally {
       setLoading(false);
       first.current = false;
     }
-  }, [context, readQueryFid]);
+  }, []);
 
   useEffect(() => {
     refresh();
+
     const onShow = () => refresh();
     const onVis = () => {
       if (!document.hidden) refresh();
     };
+
     window.addEventListener("pageshow", onShow);
     document.addEventListener("visibilitychange", onVis);
+
     return () => {
       window.removeEventListener("pageshow", onShow);
       document.removeEventListener("visibilitychange", onVis);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context]);
+  }, [refresh]);
 
   const value = useMemo<MiniState>(
     () => ({
       fid,
       user,
-      inMini: !!context,
+      inMini,
       loading,
       refresh,
     }),
-    [fid, user, loading, context, refresh],
+    [fid, user, inMini, loading, refresh],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
