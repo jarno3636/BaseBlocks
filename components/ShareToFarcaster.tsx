@@ -44,6 +44,7 @@ export default function ShareToFarcaster({
 }: Props) {
   // If you want: treat “no url + no default” as disabled
   // Right now we always fall back to /share.PNG, so this is always false.
+  // Flip this logic if you ever want a real disabled state.
   const isDisabled = false;
 
   const onClick = async () => {
@@ -52,22 +53,15 @@ export default function ShareToFarcaster({
     // Default to the global share image if nothing else is provided
     const embedUrl = toAbs(url || "/share.PNG");
 
-    // Detect if we're actually inside a Farcaster mini-app
-    const isMiniApp =
-      typeof window !== "undefined" &&
-      typeof (window as any).farcaster !== "undefined";
-
-    // 1) Mini App SDK composeCast (inside mini-app only)
-    if (isMiniApp) {
-      try {
-        await sdk.actions.composeCast({
-          text,
-          embeds: embedUrl ? [embedUrl] : [],
-        });
-        return;
-      } catch {
-        // fall through to web fallback
-      }
+    // 1) Mini App SDK composeCast (inside mini-app)
+    try {
+      await sdk.actions.composeCast({
+        text,
+        embeds: embedUrl ? [embedUrl] : [],
+      });
+      return;
+    } catch {
+      // fall through to web fallback
     }
 
     // 2) Web fallback – open Warpcast composer with query params
