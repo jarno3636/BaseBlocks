@@ -49,14 +49,12 @@ export default function ShareSection({
 }: ShareSectionProps) {
   const origin = resolveOrigin();
 
-  //
-  // 🚀 *** FIXED: PURE IMAGE URL ONLY — NEVER THE OG PAGE ***
-  //
+  // ✅ NFT image only — this URL should return a PNG/JPEG, not an HTML page.
   const cubeImageUrl = hasCube
     ? `${origin}/api/baseblox/card/${cubeId}`
     : `${origin}/share.PNG`;
 
-  // Mini app link stays ONLY in text
+  // ✅ App / mini-app link – this is what you want the "linked" image to point to.
   const appShareUrl = MINI_APP_LINK || origin;
 
   // ----------- Share text ------------
@@ -64,7 +62,7 @@ export default function ShareSection({
     ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}.`
     : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
 
-  // Farcaster → clean text + mini-app URL (inside text)
+  // Farcaster → clean text + mini-app URL in text
   const cubeFcText = `${cubeBaseText} Mint/manage: ${appShareUrl} #BaseBlox #Onchain`;
 
   // Twitter → attach image link
@@ -104,7 +102,10 @@ export default function ShareSection({
           {hasCube ? (
             <ShareToFarcaster
               text={cubeFcText}
-              url={cubeImageUrl}   // 👉 PURE IMAGE ONLY
+              // 👉 First embed: NFT card image (no app link, just the PNG URL)
+              url={cubeImageUrl}
+              // 👉 Second embed: mini-app / app URL (this one is the "linked" image)
+              extraUrl={appShareUrl}
             />
           ) : (
             <button
@@ -164,7 +165,8 @@ export default function ShareSection({
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <ShareToFarcaster text={appFcText} url="/share.PNG" />
+          {/* Here we just share the app link itself */}
+          <ShareToFarcaster text={appFcText} url={appShareUrl} />
 
           <a
             href={appTweetUrl}
