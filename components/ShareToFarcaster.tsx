@@ -57,9 +57,8 @@ export default function ShareToFarcaster({
     const message = text || "";
 
     try {
-      // Cast to any so TS doesn't complain about openCastComposer
+      // ✅ Mini-app path: use Farcaster miniapp SDK
       const fc = sdk as any;
-
       if (fc?.actions?.openCastComposer) {
         await fc.actions.openCastComposer({
           text: message,
@@ -67,17 +66,20 @@ export default function ShareToFarcaster({
         });
         return;
       }
-
-      // Fallbacks for non-mini-app / older environments
-      const href = primary || secondary;
-      if (href && typeof window !== "undefined") {
-        window.open(href, "_blank");
-      }
     } catch {
-      const href = primary || secondary;
-      if (href && typeof window !== "undefined") {
-        window.open(href, "_blank");
+      // ignore and fall through to Warpcast compose fallback
+    }
+
+    // 🌐 Fallback (outside mini-app): use Warpcast web composer
+    if (typeof window !== "undefined") {
+      const composeUrl = new URL("https://warpcast.com/~/compose");
+
+      if (message) composeUrl.searchParams.set("text", message);
+      for (const e of embeds) {
+        composeUrl.searchParams.append("embeds[]", e.url);
       }
+
+      window.open(composeUrl.toString(), "_blank");
     }
   };
 
