@@ -9,6 +9,7 @@ type ShareSectionProps = {
   cubeId: number;
   ageDays: number;
   prestigeLabelText: string;
+  primarySymbol?: string; // 👈 NEW
 };
 
 function resolveOrigin(): string {
@@ -64,11 +65,16 @@ export default function ShareSection({
   cubeId,
   ageDays,
   prestigeLabelText,
+  primarySymbol, // 👈 NEW
 }: ShareSectionProps) {
   const origin = resolveOrigin();
 
   // ---------- Share YOUR cube (per-cube OG page) ----------
-  const cubeOgPath = hasCube ? `/og/cube/${cubeId}` : "/";
+  const cubeOgPath = hasCube
+    ? `/og/cube/${cubeId}?age=${ageDays}&prestige=${encodeURIComponent(
+        prestigeLabelText,
+      )}&ticker=${encodeURIComponent(primarySymbol ?? "")}`
+    : "/";
   const cubeOgUrl = `${origin}${cubeOgPath}`;
 
   const cubeBaseText = hasCube
