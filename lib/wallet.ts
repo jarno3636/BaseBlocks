@@ -17,11 +17,13 @@ import {
 import { injected } from "wagmi/connectors";
 import { farcasterMiniApp as miniAppConnector } from "@farcaster/miniapp-wagmi-connector";
 
+// WalletConnect projectId (support both env names you used)
 const projectId =
   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
   process.env.NEXT_PUBLIC_WALLETCONNECT_ID ||
   "";
 
+// RainbowKit wallet groups
 const walletGroups = [
   {
     groupName: "Popular",
@@ -47,8 +49,13 @@ export const wagmiConfig = createConfig({
     [base.id]: http(process.env.NEXT_PUBLIC_BASE_RPC_URL || undefined),
   },
   connectors: [
+    // Farcaster mini app connector (for Warpcast mini app context)
     miniAppConnector(),
-    injected({ target: "coinbaseWallet", shimDisconnect: true }),
+
+    // 👇 Generic injected connector so ANY in-app dapp browser / wallet can connect
+    injected({ shimDisconnect: true }),
+
+    // RainbowKit connectors (MetaMask, Coinbase, Rainbow, Rabby, WalletConnect, etc.)
     ...rkConnectors,
   ],
   ssr: true,
