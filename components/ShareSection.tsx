@@ -49,10 +49,14 @@ export default function ShareSection({
 }: ShareSectionProps) {
   const origin = resolveOrigin();
 
-  // 1) Cube OG URL – this powers the cube image card
-  const cubeOgUrl = hasCube ? `${origin}/og/cube/${cubeId}` : origin;
+  //
+  // 🚀 *** FIXED: PURE IMAGE URL ONLY — NEVER THE OG PAGE ***
+  //
+  const cubeImageUrl = hasCube
+    ? `${origin}/api/baseblox/card/${cubeId}`
+    : `${origin}/share.PNG`;
 
-  // 2) Mini app URL – used as second embed + app share
+  // Mini app link stays ONLY in text
   const appShareUrl = MINI_APP_LINK || origin;
 
   // ----------- Share text ------------
@@ -60,23 +64,27 @@ export default function ShareSection({
     ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}.`
     : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
 
-  const cubeFcText = `${cubeBaseText} #BaseBlox #Onchain`;
-  const cubeTweetText = `${cubeBaseText} #BaseBlox #Base`;
+  // Farcaster → clean text + mini-app URL (inside text)
+  const cubeFcText = `${cubeBaseText} Mint/manage: ${appShareUrl} #BaseBlox #Onchain`;
 
+  // Twitter → attach image link
+  const cubeTweetText = `${cubeBaseText} #BaseBlox #Base`;
   const cubeTweetUrl = buildTweetUrl({
     text: cubeTweetText,
-    url: cubeOgUrl,
+    url: cubeImageUrl,
   });
 
   // ------------------ App share ------------------
   const appFcText =
-    "Mint a BaseBlox on Base and let your cube track age, prestige & your primary token.";
+    "Mint a BaseBlox on Base and let your cube track age, prestige & your primary token. " +
+    appShareUrl;
+
   const appTweetText =
     "Mint a BaseBlox identity cube on Base — your evolving digital identity. #BaseBlox #Base";
 
   const appTweetUrl = buildTweetUrl({
     text: appTweetText,
-    url: appShareUrl,
+    url: `${origin}/share.PNG`,
   });
 
   const disabledCubeShare = !hasCube;
@@ -96,10 +104,7 @@ export default function ShareSection({
           {hasCube ? (
             <ShareToFarcaster
               text={cubeFcText}
-              // 1) cube card image
-              url={cubeOgUrl}
-              // 2) mini-app card (like BaseBots “Launch”)
-              secondaryUrl={appShareUrl}
+              url={cubeImageUrl}   // 👉 PURE IMAGE ONLY
             />
           ) : (
             <button
@@ -130,12 +135,12 @@ export default function ShareSection({
         {hasCube && (
           <button
             type="button"
-            onClick={() => copyToClipboard(cubeOgUrl)}
+            onClick={() => copyToClipboard(cubeImageUrl)}
             className="mt-2 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
               bg-slate-900/70 border border-slate-600 text-slate-200
               hover:bg-slate-800/90 transition"
           >
-            Copy cube link
+            Copy cube image link
           </button>
         )}
 
@@ -159,7 +164,8 @@ export default function ShareSection({
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <ShareToFarcaster text={appFcText} url={appShareUrl} />
+          <ShareToFarcaster text={appFcText} url="/share.PNG" />
+
           <a
             href={appTweetUrl}
             target="_blank"
