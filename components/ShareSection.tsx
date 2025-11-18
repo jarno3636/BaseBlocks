@@ -15,7 +15,7 @@ type ShareSectionProps = {
 
 const SITE_URL = "https://baseblox.vercel.app" as const;
 
-// ✅ Farcaster mini app URL
+// ✅ Farcaster mini app URL (env override if you want)
 const FARCASTER_MINIAPP_URL =
   process.env.NEXT_PUBLIC_FARCASTER_MINIAPP_URL ??
   "https://farcaster.xyz/miniapps/N_U7EfeREI4I/baseblox";
@@ -30,13 +30,13 @@ async function shareOnFarcaster(text: string, embedUrl: string) {
     const isMiniApp = await sdk.isInMiniApp();
 
     if (isMiniApp) {
-      // Native in-app compose (no download page)
+      // ✅ Native in-app compose
       await sdk.actions.composeCast({
         text,
         embeds: embedUrl ? [{ url: embedUrl }] : [],
       });
     } else {
-      // Fallback for regular browsers
+      // 🌐 Browser fallback
       const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
         text,
       )}&embeds[]=${encodeURIComponent(embedUrl)}`;
