@@ -5,54 +5,55 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
   text?: string;
-  /** Primary URL to embed (image or page). */
-  url?: string;
-  /** Optional second URL to embed (e.g. mini-app link). */
-  extraUrl?: string;
+  url?: string;          // primary (image)
+  secondaryUrl?: string; // secondary (mini-app)
   className?: string;
 };
 
 function getOrigin(): string {
-  // Prefer runtime origin when in the browser
   if (typeof window !== "undefined" && window.location?.origin) {
     return window.location.origin.replace(/\/$/, "");
   }
 
-  const env =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "";
-  if (env) {
-    const withProto = /^https?:\/\//i.test(env) ? env : `https://${env}`;
-    return withProto.replace(/\/$/, "");
-  }
+  const raw =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_URL ||
+    process.env.VERCEL_URL ||
+    "https://baseblox.vercel.app";
 
-  return "https://baseblox.vercel.app";
+  if (/^https?:\/\//i.test(raw)) {
+    return raw.replace(/\/$/, "");
+  }
+  return `https://${raw.replace(/\/$/, "")}`;
 }
 
-function toAbs(u?: string): string {
-  if (!u) return "";
+function toAbs(u?: string): string | undefined {
+  if (!u) return undefined;
+  if (/^https?:\/\//i.test(u)) return u;
+  const base = getOrigin();
   try {
-    if (/^https?:\/\//i.test(u)) return u;
-    const base = getOrigin();
     return new URL(u, base).toString();
   } catch {
-    return "";
+    return undefined;
   }
 }
 
 export default function ShareToFarcaster({
   text,
   url,
-  extraUrl,
+  secondaryUrl,
   className,
 }: Props) {
   const handleClick = () => {
+    const primary = toAbs(url);
+    const secondary = toAbs(secondaryUrl);
+
     const embeds: { url: string }[] = [];
+    if (primary) embeds.push({ url: primary });
+    if (secondary) embeds.push({ url: secondary });
 
-    if (url) embeds.push({ url: toAbs(url) });
-    if (extraUrl) embeds.push({ url: toAbs(extraUrl) });
-
-    sdk.actions.openShareSheet({
-      text: text ?? "",
+    sdk.actions.openShare({
+      text: text || "",
       embeds,
     });
   };
@@ -63,7 +64,7 @@ export default function ShareToFarcaster({
       onClick={handleClick}
       className={
         className ??
-        "rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold bg-slate-900/80 border border-white/20 text-slate-50 hover:bg-slate-800/90 transition"
+        "rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold bg-slate-900/80 border border-white/20 text-slate-50 hover:bg-slate-800/90 transition shadow-[0_10px_24px_rgba(0,0,0,.35)]"
       }
     >
       Share on Farcaster
