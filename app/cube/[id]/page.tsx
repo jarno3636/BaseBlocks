@@ -1,3 +1,4 @@
+// app/cube/[id]/page.tsx
 "use client";
 
 import { useCube } from "@/hooks/useCube";
@@ -7,8 +8,10 @@ import { decodeSymbol, prestigeLabel } from "@/lib/cubeUtils";
 import Link from "next/link";
 import { BASEBLOCKS_ADDRESS } from "@/lib/baseblocksAbi";
 
-export default function CubePage({ params }: { params: { id: string } }) {
-  const id = params.id;
+export default function CubePage(props: any) {
+  // Safely grab id from params
+  const id = (props?.params as { id: string }).id;
+
   const { cubeData, tokenUri } = useCube(id);
 
   const image = extractImageFromTokenUri(tokenUri as string | undefined);
@@ -16,7 +19,9 @@ export default function CubePage({ params }: { params: { id: string } }) {
   const minted = cubeData ? Number((cubeData as any).mintedAt) : 0;
 
   const primaryToken = cubeData ? (cubeData as any).primaryToken : "";
-  const primarySymbol = decodeSymbol(cubeData ? (cubeData as any).primarySymbol : "");
+  const primarySymbol = decodeSymbol(
+    cubeData ? (cubeData as any).primarySymbol : ""
+  );
 
   const mintedDate =
     minted > 0
