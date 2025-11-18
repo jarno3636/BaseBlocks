@@ -882,8 +882,9 @@ export default function Home() {
           cubeId={cubeId}
           ageDays={ageDays}
           prestigeLabelText={prestigeLabelText}
+          primarySymbol={primarySymbol} // 👈 NEW
         />
-
+        
         {/* Freshly forged cubes – latest centered, then 2x2 grid */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
