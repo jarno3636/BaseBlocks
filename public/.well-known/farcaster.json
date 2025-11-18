@@ -4,16 +4,20 @@
     "payload": "eyJkb21haW4iOiJiYXNlYmxveC52ZXJjZWwuYXBwIn0",
     "signature": "B3Fw0rWMcR5pbO1ygvIX1QIsC3YRRWAxPrW4K5ve8ClYWe/i82t+qGEU0RNfP1NQ2eWzlfmdfR6kdcb7yRDD1hw="
   },
+
   "miniapp": {
     "version": "1",
     "name": "BaseBlox",
     "subtitle": "Your Onchain Identity Cube",
     "description": "Mint your BaseBlox identity cube and track your evolving onchain prestige.",
     "iconUrl": "https://baseblox.vercel.app/icon.png",
+
     "homeUrl": "https://baseblox.vercel.app/farcaster/miniapp",
+
     "screenshotUrls": [
       "https://baseblox.vercel.app/screenshot-portrait.png"
     ],
+
     "imageUrl": "https://baseblox.vercel.app/image.png",
     "splashImageUrl": "https://baseblox.vercel.app/splash.png",
     "splashBackgroundColor": "#eeccff",
@@ -24,5 +28,9 @@
     "ogTitle": "BaseBlox: Identity Cubes",
     "ogDescription": "Mint and evolve your BaseBlox identity cube.",
     "ogImageUrl": "https://baseblox.vercel.app/share.PNG"
+  },
+
+  "baseBuilder": {
+    "ownerAddress": "0x7fd97A417F64d2706cF5C93c8fdf493EdA42D25c"
   }
 }
