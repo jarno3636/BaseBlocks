@@ -1,5 +1,6 @@
+// app/api/og/route.tsx
 import { NextResponse } from "next/server";
-import { ImageResponse } from "@vercel/og";
+import { ImageResponse } from "next/og";
 import { extractImageFromTokenUri } from "@/lib/extractImage";
 import { BASEBLOCKS_ABI, BASEBLOCKS_ADDRESS } from "@/lib/baseblocksAbi";
 import { createPublicClient, http } from "viem";
@@ -42,15 +43,19 @@ export async function GET(req: Request) {
           fontFamily: "sans-serif",
         }}
       >
-        <img
-          src={image}
-          width={420}
-          height={420}
-          style={{
-            borderRadius: "24px",
-            boxShadow: "0 0 30px rgba(0,0,0,0.4)",
-          }}
-        />
+        {/* cube art pulled from tokenURI */}
+        {image && (
+          <img
+            src={image}
+            width={420}
+            height={420}
+            style={{
+              borderRadius: "24px",
+              boxShadow: "0 0 30px rgba(0,0,0,0.4)",
+              objectFit: "cover",
+            }}
+          />
+        )}
 
         <div
           style={{
@@ -61,10 +66,12 @@ export async function GET(req: Request) {
             textAlign: "center",
           }}
         >
-          <div style={{ fontSize: "48px", fontWeight: "700" }}>
+          <div style={{ fontSize: "48px", fontWeight: 700 }}>
             BaseBlox Cube #{id}
           </div>
-          <div style={{ fontSize: "22px", opacity: 0.8 }}>Identity on Base</div>
+          <div style={{ fontSize: "22px", opacity: 0.8 }}>
+            Identity on Base
+          </div>
         </div>
       </div>
     ),
