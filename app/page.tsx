@@ -874,13 +874,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ⬇️ New shared component: Share your cube + Share BaseBlox */}
+        {/* ⬇️ Shared component: Share your cube + Share BaseBlox */}
         <ShareSection
           hasCube={hasCube}
           cubeId={cubeId}
           ageDays={ageDays}
           prestigeLabelText={prestigeLabelText}
-          cubePath={hasCube ? `/cube/${cubeId}` : undefined}
         />
 
         {/* Freshly forged cubes – latest centered, then 2x2 grid */}
