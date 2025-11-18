@@ -56,7 +56,7 @@ export function MiniContextProvider({ children }: { children: React.ReactNode })
       if (typeof window !== "undefined") {
         const w: any = window as any;
 
-        // Farcaster mini (via farcaster.miniapp or miniApp.context.user)
+        // Farcaster mini (if they inject a user object)
         let miniUser: any =
           w?.farcaster?.miniapp?.user ??
           w?.miniApp?.context?.user ??
@@ -90,7 +90,7 @@ export function MiniContextProvider({ children }: { children: React.ReactNode })
           resolved = true;
         }
 
-        // Base app style detection (very rough)
+        // Base mini-ish detection (very rough) if no explicit user
         if (!resolved) {
           const looksMini =
             !!w?.farcaster?.miniapp ||
