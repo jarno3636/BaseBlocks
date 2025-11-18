@@ -5,8 +5,10 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
   text?: string;
-  /** URL to embed in the cast (image or page). */
+  /** Primary URL to embed (image or page). */
   url?: string;
+  /** Optional second embed (e.g. mini-app link). */
+  secondaryUrl?: string;
   className?: string;
 };
 
@@ -40,24 +42,34 @@ function toAbs(u?: string): string {
 export default function ShareToFarcaster({
   text = "",
   url,
+  secondaryUrl,
   className = "",
 }: Props) {
-  // If you want: treat “no url + no default” as disabled
-  // Right now we always fall back to /share.PNG, so this is always false.
-  // Flip this logic if you ever want a real disabled state.
+  // Right now we always have a fallback image, so this stays false.
   const isDisabled = false;
 
   const onClick = async () => {
     if (isDisabled) return;
 
-    // Default to the global share image if nothing else is provided
-    const embedUrl = toAbs(url || "/share.PNG");
+    // Build embed list: primary + optional secondary.
+    const embeds: string[] = [];
+    const primary = toAbs(url);
+    const secondary = toAbs(secondaryUrl);
+
+    if (primary) embeds.push(primary);
+    if (secondary) embeds.push(secondary);
+
+    // If nothing valid, fall back to global share image.
+    if (embeds.length === 0) {
+      const fallback = toAbs("/share.PNG");
+      if (fallback) embeds.push(fallback);
+    }
 
     // 1) Mini App SDK composeCast (inside mini-app)
     try {
       await sdk.actions.composeCast({
         text,
-        embeds: embedUrl ? [embedUrl] : [],
+        embeds,
       });
       return;
     } catch {
@@ -68,7 +80,9 @@ export default function ShareToFarcaster({
     try {
       const u = new URL("https://warpcast.com/~/compose");
       if (text) u.searchParams.set("text", text);
-      if (embedUrl) u.searchParams.append("embeds[]", embedUrl);
+      for (const e of embeds) {
+        u.searchParams.append("embeds[]", e);
+      }
       window.open(u.toString(), "_blank", "noopener,noreferrer");
     } catch {
       // As a last resort, just navigate
