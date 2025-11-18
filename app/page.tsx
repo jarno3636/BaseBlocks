@@ -359,12 +359,15 @@ export default function Home() {
   }, [address, nextTokenIdData]);
 
   const { data: ownedScanResults } = useReadContracts({
-    contracts: ownedScanTokenIds.map((id) => ({
-      address: BASEBLOCKS_ADDRESS,
-      abi: BASEBLOCKS_ABI,
-      functionName: "ownerOf",
-      args: [id],
-    })) as const,
+    contracts: ownedScanTokenIds.map(
+      (id) =>
+        ({
+          address: BASEBLOCKS_ADDRESS,
+          abi: BASEBLOCKS_ABI,
+          functionName: "ownerOf",
+          args: [id],
+        } as const),
+    ),
     query: { enabled: Boolean(address && ownedScanTokenIds.length > 0) },
   });
 
