@@ -1,22 +1,16 @@
-// app/og/cube/[cubeId]/opengraph-image.tsx
+// app/og/cube/[id]/opengraph-image.tsx
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
 type OgProps = {
-  params: { cubeId: string };
-  // Next passes URL query as searchParams
-  searchParams: {
-    age?: string;
-    prestige?: string;
-    ticker?: string;
-  };
+  params: { id: string };
 };
 
 export async function GET(req: Request, { params }: OgProps) {
   const { searchParams } = new URL(req.url);
 
-  const cubeId = params.cubeId;
+  const cubeId = params.id;
   const age = searchParams.get("age") ?? "0";
   const prestige = searchParams.get("prestige") ?? "Unprestiged";
   const ticker = searchParams.get("ticker") ?? "";
@@ -32,7 +26,8 @@ export async function GET(req: Request, { params }: OgProps) {
           justifyContent: "center",
           background:
             "radial-gradient(circle at 0 0, #1d4ed8 0, #020617 50%), radial-gradient(circle at 100% 100%, #4f46e5 0, #020617 50%)",
-          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif,
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif",
         }}
       >
         {/* Left side: cube art background block */}
@@ -163,6 +158,6 @@ export async function GET(req: Request, { params }: OgProps) {
     {
       width: 1200,
       height: 630,
-    }
+    },
   );
 }
