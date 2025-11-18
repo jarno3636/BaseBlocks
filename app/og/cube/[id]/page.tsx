@@ -1,10 +1,10 @@
 // app/og/cube/[id]/page.tsx
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 type Params = { id: string };
 
-export const dynamic = "force-static";
-export const revalidate = 300;
+export const revalidate = 0; // more aggressive, helps "refresh" cards faster
 
 function baseUrl() {
   const raw =
@@ -20,6 +20,11 @@ function baseUrl() {
   return `https://${raw.replace(/\/$/, "")}`;
 }
 
+const MINI_APP_LINK =
+  process.env.NEXT_PUBLIC_FC_MINIAPP_LINK ||
+  process.env.NEXT_PUBLIC_FC_MINIAPP_URL ||
+  ""; // e.g. https://farcaster.xyz/miniapps/xxxx/your-mini-app
+
 export async function generateMetadata(
   { params }: { params: Promise<Params> }
 ): Promise<Metadata> {
@@ -34,13 +39,14 @@ export async function generateMetadata(
     ? `BaseBlox identity cube #${clean} on Base. Age, prestige, and primary token onchain.`
     : "BaseBlox identity cube on Base.";
 
-  // Per-cube card for X / Warpcast, fallback to share.PNG if no id
+  // Our dynamic OG image – pulls real stats + art from the API route
   const imgCard = clean
     ? `${base}/api/baseblox/card/${clean}`
     : `${base}/share.PNG`;
 
-  // Tiny cache-buster to help X refresh
-  const cardWithBuster = `${imgCard}?v=${Date.now().toString().slice(-6)}`;
+  // Cache-buster to encourage Twitter / Warpcast to re-fetch
+  const cacheBuster = Date.now().toString(36);
+  const cardWithBuster = `${imgCard}?v=${cacheBuster}`;
 
   const url = clean ? `${base}/og/cube/${clean}` : `${base}/og/cube`;
 
@@ -69,25 +75,11 @@ export default async function Page(
   const { id } = await params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
 
-  return (
-    <main
-      style={{
-        padding: 24,
-        color: "white",
-        background: "#020617",
-        minHeight: "60vh",
-      }}
-    >
-      <h1>BaseBlox cube #{clean || "—"}</h1>
-      <p>This page exists to provide rich previews on Farcaster/X.</p>
-      <p>
-        Preview image:{" "}
-        <code>
-          {clean
-            ? `/api/baseblox/card/${clean}`
-            : "/share.PNG"}
-        </code>
-      </p>
-    </main>
-  );
+  const baseMini =
+    MINI_APP_LINK || "https://farcaster.xyz/miniapps/your-mini-app-slug";
+
+  const target = clean ? `${baseMini}?cube=${clean}` : baseMini;
+
+  // Clicking the card takes the user into the mini-app
+  redirect(target);
 }
