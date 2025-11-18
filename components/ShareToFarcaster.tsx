@@ -53,24 +53,33 @@ export default function ShareToFarcaster({
 
     // Build embed list: primary + optional secondary.
     const embeds: string[] = [];
-    const primary = toAbs(url);
-    const secondary = toAbs(secondaryUrl);
+    let primary = toAbs(url);
+    let secondary = toAbs(secondaryUrl);
+
+    // If nothing valid, fall back to global share image.
+    if (!primary && !secondary) {
+      primary = toAbs("/share.PNG");
+    }
 
     if (primary) embeds.push(primary);
     if (secondary) embeds.push(secondary);
 
-    // If nothing valid, fall back to global share image.
-    if (embeds.length === 0) {
-      const fallback = toAbs("/share.PNG");
-      if (fallback) embeds.push(fallback);
-    }
+    // For the mini-app SDK we must pass [] | [string] | [string, string]
+    const embedsForSdk =
+      embeds.length === 0
+        ? undefined
+        : (embeds as [string] | [string, string]);
 
     // 1) Mini App SDK composeCast (inside mini-app)
     try {
-      await sdk.actions.composeCast({
-        text,
-        embeds,
-      });
+      if (embedsForSdk) {
+        await sdk.actions.composeCast({
+          text,
+          embeds: embedsForSdk,
+        });
+      } else {
+        await sdk.actions.composeCast({ text });
+      }
       return;
     } catch {
       // fall through to web fallback
