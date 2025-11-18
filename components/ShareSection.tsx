@@ -34,10 +34,31 @@ const MINI_APP_LINK =
   process.env.NEXT_PUBLIC_FC_MINIAPP_URL ||
   "";
 
-// Copy helper
+// Safer copy helper (works in SSR + browser)
 function copyToClipboard(text: string) {
   if (!text) return;
-  navigator?.clipboard?.writeText(text).catch(() => {});
+
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    return;
+  }
+
+  if (typeof document !== "undefined") {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand("copy");
+    } catch {
+      // ignore
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
 }
 
 export default function ShareSection({
@@ -50,13 +71,24 @@ export default function ShareSection({
   const origin = resolveOrigin();
 
   // -------------------------------------------------------
-  //  1) CORRECT OG URL (no params, OG pipeline handles data)
+  //  1) CORRECT OG URL (no params; OG pipeline pulls data)
   // -------------------------------------------------------
   const cubeOgUrl = hasCube ? `${origin}/og/cube/${cubeId}` : origin;
 
   // ----------- Share text ------------
+  let details: string | null = null;
+  if (hasCube) {
+    const parts: string[] = [];
+    parts.push(`${ageDays} days old`);
+    parts.push(prestigeLabelText);
+    if (primarySymbol) {
+      parts.push(`primary token: ${primarySymbol}`);
+    }
+    details = parts.join(", ");
+  }
+
   const cubeBaseText = hasCube
-    ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}.`
+    ? `My BaseBlox cube #${cubeId} on Base – ${details}.`
     : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
 
   const cubeFcText = `${cubeBaseText} #BaseBlox #Onchain`;
@@ -84,7 +116,6 @@ export default function ShareSection({
 
   return (
     <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-4">
-
       {/* Share Your Cube */}
       <div>
         <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
@@ -110,8 +141,8 @@ export default function ShareSection({
 
           <a
             href={disabledCubeShare ? "#" : cubeTweetUrl}
-            target="_blank"
-            rel="noreferrer"
+            target={disabledCubeShare ? undefined : "_blank"}
+            rel={disabledCubeShare ? undefined : "noreferrer"}
             className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition
               ${
                 disabledCubeShare
