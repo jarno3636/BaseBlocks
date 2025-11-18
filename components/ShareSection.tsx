@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { sdk } from "@farcaster/miniapp-sdk";
+import { useMiniApp } from "@farcaster/miniapp-sdk";
 
 type ShareSectionProps = {
   hasCube: boolean;
@@ -15,40 +15,10 @@ type ShareSectionProps = {
 
 const SITE_URL = "https://baseblox.vercel.app" as const;
 
-// ✅ Farcaster mini app URL (env override if you want)
+// ✅ Farcaster mini app URL (configurable)
 const FARCASTER_MINIAPP_URL =
   process.env.NEXT_PUBLIC_FARCASTER_MINIAPP_URL ??
   "https://farcaster.xyz/miniapps/N_U7EfeREI4I/baseblox";
-
-/**
- * Helper: share via Farcaster.
- * - If inside a Mini App ➜ use sdk.actions.composeCast (native compose sheet)
- * - Otherwise ➜ fall back to Warpcast web compose URL
- */
-async function shareOnFarcaster(text: string, embedUrl: string) {
-  try {
-    const isMiniApp = await sdk.isInMiniApp();
-
-    if (isMiniApp) {
-      // ✅ Native in-app compose
-      await sdk.actions.composeCast({
-        text,
-        embeds: embedUrl ? [{ url: embedUrl }] : [],
-      });
-    } else {
-      // 🌐 Browser fallback
-      const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
-        text,
-      )}&embeds[]=${encodeURIComponent(embedUrl)}`;
-
-      if (typeof window !== "undefined") {
-        window.open(shareUrl, "_blank");
-      }
-    }
-  } catch (err) {
-    console.error("Farcaster share failed:", err);
-  }
-}
 
 export default function ShareSection({
   hasCube,
@@ -57,26 +27,40 @@ export default function ShareSection({
   prestigeLabelText,
   cubePath,
 }: ShareSectionProps) {
+  const { sdk, isMiniApp } = useMiniApp();
+
   // Cube-specific URL (falls back to root)
   const cubeUrl = cubePath ? `${SITE_URL}${cubePath}` : SITE_URL;
 
-  // ---------- Share helpers (cube-specific) ----------
+  // ---- Generic helper to share to Farcaster ----
+  async function shareToFarcaster(text: string, embedUrl?: string) {
+    // Inside Farcaster mini app -> use SDK composeCast
+    if (isMiniApp && sdk) {
+      await sdk.actions.composeCast({
+        text,
+        // ✅ SDK expects string[] like ['https://...'], not [{ url: ... }]
+        embeds: embedUrl ? [embedUrl] : [],
+      });
+      return;
+    }
 
-  async function handleShareX() {
-    if (!hasCube) return;
-
-    const text = `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabelText}.`;
-
-    const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
+    // 🌐 Browser fallback -> open Warpcast compose with embeds[]
+    const composeUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text,
-    )}&url=${encodeURIComponent(cubeUrl)}`;
+    )}${
+      embedUrl
+        ? `&embeds[]=${encodeURIComponent(embedUrl)}`
+        : ""
+    }`;
 
     if (typeof window !== "undefined") {
-      window.open(shareUrl, "_blank");
+      window.open(composeUrl, "_blank");
     }
   }
 
-  async function handleShareFarcaster() {
+  // ---------- Share helpers (cube-specific) ----------
+
+  async function handleShareFarcasterCube() {
     if (!hasCube) return;
 
     const textLines = [
@@ -86,13 +70,36 @@ export default function ShareSection({
     ];
 
     const text = textLines.join("\n");
-
-    await shareOnFarcaster(text, cubeUrl);
+    await shareToFarcaster(text, cubeUrl);
   }
 
-  // ---------- Share helpers (project-level CTA using share.PNG OG) ----------
+  function handleShareXCube() {
+    if (!hasCube) return;
 
-  async function handleShareProjectX() {
+    const text = `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabelText}.`;
+    const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
+      text,
+    )}&url=${encodeURIComponent(cubeUrl)}`;
+
+    if (typeof window !== "undefined") {
+      window.open(shareUrl, "_blank");
+    }
+  }
+
+  // ---------- Project-level share (using share.PNG OG) ----------
+
+  async function handleShareProjectFarcaster() {
+    const textLines = [
+      "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.",
+      "",
+      `Mini app: ${FARCASTER_MINIAPP_URL}`,
+    ];
+    const text = textLines.join("\n");
+
+    await shareToFarcaster(text, SITE_URL);
+  }
+
+  function handleShareProjectX() {
     const text =
       "Mint your BaseBlox identity cube on Base and let your onchain age & prestige show.";
 
@@ -103,18 +110,6 @@ export default function ShareSection({
     if (typeof window !== "undefined") {
       window.open(shareUrl, "_blank");
     }
-  }
-
-  async function handleShareProjectFarcaster() {
-    const textLines = [
-      "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.",
-      "",
-      `Mini app: ${FARCASTER_MINIAPP_URL}`,
-    ];
-
-    const text = textLines.join("\n");
-
-    await shareOnFarcaster(text, SITE_URL);
   }
 
   return (
@@ -129,6 +124,12 @@ export default function ShareSection({
             <p className="text-xs text-slate-200/85">
               Cast or tweet your BaseBlox stats as a flex.
             </p>
+            {isMiniApp && (
+              <p className="text-[10px] text-emerald-400 mt-1">
+                You&apos;re in the Farcaster mini app — sharing opens a compose
+                screen in-app.
+              </p>
+            )}
           </div>
         </div>
 
@@ -136,7 +137,7 @@ export default function ShareSection({
           <button
             type="button"
             disabled={!hasCube}
-            onClick={handleShareFarcaster}
+            onClick={handleShareFarcasterCube}
             className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
               hasCube
                 ? "bg-violet-500/20 border-violet-400/60 text-violet-50 hover:bg-violet-500/30"
@@ -149,7 +150,7 @@ export default function ShareSection({
           <button
             type="button"
             disabled={!hasCube}
-            onClick={handleShareX}
+            onClick={handleShareXCube}
             className={`text-xs px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 ${
               hasCube
                 ? "bg-slate-900 border-slate-500 text-slate-100 hover:bg-black"
