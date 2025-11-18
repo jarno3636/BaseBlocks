@@ -5,8 +5,10 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
   text?: string;
-  url?: string;          // primary (image)
-  secondaryUrl?: string; // secondary (mini-app)
+  /** Primary embed – usually the NFT image URL */
+  url?: string;
+  /** Secondary embed – usually the mini-app/page URL */
+  secondaryUrl?: string;
   className?: string;
 };
 
@@ -44,7 +46,7 @@ export default function ShareToFarcaster({
   secondaryUrl,
   className,
 }: Props) {
-  const handleClick = () => {
+  const handleClick = async () => {
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
 
@@ -52,10 +54,29 @@ export default function ShareToFarcaster({
     if (primary) embeds.push({ url: primary });
     if (secondary) embeds.push({ url: secondary });
 
-    sdk.actions.openShare({
-      text: text || "",
-      embeds,
-    });
+    const message = text || "";
+
+    try {
+      // ✅ Proper mini-app share: open cast composer with embeds
+      if (sdk?.actions?.openCastComposer) {
+        await sdk.actions.openCastComposer({
+          text: message,
+          embeds,
+        });
+        return;
+      }
+
+      // Fallbacks for non-mini-app / older environments
+      const href = primary || secondary;
+      if (href && typeof window !== "undefined") {
+        window.open(href, "_blank");
+      }
+    } catch {
+      const href = primary || secondary;
+      if (href && typeof window !== "undefined") {
+        window.open(href, "_blank");
+      }
+    }
   };
 
   return (
