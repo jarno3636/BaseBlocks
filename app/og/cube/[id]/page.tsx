@@ -1,10 +1,9 @@
 // app/og/cube/[id]/page.tsx
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 type Params = { id: string };
 
-export const revalidate = 0; // more aggressive, helps "refresh" cards faster
+export const revalidate = 0; // encourage crawlers to re-fetch
 
 function baseUrl() {
   const raw =
@@ -26,7 +25,7 @@ const MINI_APP_LINK =
   ""; // e.g. https://farcaster.xyz/miniapps/xxxx/your-mini-app
 
 export async function generateMetadata(
-  { params }: { params: Promise<Params> }
+  { params }: { params: Promise<Params> },
 ): Promise<Metadata> {
   const { id } = await params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
@@ -39,12 +38,12 @@ export async function generateMetadata(
     ? `BaseBlox identity cube #${clean} on Base. Age, prestige, and primary token onchain.`
     : "BaseBlox identity cube on Base.";
 
-  // Our dynamic OG image – pulls real stats + art from the API route
+  // Dynamic OG image from the API route
   const imgCard = clean
     ? `${base}/api/baseblox/card/${clean}`
     : `${base}/share.PNG`;
 
-  // Cache-buster to encourage Twitter / Warpcast to re-fetch
+  // Tiny cache-buster to nudge X/Warpcast to refresh
   const cacheBuster = Date.now().toString(36);
   const cardWithBuster = `${imgCard}?v=${cacheBuster}`;
 
@@ -70,16 +69,50 @@ export async function generateMetadata(
 }
 
 export default async function Page(
-  { params }: { params: Promise<Params> }
+  { params }: { params: Promise<Params> },
 ) {
   const { id } = await params;
   const clean = String(id ?? "").replace(/[^\d]/g, "");
+  const base = baseUrl();
 
-  const baseMini =
-    MINI_APP_LINK || "https://farcaster.xyz/miniapps/your-mini-app-slug";
+  const miniApp = MINI_APP_LINK || "https://farcaster.xyz/miniapps/your-mini-app-slug";
 
-  const target = clean ? `${baseMini}?cube=${clean}` : baseMini;
+  const imgCard = clean
+    ? `${base}/api/baseblox/card/${clean}`
+    : `${base}/share.PNG`;
 
-  // Clicking the card takes the user into the mini-app
-  redirect(target);
+  return (
+    <main
+      style={{
+        padding: 24,
+        color: "white",
+        background: "#020617",
+        minHeight: "60vh",
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif",
+      }}
+    >
+      <h1 style={{ fontSize: 28, marginBottom: 12 }}>
+        BaseBlox cube {clean ? `#${clean}` : ""}
+      </h1>
+      <p style={{ opacity: 0.8, marginBottom: 8 }}>
+        This page exists primarily to provide rich previews on Farcaster and X.
+      </p>
+      <p style={{ opacity: 0.8, marginBottom: 8 }}>
+        Card image URL:{" "}
+        <code style={{ fontSize: 14, background: "#020617", padding: 4 }}>
+          {imgCard}
+        </code>
+      </p>
+      <p style={{ opacity: 0.8, marginTop: 16 }}>
+        Mini-app:{" "}
+        <a
+          href={miniApp}
+          style={{ color: "#38bdf8", textDecoration: "underline" }}
+        >
+          Open BaseBlox mini-app
+        </a>
+      </p>
+    </main>
+  );
 }
