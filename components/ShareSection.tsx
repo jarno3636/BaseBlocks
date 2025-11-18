@@ -33,6 +33,32 @@ const MINI_APP_LINK =
   process.env.NEXT_PUBLIC_FC_MINIAPP_URL ||
   "";
 
+// 🔹 small helper for copy buttons
+function copyToClipboard(text: string) {
+  if (!text) return;
+
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {
+      console.error("Failed to copy to clipboard");
+    });
+  } else if (typeof document !== "undefined") {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand("copy");
+    } catch (e) {
+      console.error("Fallback copy failed", e);
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
+}
+
 export default function ShareSection({
   hasCube,
   cubeId,
@@ -106,10 +132,15 @@ export default function ShareSection({
         </div>
 
         {hasCube && (
-          <p className="mt-2 text-[11px] text-slate-400">
-            Link shared:&nbsp;
-            <code className="break-all text-slate-300">{cubeOgUrl}</code>
-          </p>
+          <button
+            type="button"
+            onClick={() => copyToClipboard(cubeOgUrl)}
+            className="mt-2 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
+                       bg-slate-900/70 border border-slate-600 text-slate-200
+                       hover:bg-slate-800/90 transition"
+          >
+            Copy cube link
+          </button>
         )}
         {!hasCube && (
           <p className="mt-2 text-[11px] text-slate-500">
@@ -145,10 +176,15 @@ export default function ShareSection({
           </a>
         </div>
 
-        <p className="mt-2 text-[11px] text-slate-400">
-          App link:&nbsp;
-          <code className="break-all text-slate-300">{appShareUrl}</code>
-        </p>
+        <button
+          type="button"
+          onClick={() => copyToClipboard(appShareUrl)}
+          className="mt-2 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
+                     bg-slate-900/70 border border-slate-600 text-slate-200
+                     hover:bg-slate-800/90 transition"
+        >
+          Copy app link
+        </button>
       </div>
     </div>
   );
