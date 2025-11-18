@@ -1,4 +1,5 @@
 // app/api/baseblox/card/[id]/route.tsx
+import type { NextRequest } from "next/server";
 import { ImageResponse } from "next/og";
 import { BASEBLOCKS_ADDRESS, BASEBLOCKS_ABI } from "@/lib/baseblocksAbi";
 import { createPublicClient, http } from "viem";
@@ -63,10 +64,13 @@ function extractImageFromTokenUri(uri?: string | null): string | undefined {
 }
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } },
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ) {
-  const clean = String(params.id ?? "").replace(/[^\d]/g, "");
+  // 🔴 Next 15 thing: params is a *Promise*
+  const { id } = await context.params;
+
+  const clean = String(id ?? "").replace(/[^\d]/g, "");
   if (!clean) {
     return new Response("Missing id", { status: 400 });
   }
