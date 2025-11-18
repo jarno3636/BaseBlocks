@@ -7,8 +7,7 @@ import { base } from "viem/chains";
 const client = createPublicClient({
   chain: base,
   transport: http(
-    process.env.NEXT_PUBLIC_BASE_RPC_URL ||
-      "https://mainnet.base.org"
+    process.env.NEXT_PUBLIC_BASE_RPC_URL || "https://mainnet.base.org",
   ),
 });
 
@@ -30,8 +29,9 @@ function prestigeLabel(prestige: number): string {
 
 function decodeBytes8Symbol(sym?: `0x${string}` | string): string {
   if (!sym) return "";
-  if (!sym.toString().startsWith("0x")) return sym.toString();
-  const hex = sym.toString().slice(2);
+  const str = sym.toString();
+  if (!str.startsWith("0x")) return str;
+  const hex = str.slice(2);
   let out = "";
   for (let i = 0; i < hex.length; i += 2) {
     const byte = parseInt(hex.slice(i, i + 2), 16);
@@ -64,7 +64,7 @@ function extractImageFromTokenUri(uri?: string | null): string | undefined {
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const clean = String(params.id ?? "").replace(/[^\d]/g, "");
   if (!clean) {
@@ -284,9 +284,9 @@ export async function GET(
 
           <div
             style={{
-              marginTop: 28,
-              fontSize: 18,
-              opacity: 0.75,
+           	marginTop: 28,
+           	fontSize: 18,
+           	opacity: 0.75,
             }}
           >
             Mint an evolving onchain identity cube on Base.
@@ -297,6 +297,6 @@ export async function GET(
     {
       width,
       height,
-    }
+    },
   );
 }
