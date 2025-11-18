@@ -5,10 +5,8 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
   text?: string;
-  /** Primary URL to embed (image or page). */
+  /** Image URL to embed in the cast. */
   url?: string;
-  /** Optional second embed (e.g. mini-app link). */
-  secondaryUrl?: string;
   className?: string;
 };
 
@@ -42,59 +40,38 @@ function toAbs(u?: string): string {
 export default function ShareToFarcaster({
   text = "",
   url,
-  secondaryUrl,
   className = "",
 }: Props) {
-  // Right now we always have a fallback image, so this stays false.
+  // We always have at least a fallback image.
   const isDisabled = false;
 
   const onClick = async () => {
     if (isDisabled) return;
 
-    // Build embed list: primary + optional secondary.
-    const embeds: string[] = [];
-    let primary = toAbs(url);
-    let secondary = toAbs(secondaryUrl);
+    // Only ever embed an *image* URL (no app/OG pages).
+    const embedUrl = toAbs(url || "/share.PNG");
 
-    // If nothing valid, fall back to global share image.
-    if (!primary && !secondary) {
-      primary = toAbs("/share.PNG");
-    }
+    // For SDK: [] | [string]
+    const embedsForSdk: [] | [string] = embedUrl ? [embedUrl] : [];
 
-    if (primary) embeds.push(primary);
-    if (secondary) embeds.push(secondary);
-
-    // For the mini-app SDK we must pass [] | [string] | [string, string]
-    const embedsForSdk =
-      embeds.length === 0
-        ? undefined
-        : (embeds as [string] | [string, string]);
-
-    // 1) Mini App SDK composeCast (inside mini-app)
+    // 1) Mini App SDK composeCast
     try {
-      if (embedsForSdk) {
-        await sdk.actions.composeCast({
-          text,
-          embeds: embedsForSdk,
-        });
-      } else {
-        await sdk.actions.composeCast({ text });
-      }
+      await sdk.actions.composeCast({
+        text,
+        embeds: embedsForSdk,
+      });
       return;
     } catch {
       // fall through to web fallback
     }
 
-    // 2) Web fallback – open Warpcast composer with query params
+    // 2) Web fallback – Warpcast composer
     try {
       const u = new URL("https://warpcast.com/~/compose");
       if (text) u.searchParams.set("text", text);
-      for (const e of embeds) {
-        u.searchParams.append("embeds[]", e);
-      }
+      if (embedUrl) u.searchParams.append("embeds[]", embedUrl);
       window.open(u.toString(), "_blank", "noopener,noreferrer");
     } catch {
-      // As a last resort, just navigate
       window.location.href = "https://warpcast.com/~/compose";
     }
   };
