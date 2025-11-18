@@ -5,11 +5,8 @@ import { ImageResponse } from "next/og";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  const rawId = params?.id ?? "";
+export async function GET(_req: NextRequest, context: any) {
+  const rawId = context?.params?.id ?? "";
   const clean = String(rawId).replace(/[^\d]/g, "") || "—";
 
   const width = 1200;
@@ -57,7 +54,14 @@ export async function GET(
           />
 
           {/* Right: text */}
-          <div style={{ maxWidth: 460, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div
+            style={{
+              maxWidth: 460,
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
             <div
               style={{
                 fontSize: 14,
@@ -68,9 +72,7 @@ export async function GET(
             >
               BaseBlox cube
             </div>
-            <div style={{ fontSize: 52, fontWeight: 800 }}>
-              #{clean}
-            </div>
+            <div style={{ fontSize: 52, fontWeight: 800 }}>#{clean}</div>
             <div style={{ fontSize: 18, opacity: 0.85 }}>
               One evolving identity cube per wallet on Base. Age, prestige, and
               your primary token, all etched onchain.
