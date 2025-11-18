@@ -880,6 +880,7 @@ export default function Home() {
           cubeId={cubeId}
           ageDays={ageDays}
           prestigeLabelText={prestigeLabelText}
+          cubePath={hasCube ? `/cube/${cubeId}` : undefined}
         />
 
         {/* Freshly forged cubes – latest centered, then 2x2 grid */}
