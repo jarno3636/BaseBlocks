@@ -15,8 +15,6 @@ import { WagmiProvider, useReconnect } from "wagmi";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { base } from "viem/chains";
 import { wagmiConfig } from "@/lib/wallet";
-import { OnchainKitProvider } from "@coinbase/onchainkit";
-import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
 import { MiniContextProvider } from "@/lib/useMiniContext";
 
 /* ---------------- BigInt JSON polyfill ---------------- */
@@ -75,7 +73,6 @@ function NeynarProviders({ children }: { children: ReactNode }) {
 
   if (!MiniAppProvider && !NeynarProvider) return <>{children}</>;
 
-  // Always wrap with MiniAppProvider if available (no props needed)
   if (MiniAppProvider) {
     return (
       <MiniAppProvider>
@@ -88,7 +85,6 @@ function NeynarProviders({ children }: { children: ReactNode }) {
     );
   }
 
-  // If we only have NeynarProvider (rare), still wrap it when clientId exists
   if (clientId && NeynarProvider) {
     return <NeynarProvider clientId={clientId}>{children}</NeynarProvider>;
   }
@@ -111,43 +107,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   const dehydratedState = dehydrate(queryClient, { serializeData });
 
-  // CDP/OnchainKit API key – if not present, we gracefully fall back to RainbowKit only
-  const onchainkitApiKey = (process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY || "") as string;
-
-  // Inner tree: everything *after* RainbowKit
+  // Inner tree: wagmi + RainbowKit + your mini context + Neynar
   const innerTree = (
     <>
       <AutoReconnect />
-      {onchainkitApiKey ? (
-        // Full mini-app stack when OnchainKit is configured
-        <OnchainKitProvider apiKey={onchainkitApiKey} chain={base}>
-          <RainbowKitProvider
-            theme={theme}
-            initialChain={base}
-            modalSize="compact"
-            appInfo={{ appName: "BaseBlox" }}
-          >
-            {/* MiniKitProvider: mini-app notifications, etc. */}
-            <MiniKitProvider chain={base} notificationProxyUrl="/api/notification">
-              {/* Global Farcaster identity (fid/user) available everywhere */}
-              <MiniContextProvider>
-                {/* Neynar MiniAppProvider + (optional) NeynarProvider */}
-                <NeynarProviders>{children}</NeynarProviders>
-              </MiniContextProvider>
-            </MiniKitProvider>
-          </RainbowKitProvider>
-        </OnchainKitProvider>
-      ) : (
-        // Safe fallback: still have wagmi + RainbowKit even if OnchainKit isn’t configured
-        <RainbowKitProvider
-          theme={theme}
-          initialChain={base}
-          modalSize="compact"
-          appInfo={{ appName: "BaseBlox" }}
-        >
-          {children}
-        </RainbowKitProvider>
-      )}
+      <RainbowKitProvider
+        theme={theme}
+        initialChain={base}
+        modalSize="compact"
+        appInfo={{ appName: "BaseBlox" }}
+      >
+        <MiniContextProvider>
+          <NeynarProviders>{children}</NeynarProviders>
+        </MiniContextProvider>
+      </RainbowKitProvider>
     </>
   );
 
