@@ -9,12 +9,12 @@ type ShareSectionProps = {
   cubeId: number;
   ageDays: number;
   prestigeLabelText: string;
-  primarySymbol?: string; // 👈 NEW
+  primarySymbol?: string;
 };
 
 function resolveOrigin(): string {
   if (typeof window !== "undefined" && window.location?.origin) {
-    return window.location.origin;
+    return window.location.origin.replace(/\/$/, "");
   }
 
   const raw =
@@ -34,30 +34,10 @@ const MINI_APP_LINK =
   process.env.NEXT_PUBLIC_FC_MINIAPP_URL ||
   "";
 
-// 🔹 small helper for copy buttons
+// Copy helper
 function copyToClipboard(text: string) {
   if (!text) return;
-
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(text).catch(() => {
-      console.error("Failed to copy to clipboard");
-    });
-  } else if (typeof document !== "undefined") {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.left = "-9999px";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    try {
-      document.execCommand("copy");
-    } catch (e) {
-      console.error("Fallback copy failed", e);
-    } finally {
-      document.body.removeChild(textarea);
-    }
-  }
+  navigator?.clipboard?.writeText(text).catch(() => {});
 }
 
 export default function ShareSection({
@@ -65,47 +45,53 @@ export default function ShareSection({
   cubeId,
   ageDays,
   prestigeLabelText,
-  primarySymbol, // 👈 NEW
+  primarySymbol,
 }: ShareSectionProps) {
   const origin = resolveOrigin();
 
-  // ---------- Share YOUR cube (per-cube OG page) ----------
-  const cubeOgPath = hasCube
-    ? `/og/cube/${cubeId}?age=${ageDays}&prestige=${encodeURIComponent(
-        prestigeLabelText,
-      )}&ticker=${encodeURIComponent(primarySymbol ?? "")}`
-    : "/";
-  const cubeOgUrl = `${origin}${cubeOgPath}`;
+  // -------------------------------------------------------
+  //  1) CORRECT OG URL (no params, OG pipeline handles data)
+  // -------------------------------------------------------
+  const cubeOgUrl = hasCube ? `${origin}/og/cube/${cubeId}` : origin;
 
+  // ----------- Share text ------------
   const cubeBaseText = hasCube
     ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}.`
-    : "Mint a BaseBlox cube on Base and let your age, prestige, and primary token tell your story.";
+    : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
 
-  const cubeFcText = cubeBaseText + " #BaseBlox #Onchain";
-  const cubeTweetText = cubeBaseText + " #BaseBlox #Base";
-  const cubeTweetUrl = buildTweetUrl({ text: cubeTweetText, url: cubeOgUrl });
+  const cubeFcText = `${cubeBaseText} #BaseBlox #Onchain`;
+  const cubeTweetText = `${cubeBaseText} #BaseBlox #Base`;
 
-  // ---------- Share the APP (mini-app / homepage) ----------
+  const cubeTweetUrl = buildTweetUrl({
+    text: cubeTweetText,
+    url: cubeOgUrl,
+  });
+
+  // ------------------ App share ------------------
   const appShareUrl = MINI_APP_LINK || origin;
 
   const appFcText =
-    "Mint a BaseBlox on Base and let your cube track age, prestige, and your primary token.";
+    "Mint a BaseBlox on Base and let your cube track age, prestige & your primary token.";
   const appTweetText =
-    "Mint a BaseBlox identity cube on Base and let your onchain age + prestige show. #BaseBlox #Base";
-  const appTweetUrl = buildTweetUrl({ text: appTweetText, url: appShareUrl });
+    "Mint a BaseBlox identity cube on Base — your evolving digital identity. #BaseBlox #Base";
+
+  const appTweetUrl = buildTweetUrl({
+    text: appTweetText,
+    url: appShareUrl,
+  });
 
   const disabledCubeShare = !hasCube;
 
   return (
     <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-4">
-      {/* Share your cube */}
+
+      {/* Share Your Cube */}
       <div>
         <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
           Share your cube
         </p>
         <p className="text-[11px] text-slate-200/85 mb-2">
-          Post a card that uses your cube&apos;s onchain art as the preview on
-          Farcaster and X.
+          Post a dynamic card preview of your cube on Farcaster or X.
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -116,7 +102,7 @@ export default function ShareSection({
               type="button"
               disabled
               className="rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold
-                         bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
+                bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
             >
               Share cube on Farcaster
             </button>
@@ -124,8 +110,8 @@ export default function ShareSection({
 
           <a
             href={disabledCubeShare ? "#" : cubeTweetUrl}
-            target={disabledCubeShare ? undefined : "_blank"}
-            rel={disabledCubeShare ? undefined : "noreferrer"}
+            target="_blank"
+            rel="noreferrer"
             className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition
               ${
                 disabledCubeShare
@@ -142,15 +128,16 @@ export default function ShareSection({
             type="button"
             onClick={() => copyToClipboard(cubeOgUrl)}
             className="mt-2 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
-                       bg-slate-900/70 border border-slate-600 text-slate-200
-                       hover:bg-slate-800/90 transition"
+              bg-slate-900/70 border border-slate-600 text-slate-200
+              hover:bg-slate-800/90 transition"
           >
             Copy cube link
           </button>
         )}
+
         {!hasCube && (
           <p className="mt-2 text-[11px] text-slate-500">
-            Mint a cube first to unlock personal share links.
+            Mint a cube to unlock personal share links.
           </p>
         )}
       </div>
@@ -158,14 +145,13 @@ export default function ShareSection({
       {/* Divider */}
       <div className="h-px w-full bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" />
 
-      {/* Share the app */}
+      {/* Share the App */}
       <div>
         <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
           Share BaseBlox app
         </p>
         <p className="text-[11px] text-slate-200/85 mb-2">
-          Invite friends to forge their own cubes. Uses the main BaseBlox card
-          image.
+          Invite friends to forge their own evolving identity cubes.
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -175,8 +161,8 @@ export default function ShareSection({
             target="_blank"
             rel="noreferrer"
             className="rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold
-                       bg-slate-900/80 border border-white/20 text-slate-50
-                       hover:bg-slate-800/90 transition shadow-[0_10px_24px_rgba(0,0,0,.35)]"
+              bg-slate-900/80 border border-white/20 text-slate-50
+              hover:bg-slate-800/90 transition shadow-[0_10px_24px_rgba(0,0,0,.35)]"
           >
             Share app on X
           </a>
@@ -186,8 +172,8 @@ export default function ShareSection({
           type="button"
           onClick={() => copyToClipboard(appShareUrl)}
           className="mt-2 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
-                     bg-slate-900/70 border border-slate-600 text-slate-200
-                     hover:bg-slate-800/90 transition"
+            bg-slate-900/70 border border-slate-600 text-slate-200
+            hover:bg-slate-800/90 transition"
         >
           Copy app link
         </button>
