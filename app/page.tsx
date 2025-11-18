@@ -185,8 +185,9 @@ export default function Home() {
   const { address, isConnected } = useAccount();
   const { writeContractAsync, isPending: isWriting } = useWriteContract();
 
-  // ---------- Onchain reads ----------
+  // ---------- Onchain reads: primary cube (cubeOf) + global state ----------
 
+  // "Minted identity cube" mapping
   const { data: cubeIdData } = useReadContract({
     address: BASEBLOCKS_ADDRESS,
     abi: BASEBLOCKS_ABI,
@@ -195,24 +196,8 @@ export default function Home() {
     query: { enabled: Boolean(address) },
   });
 
-  const hasCube = !!cubeIdData && cubeIdData > 0n;
-  const cubeId = hasCube ? Number(cubeIdData) : 0;
-
-  const { data: cubeData } = useReadContract({
-    address: BASEBLOCKS_ADDRESS,
-    abi: BASEBLOCKS_ABI,
-    functionName: "getCubeData",
-    args: hasCube ? [cubeIdData!] : undefined,
-    query: { enabled: hasCube },
-  });
-
-  const { data: ageSecondsData } = useReadContract({
-    address: BASEBLOCKS_ADDRESS,
-    abi: BASEBLOCKS_ABI,
-    functionName: "getAge",
-    args: hasCube ? [cubeIdData!] : undefined,
-    query: { enabled: hasCube },
-  });
+  const hasMintedCube = !!cubeIdData && cubeIdData > 0n;
+  const mintedCubeId = hasMintedCube ? Number(cubeIdData) : 0;
 
   const { data: maxSupplyData } = useReadContract({
     address: BASEBLOCKS_ADDRESS,
@@ -236,15 +221,6 @@ export default function Home() {
     address: BASEBLOCKS_ADDRESS,
     abi: BASEBLOCKS_ABI,
     functionName: "promoMintsRemaining",
-  });
-
-  // Main cube tokenURI (for NFT art)
-  const { data: mainTokenUriData } = useReadContract({
-    address: BASEBLOCKS_ADDRESS,
-    abi: BASEBLOCKS_ABI,
-    functionName: "tokenURI",
-    args: hasCube ? [cubeIdData!] : undefined,
-    query: { enabled: hasCube },
   });
 
   // ---------- Recent mints ----------
@@ -364,24 +340,142 @@ export default function Home() {
     return out;
   }, [featuredResults, featuredTokenIds]);
 
-  // ---------- Derived for current cube ----------
+  // ---------- Robust-ish scan: other cubes owned by this wallet ----------
+
+  const ownedScanTokenIds = useMemo(() => {
+    if (!address || !nextTokenIdData || nextTokenIdData <= 1n) {
+      return [] as bigint[];
+    }
+    const last = Number(nextTokenIdData) - 1;
+    const mintedCount = last;
+    // Scan up to the last 256 cubes; if total minted <= 256, this covers all.
+    const windowSize = Math.min(mintedCount, 256);
+    const first = last - windowSize + 1;
+    const ids: bigint[] = [];
+    for (let id = last; id >= first; id--) {
+      ids.push(BigInt(id));
+    }
+    return ids;
+  }, [address, nextTokenIdData]);
+
+  const { data: ownedScanResults } = useReadContracts({
+    contracts: ownedScanTokenIds.map((id) => ({
+      address: BASEBLOCKS_ADDRESS,
+      abi: BASEBLOCKS_ABI,
+      functionName: "ownerOf",
+      args: [id],
+    })) as const,
+    query: { enabled: Boolean(address && ownedScanTokenIds.length > 0) },
+  });
+
+  const extraOwnedCubes = useMemo(() => {
+    if (!address || !ownedScanResults || ownedScanResults.length === 0) {
+      return [] as number[];
+    }
+    const lower = address.toLowerCase();
+    const extras: number[] = [];
+
+    ownedScanTokenIds.forEach((id, idx) => {
+      const owner = ownedScanResults[idx]?.result as string | undefined;
+      if (owner && owner.toLowerCase() === lower) {
+        const numericId = Number(id);
+        // skip the primary cubeOf(address) in this list
+        if (!hasMintedCube || numericId !== mintedCubeId) {
+          extras.push(numericId);
+        }
+      }
+    });
+
+    extras.sort((a, b) => a - b);
+    return extras;
+  }, [address, ownedScanResults, ownedScanTokenIds, hasMintedCube, mintedCubeId]);
+
+  // All cubes we know this wallet owns (primary + extras)
+  const allOwnedCubes = useMemo(() => {
+    const ids = new Set<number>();
+    if (hasMintedCube) ids.add(mintedCubeId);
+    extraOwnedCubes.forEach((id) => ids.add(id));
+    return Array.from(ids).sort((a, b) => a - b);
+  }, [hasMintedCube, mintedCubeId, extraOwnedCubes]);
+
+  const hasAnyCube = allOwnedCubes.length > 0;
+
+  // ---------- Active (display) cube selection ----------
+
+  const [activeCubeId, setActiveCubeId] = useState<number | null>(null);
+
+  // The cube we actually show stats + art for
+  const effectiveCubeId = useMemo(() => {
+    if (activeCubeId != null) return activeCubeId;
+    if (allOwnedCubes.length > 0) return allOwnedCubes[0];
+    return null;
+  }, [activeCubeId, allOwnedCubes]);
+
+  const effectiveCubeIdBig =
+    effectiveCubeId != null ? BigInt(effectiveCubeId) : null;
+
+  // Reads for the *active* cube
+  const { data: activeCubeData } = useReadContract({
+    address: BASEBLOCKS_ADDRESS,
+    abi: BASEBLOCKS_ABI,
+    functionName: "getCubeData",
+    args: effectiveCubeIdBig ? [effectiveCubeIdBig] : undefined,
+    query: { enabled: Boolean(effectiveCubeIdBig) },
+  });
+
+  const { data: activeAgeSecondsData } = useReadContract({
+    address: BASEBLOCKS_ADDRESS,
+    abi: BASEBLOCKS_ABI,
+    functionName: "getAge",
+    args: effectiveCubeIdBig ? [effectiveCubeIdBig] : undefined,
+    query: { enabled: Boolean(effectiveCubeIdBig) },
+  });
+
+  const { data: activeTokenUriData } = useReadContract({
+    address: BASEBLOCKS_ADDRESS,
+    abi: BASEBLOCKS_ABI,
+    functionName: "tokenURI",
+    args: effectiveCubeIdBig ? [effectiveCubeIdBig] : undefined,
+    query: { enabled: Boolean(effectiveCubeIdBig) },
+  });
+
+  // ---------- Derived for active cube ----------
 
   const {
-    ageDays,
-    ageTier,
-    prestigeLevel,
-    primaryToken,
-    primarySymbol,
-    mintedAtDate,
+    activeAgeDays,
+    activeAgeTier,
+    activePrestigeLevel,
+    activePrimaryToken,
+    activePrimarySymbol,
+    activeMintedAtDate,
   } = useMemo(() => {
-    const seconds = ageSecondsData ? Number(ageSecondsData) : 0;
+    if (!effectiveCubeIdBig || !activeCubeData) {
+      return {
+        activeAgeDays: 0,
+        activeAgeTier: ageTierLabel(0),
+        activePrestigeLevel: 0,
+        activePrimaryToken: undefined as string | undefined,
+        activePrimarySymbol: "",
+        activeMintedAtDate: "—",
+      };
+    }
+
+    const seconds = activeAgeSecondsData ? Number(activeAgeSecondsData) : 0;
     const days = Math.floor(seconds / 86400);
 
-    const prestige = cubeData ? Number((cubeData as any).prestigeLevel) : 0;
-    const primaryTokenAddr = cubeData ? (cubeData as any).primaryToken : undefined;
-    const primarySymbolBytes = cubeData ? (cubeData as any).primarySymbol : undefined;
+    const prestige = activeCubeData
+      ? Number((activeCubeData as any).prestigeLevel)
+      : 0;
+    const primaryTokenAddr = activeCubeData
+      ? (activeCubeData as any).primaryToken
+      : undefined;
+    const primarySymbolBytes = activeCubeData
+      ? (activeCubeData as any).primarySymbol
+      : undefined;
 
-    const mintedAtSeconds = cubeData ? Number((cubeData as any).mintedAt) : 0;
+    const mintedAtSeconds = activeCubeData
+      ? Number((activeCubeData as any).mintedAt)
+      : 0;
     const mintedAt =
       mintedAtSeconds > 0
         ? new Date(mintedAtSeconds * 1000).toLocaleDateString("en-US", {
@@ -392,14 +486,16 @@ export default function Home() {
         : "—";
 
     return {
-      ageDays: days,
-      ageTier: ageTierLabel(days),
-      prestigeLevel: prestige,
-      primaryToken: primaryTokenAddr as string | undefined,
-      primarySymbol: decodeBytes8Symbol(primarySymbolBytes as string | undefined),
-      mintedAtDate: mintedAt,
+      activeAgeDays: days,
+      activeAgeTier: ageTierLabel(days),
+      activePrestigeLevel: prestige,
+      activePrimaryToken: primaryTokenAddr as string | undefined,
+      activePrimarySymbol: decodeBytes8Symbol(
+        primarySymbolBytes as string | undefined,
+      ),
+      activeMintedAtDate: mintedAt,
     };
-  }, [ageSecondsData, cubeData]);
+  }, [effectiveCubeIdBig, activeCubeData, activeAgeSecondsData]);
 
   const mintedCount = nextTokenIdData ? Number(nextTokenIdData) - 1 : 0;
   const maxSupply = maxSupplyData ? Number(maxSupplyData) : 0;
@@ -407,21 +503,24 @@ export default function Home() {
   const mintPriceEth = mintPriceData ? formatEther(mintPriceData) : "0";
 
   const notConnected = !isConnected;
-  const noCubeYet = isConnected && !hasCube;
+  const noCubeYet = isConnected && !hasAnyCube;
 
-  const mainCubeImage = extractImageFromTokenUri(
-    mainTokenUriData as string | undefined,
+  const activeCubeImage = extractImageFromTokenUri(
+    activeTokenUriData as string | undefined,
   );
 
-  // when user does NOT have a cube (connected or not), show fallback.PNG.
-  const myCubeImageToShow = hasCube ? mainCubeImage : "/fallback.PNG";
+  // when user does NOT have any cube (connected or not), show fallback.PNG.
+  const myCubeImageToShow =
+    effectiveCubeId != null && activeCubeImage ? activeCubeImage : "/fallback.PNG";
 
   // prestige timing: 180 days between prestiges
-  const canPrestige = hasCube && ageDays >= 180;
+  const canPrestige = effectiveCubeId != null && activeAgeDays >= 180;
   const prestigeCooldownDays =
-    hasCube && ageDays < 180 ? 180 - ageDays : 0;
+    effectiveCubeId != null && activeAgeDays < 180 ? 180 - activeAgeDays : 0;
 
-  // ---------- Local state ----------
+  const activePrestigeLabelText = prestigeLabel(activePrestigeLevel);
+
+  // ---------- Local state for manage actions ----------
 
   const [primaryTokenInput, setPrimaryTokenInput] = useState("");
   const [primarySymbolInput, setPrimarySymbolInput] = useState("");
@@ -453,7 +552,7 @@ export default function Home() {
 
   async function handleSetPrimaryToken(e: React.FormEvent) {
     e.preventDefault();
-    if (!hasCube) return;
+    if (effectiveCubeId == null) return;
     setManageError(null);
     setManageSuccess(null);
 
@@ -483,7 +582,7 @@ export default function Home() {
   }
 
   async function handlePrestige() {
-    if (!hasCube || !cubeIdData) return;
+    if (effectiveCubeId == null) return;
     setManageError(null);
     setManageSuccess(null);
 
@@ -492,7 +591,7 @@ export default function Home() {
         address: BASEBLOCKS_ADDRESS,
         abi: BASEBLOCKS_ABI,
         functionName: "prestige",
-        args: [cubeIdData],
+        args: [BigInt(effectiveCubeId)],
       });
 
       setManageSuccess(
@@ -506,8 +605,6 @@ export default function Home() {
   const latestCube = recentCubes[0];
   const otherRecent = recentCubes.slice(1);
   const gridRecent = otherRecent.slice(0, 4); // up to 4 in the 2x2 grid
-
-  const prestigeLabelText = prestigeLabel(prestigeLevel);
 
   // ---------- UI ----------
 
@@ -563,8 +660,12 @@ export default function Home() {
               <div className="flex justify-center sm:justify-start">
                 {/* NOTE: cube itself does NOT animate */}
                 <CubeVisual
-                  tokenId={hasCube ? cubeId : undefined}
-                  label={hasCube ? "Your BaseBlox cube" : "BaseBlox cube"}
+                  tokenId={effectiveCubeId ?? undefined}
+                  label={
+                    effectiveCubeId != null
+                      ? "Your BaseBlox cube"
+                      : "BaseBlox cube"
+                  }
                   size={336} // big hero cube
                   imageSrc={myCubeImageToShow}
                   showMeta={false}
@@ -580,29 +681,62 @@ export default function Home() {
                   <div className="mt-1 mb-4 h-px w-16 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
                 </div>
 
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div>
-                    <h2 className="text-base sm:text-lg font-semibold leading-tight text-slate-50">
-                      {hasCube ? `Cube #${cubeId}` : "No cube yet"}
-                    </h2>
-                    <p className="mt-1 text-xs text-slate-200/90">
-                      {address
-                        ? truncateAddress(address)
-                        : "Connect a Base wallet to begin"}
-                    </p>
-                    {hasCube && (
-                      <p className="text-xs text-slate-300/85">
-                        Minted{" "}
-                        <span className="font-medium text-slate-50">
-                          {mintedAtDate}
-                        </span>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div>
+                      <h2 className="text-base sm:text-lg font-semibold leading-tight text-slate-50">
+                        {effectiveCubeId != null
+                          ? `Cube #${effectiveCubeId}`
+                          : "No cube yet"}
+                      </h2>
+                      <p className="mt-1 text-xs text-slate-200/90">
+                        {address
+                          ? truncateAddress(address)
+                          : "Connect a Base wallet to begin"}
                       </p>
-                    )}
+                      {effectiveCubeId != null && (
+                        <p className="text-xs text-slate-300/85">
+                          Minted{" "}
+                          <span className="font-medium text-slate-50">
+                            {activeMintedAtDate}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="self-start">
+                      <ConnectButton chainStatus="none" showBalance={false} />
+                    </div>
                   </div>
 
-                  <div className="self-start">
-                    <ConnectButton chainStatus="none" showBalance={false} />
-                  </div>
+                  {allOwnedCubes.length > 1 && effectiveCubeId != null && (
+                    <div>
+                      <p className="text-[11px] text-slate-400 mb-1">
+                        Active cube
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {allOwnedCubes.map((id) => (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() =>
+                              setActiveCubeId(
+                                id === effectiveCubeId ? null : id,
+                              )
+                            }
+                            className={`text-[11px] px-2.5 py-1 rounded-full border transition ${
+                              id === effectiveCubeId
+                                ? "bg-sky-500/30 border-sky-400 text-sky-50"
+                                : "bg-slate-900/80 border-slate-600 text-slate-200 hover:bg-slate-800/90"
+                            }`}
+                          >
+                            #{id}
+                            {id === effectiveCubeId ? " (active)" : ""}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -617,15 +751,15 @@ export default function Home() {
                 )}
                 {noCubeYet && (
                   <p className="mt-1.5">
-                    You don&apos;t have a cube yet. Mint one on Base to start
-                    building your onchain identity.
+                    You don&apos;t have a cube yet. Mint or acquire one on Base
+                    to start building your onchain identity.
                   </p>
                 )}
               </div>
             )}
 
             {/* Identity snapshot inline in same card */}
-            {hasCube && (
+            {effectiveCubeId != null && (
               <div className="mt-1 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -638,7 +772,7 @@ export default function Home() {
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-sm font-semibold text-slate-50">
-                      {prestigeLabelText}
+                      {activePrestigeLabelText}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5">
                       Prestige level
@@ -650,11 +784,11 @@ export default function Home() {
                   <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
                     <p className="text-[11px] text-slate-400 mb-1">Age</p>
                     <p className="text-lg font-semibold text-slate-50">
-                      {ageDays}
+                      {activeAgeDays}
                       <span className="text-xs text-slate-400 ml-1">days</span>
                     </p>
                     <p className="text-[11px] text-slate-200 mt-0.5">
-                      {ageTier.label}
+                      {activeAgeTier.label}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Prestige unlocks roughly every 180 days.
@@ -664,10 +798,10 @@ export default function Home() {
                   <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
                     <p className="text-[11px] text-slate-400 mb-1">Prestige</p>
                     <p className="text-lg font-semibold text-slate-50">
-                      {prestigeLevel}
+                      {activePrestigeLevel}
                     </p>
                     <p className="text-[11px] text-slate-200 mt-0.5">
-                      {prestigeLabelText}
+                      {activePrestigeLabelText}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Your badge upgrades over time — outlined stars first,
@@ -680,10 +814,10 @@ export default function Home() {
                       Primary token
                     </p>
                     <p className="text-sm font-semibold text-slate-50">
-                      {primarySymbol || "Not set"}
+                      {activePrimarySymbol || "Not set"}
                     </p>
                     <p className="text-[11px] text-slate-300 mt-0.5">
-                      {truncateAddress(primaryToken)}
+                      {truncateAddress(activePrimaryToken)}
                     </p>
                   </div>
                 </div>
@@ -737,18 +871,18 @@ export default function Home() {
 
           <button
             type="button"
-            disabled={!isConnected || hasCube || isWriting || !mintPriceData}
+            disabled={!isConnected || hasMintedCube || isWriting || !mintPriceData}
             onClick={handleMint}
             className={`w-full text-xs sm:text-sm px-4 py-2.5 rounded-xl border font-medium transition
               ${
-                !isConnected || hasCube || !mintPriceData
+                !isConnected || hasMintedCube || !mintPriceData
                   ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
                   : "bg-sky-500/25 border-sky-400/80 text-sky-50 hover:bg-sky-500/40"
               }`}
           >
             {!isConnected
               ? "Connect wallet to mint"
-              : hasCube
+              : hasMintedCube
               ? "One cube per wallet (already minted)"
               : isWriting
               ? "Minting..."
@@ -756,7 +890,7 @@ export default function Home() {
           </button>
 
           {/* Prestige section */}
-          {hasCube && (
+          {effectiveCubeId != null && (
             <div className="mt-2 rounded-2xl bg-slate-900/90 px-3 py-3.5 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <div>
@@ -766,11 +900,11 @@ export default function Home() {
                   <p className="text-[11px] text-slate-200/80">
                     Every ~6 months of age you can prestige, resetting your age
                     and upgrading the badge on your card. Come back here when
-                    your cube is old enough to level up again.
+                    your active cube is old enough to level up again.
                   </p>
                 </div>
                 <span className="text-xs text-slate-300">
-                  Level {prestigeLevel}
+                  Level {activePrestigeLevel}
                 </span>
               </div>
 
@@ -787,13 +921,13 @@ export default function Home() {
                 {isWriting
                   ? "Submitting..."
                   : canPrestige
-                  ? "Prestige your cube"
+                  ? "Prestige your active cube"
                   : `Prestige available in ${prestigeCooldownDays} days`}
               </button>
             </div>
           )}
 
-          {hasCube && (
+          {effectiveCubeId != null && (
             <form
               onSubmit={handleSetPrimaryToken}
               className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 px-3 py-3.5"
@@ -802,7 +936,8 @@ export default function Home() {
                 Primary token
               </p>
               <p className="text-[11px] text-slate-200/80 mb-1.5">
-                Link a token you&apos;re known for. Symbol is etched on the cube.
+                Link a token you&apos;re known for. Symbol is etched on the
+                active cube.
               </p>
               <div className="space-y-2">
                 <div className="flex flex-col gap-1">
@@ -842,7 +977,7 @@ export default function Home() {
                     : "bg-slate-900 border-slate-600 text-slate-100 hover:bg-slate-800/90"
                 }`}
               >
-                {isWriting ? "Updating..." : "Set primary token"}
+                {isWriting ? "Updating..." : "Set primary token for active cube"}
               </button>
 
               {manageError && (
@@ -863,28 +998,62 @@ export default function Home() {
             Links
           </p>
           <div className="flex flex-wrap gap-2">
-            {hasCube && (
+            {effectiveCubeId != null && (
               <a
-                href={`https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${cubeId}`}
+                href={`https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${effectiveCubeId}`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs px-3 py-1.5 rounded-full bg-slate-900/85 border border-slate-600 text-slate-100 hover:bg-slate-800/95 transition"
               >
-                View cube #{cubeId} on Base
+                View active cube #{effectiveCubeId} on Base
               </a>
             )}
           </div>
+
+          {extraOwnedCubes.length > 0 && (
+            <div className="mt-3">
+              <p className="text-[11px] text-slate-400 mb-1">
+                Other cubes in this wallet (last 256 mints scanned)
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {extraOwnedCubes.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      setActiveCubeId(id === effectiveCubeId ? null : id)
+                    }
+                    className={`text-[11px] px-3 py-1.5 rounded-full border transition ${
+                      id === effectiveCubeId
+                        ? "bg-sky-500/30 border-sky-400 text-sky-50"
+                        : "bg-slate-900/85 border-slate-600 text-slate-100 hover:bg-slate-800/95"
+                    }`}
+                  >
+                    Cube #{id}
+                    {id === effectiveCubeId ? " (active)" : ""}
+                  </button>
+                ))}
+              </div>
+              {effectiveCubeId != null && (
+                <p className="mt-1 text-[10px] text-slate-500">
+                  Your BaseBlox identity on this page follows the active cube,
+                  but these cubes are also held by your wallet. For very old
+                  mints outside the last 256, check BaseScan directly.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ⬇️ Shared component: Share your cube + Share BaseBlox */}
         <ShareSection
-          hasCube={hasCube}
-          cubeId={cubeId}
-          ageDays={ageDays}
-          prestigeLabelText={prestigeLabelText}
-          primarySymbol={primarySymbol} // 👈 NEW
+          hasCube={effectiveCubeId != null}
+          cubeId={effectiveCubeId ?? 0}
+          ageDays={activeAgeDays}
+          prestigeLabelText={activePrestigeLabelText}
+          primarySymbol={activePrimarySymbol}
         />
-        
+
         {/* Freshly forged cubes – latest centered, then 2x2 grid */}
         <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
