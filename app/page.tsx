@@ -427,6 +427,7 @@ export default function Home() {
   const [primarySymbolInput, setPrimarySymbolInput] = useState("");
   const [manageError, setManageError] = useState<string | null>(null);
   const [manageSuccess, setManageSuccess] = useState<string | null>(null);
+  const [showMintCongrats, setShowMintCongrats] = useState(false);
 
   async function handleMint() {
     if (!mintPriceData) return;
@@ -444,6 +445,7 @@ export default function Home() {
       setManageSuccess(
         "Mint submitted. Your cube will appear once the transaction confirms.",
       );
+      setShowMintCongrats(true);
     } catch (err: any) {
       setManageError(err?.shortMessage || err?.message || "Mint failed.");
     }
@@ -977,6 +979,37 @@ export default function Home() {
           </a>
         </div>
       </div>
+
+      {/* Mint confirmation popup */}
+      {showMintCongrats && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center px-6">
+          {/* backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowMintCongrats(false)}
+          />
+          {/* card */}
+          <div className="relative z-50 max-w-sm w-full rounded-3xl border border-sky-400/70 bg-slate-950/95 px-6 py-6 shadow-[0_0_60px_rgba(56,189,248,.6)]">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="text-4xl">🎉</div>
+              <h2 className="text-lg font-semibold text-slate-50">
+                Cube mint submitted
+              </h2>
+              <p className="text-sm text-slate-300">
+                Once your transaction confirms, your BaseBlox cube will appear
+                above and start aging on Base. One cube per wallet.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowMintCongrats(false)}
+                className="mt-2 inline-flex items-center justify-center px-4 py-1.5 rounded-full text-xs font-semibold bg-sky-500/20 border border-sky-400/70 text-sky-50 hover:bg-sky-500/30 transition"
+              >
+                Nice, let it cook ✨
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
