@@ -2,6 +2,7 @@
 "use client";
 
 import Image from "next/image";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 type ShareSectionProps = {
   hasCube: boolean;
@@ -19,6 +20,36 @@ const FARCASTER_MINIAPP_URL =
   process.env.NEXT_PUBLIC_FARCASTER_MINIAPP_URL ??
   "https://farcaster.xyz/miniapps/N_U7EfeREI4I/baseblox";
 
+/**
+ * Helper: share via Farcaster.
+ * - If inside a Mini App ➜ use sdk.actions.composeCast (native compose sheet)
+ * - Otherwise ➜ fall back to Warpcast web compose URL
+ */
+async function shareOnFarcaster(text: string, embedUrl: string) {
+  try {
+    const isMiniApp = await sdk.isInMiniApp();
+
+    if (isMiniApp) {
+      // Native in-app compose (no download page)
+      await sdk.actions.composeCast({
+        text,
+        embeds: embedUrl ? [{ url: embedUrl }] : [],
+      });
+    } else {
+      // Fallback for regular browsers
+      const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
+        text,
+      )}&embeds[]=${encodeURIComponent(embedUrl)}`;
+
+      if (typeof window !== "undefined") {
+        window.open(shareUrl, "_blank");
+      }
+    }
+  } catch (err) {
+    console.error("Farcaster share failed:", err);
+  }
+}
+
 export default function ShareSection({
   hasCube,
   cubeId,
@@ -31,7 +62,7 @@ export default function ShareSection({
 
   // ---------- Share helpers (cube-specific) ----------
 
-  function handleShareX() {
+  async function handleShareX() {
     if (!hasCube) return;
 
     const text = `My BaseBlox cube #${cubeId} on Base — ${ageDays} days old, ${prestigeLabelText}.`;
@@ -45,7 +76,7 @@ export default function ShareSection({
     }
   }
 
-  function handleShareFarcaster() {
+  async function handleShareFarcaster() {
     if (!hasCube) return;
 
     const textLines = [
@@ -56,18 +87,12 @@ export default function ShareSection({
 
     const text = textLines.join("\n");
 
-    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
-      text,
-    )}&embeds[]=${encodeURIComponent(cubeUrl)}`;
-
-    if (typeof window !== "undefined") {
-      window.open(shareUrl, "_blank");
-    }
+    await shareOnFarcaster(text, cubeUrl);
   }
 
   // ---------- Share helpers (project-level CTA using share.PNG OG) ----------
 
-  function handleShareProjectX() {
+  async function handleShareProjectX() {
     const text =
       "Mint your BaseBlox identity cube on Base and let your onchain age & prestige show.";
 
@@ -80,7 +105,7 @@ export default function ShareSection({
     }
   }
 
-  function handleShareProjectFarcaster() {
+  async function handleShareProjectFarcaster() {
     const textLines = [
       "Mint your BaseBlox identity cube on Base — one evolving cube per wallet.",
       "",
@@ -89,13 +114,7 @@ export default function ShareSection({
 
     const text = textLines.join("\n");
 
-    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
-      text,
-    )}&embeds[]=${encodeURIComponent(SITE_URL)}`;
-
-    if (typeof window !== "undefined") {
-      window.open(shareUrl, "_blank");
-    }
+    await shareOnFarcaster(text, SITE_URL);
   }
 
   return (
