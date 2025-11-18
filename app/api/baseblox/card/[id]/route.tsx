@@ -1,4 +1,4 @@
-// app/api/baseblox/card/[id]/route.ts
+// app/api/baseblox/card/[id]/route.tsx
 import { ImageResponse } from "next/og";
 import { BASEBLOCKS_ADDRESS, BASEBLOCKS_ABI } from "@/lib/baseblocksAbi";
 import { createPublicClient, http } from "viem";
@@ -284,9 +284,9 @@ export async function GET(
 
           <div
             style={{
-           	marginTop: 28,
-           	fontSize: 18,
-           	opacity: 0.75,
+              marginTop: 28,
+              fontSize: 18,
+              opacity: 0.75,
             }}
           >
             Mint an evolving onchain identity cube on Base.
