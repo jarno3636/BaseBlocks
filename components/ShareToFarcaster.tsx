@@ -1,7 +1,7 @@
 // components/ShareToFarcaster.tsx
 "use client";
 
-import { sdk } from "@farcaster/miniapp-sdk";
+import { useComposeCast } from "@coinbase/onchainkit/minikit";
 
 type Props = {
   text?: string;
@@ -46,40 +46,33 @@ export default function ShareToFarcaster({
   secondaryUrl,
   className,
 }: Props) {
-  const handleClick = async () => {
+  const { composeCast } = useComposeCast();
+
+  const handleClick = () => {
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
 
-    const embeds: { url: string }[] = [];
-    if (primary) embeds.push({ url: primary });
-    if (secondary) embeds.push({ url: secondary });
+    const embeds: string[] = [];
+    if (primary) embeds.push(primary);
+    if (secondary && secondary !== primary) embeds.push(secondary);
 
     const message = text || "";
 
-    try {
-      // ✅ Mini-app path: use Farcaster miniapp SDK
-      const fc = sdk as any;
-      if (fc?.actions?.openCastComposer) {
-        await fc.actions.openCastComposer({
-          text: message,
-          embeds,
-        });
-        return;
-      }
-    } catch {
-      // ignore and fall through to Warpcast compose fallback
+    // ✅ Primary path: inside Base app / Mini App
+    if (composeCast) {
+      composeCast({ text: message, embeds });
+      return;
     }
 
-    // 🌐 Fallback (outside mini-app): use Warpcast web composer
+    // 🌐 Fallback: normal web – open Warpcast composer
+    const params = new URLSearchParams();
+    if (message) params.set("text", message);
+    embeds.forEach((e) => params.append("embeds[]", e));
+
+    const href = `https://warpcast.com/~/compose?${params.toString()}`;
+
     if (typeof window !== "undefined") {
-      const composeUrl = new URL("https://warpcast.com/~/compose");
-
-      if (message) composeUrl.searchParams.set("text", message);
-      for (const e of embeds) {
-        composeUrl.searchParams.append("embeds[]", e.url);
-      }
-
-      window.open(composeUrl.toString(), "_blank");
+      window.open(href, "_blank");
     }
   };
 
