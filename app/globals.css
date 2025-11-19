@@ -149,3 +149,21 @@ textarea {
   animation: hero-float 4s ease-in-out infinite;
   will-change: transform;
 }
+
+/* ---------- Explicit grids for cube galleries ---------- */
+
+/* Force a 2-column grid for recent + featured cubes on all screen sizes */
+.fresh-grid,
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;           /* space between cards */
+  justify-items: center; /* center each cube card inside its cell */
+}
+
+/* Make sure each cube card has a nice fixed-ish width and doesn’t stretch */
+.fresh-item,
+.featured-item {
+  width: 100%;
+  max-width: 180px;
+}
