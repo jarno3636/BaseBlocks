@@ -52,8 +52,9 @@ export default function ShareToFarcaster({
 
     // 1) Mini-app native share if available
     try {
-      if (sdk?.actions?.openCastComposer) {
-        await sdk.actions.openCastComposer({
+      const anySdk = sdk as any; // <- cast to any so TS doesn't complain
+      if (anySdk?.actions?.openCastComposer) {
+        await anySdk.actions.openCastComposer({
           text,
           embeds,
         });
