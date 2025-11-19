@@ -2,9 +2,8 @@
 "use client";
 
 import "@rainbow-me/rainbowkit/styles.css";
-import "@coinbase/onchainkit/styles.css";
 
-import React, { useMemo, type ReactNode, useEffect } from "react";
+import React, { useMemo, useEffect } from "react";
 import {
   QueryClient,
   QueryClientProvider,
@@ -15,7 +14,6 @@ import { WagmiProvider, useReconnect } from "wagmi";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { base } from "viem/chains";
 import { wagmiConfig } from "@/lib/wallet";
-import { MiniContextProvider } from "@/lib/useMiniContext";
 
 /* ---------------- BigInt JSON polyfill ---------------- */
 declare global {
@@ -48,50 +46,6 @@ function AutoReconnect() {
   return null;
 }
 
-/* ---------- Neynar providers (lazy, safe load) ---------
-   - MiniAppProvider gives you the Farcaster mini-app context (FID, etc.) when opened
-     in Warpcast/Merkle.
-   - NeynarProvider (optional) enables client SDK features if you provide
-     NEXT_PUBLIC_NEYNAR_CLIENT_ID.
-   Both are loaded via require() to avoid breaking builds if the package isn’t
-   installed server-side.
--------------------------------------------------------- */
-function NeynarProviders({ children }: { children: ReactNode }) {
-  const clientId = process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID;
-
-  let MiniAppProvider: React.ComponentType<any> | null = null;
-  let NeynarProvider: React.ComponentType<any> | null = null;
-
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const mod: any = require("@neynar/react");
-    MiniAppProvider = mod?.MiniAppProvider ?? null;
-    NeynarProvider = mod?.NeynarProvider ?? mod?.default ?? null;
-  } catch {
-    // package not present at runtime — just render children
-  }
-
-  if (!MiniAppProvider && !NeynarProvider) return <>{children}</>;
-
-  if (MiniAppProvider) {
-    return (
-      <MiniAppProvider>
-        {clientId && NeynarProvider ? (
-          <NeynarProvider clientId={clientId}>{children}</NeynarProvider>
-        ) : (
-          children
-        )}
-      </MiniAppProvider>
-    );
-  }
-
-  if (clientId && NeynarProvider) {
-    return <NeynarProvider clientId={clientId}>{children}</NeynarProvider>;
-  }
-
-  return <>{children}</>;
-}
-
 /* ------------------- Root Providers ------------------- */
 export default function Providers({ children }: { children: React.ReactNode }) {
   const theme = useMemo(
@@ -107,27 +61,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   const dehydratedState = dehydrate(queryClient, { serializeData });
 
-  // Inner tree: wagmi + RainbowKit + your mini context + Neynar
-  const innerTree = (
-    <>
-      <AutoReconnect />
-      <RainbowKitProvider
-        theme={theme}
-        initialChain={base}
-        modalSize="compact"
-        appInfo={{ appName: "BaseBlox" }}
-      >
-        <MiniContextProvider>
-          <NeynarProviders>{children}</NeynarProviders>
-        </MiniContextProvider>
-      </RainbowKitProvider>
-    </>
-  );
-
   return (
     <QueryClientProvider client={queryClient}>
       <HydrationBoundary state={dehydratedState}>
-        <WagmiProvider config={wagmiConfig}>{innerTree}</WagmiProvider>
+        <WagmiProvider config={wagmiConfig}>
+          <AutoReconnect />
+          <RainbowKitProvider
+            theme={theme}
+            initialChain={base}
+            modalSize="compact"
+            appInfo={{ appName: "BaseBlox" }}
+          >
+            {children}
+          </RainbowKitProvider>
+        </WagmiProvider>
       </HydrationBoundary>
     </QueryClientProvider>
   );
