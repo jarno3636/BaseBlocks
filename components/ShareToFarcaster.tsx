@@ -48,23 +48,21 @@ export default function ShareToFarcaster({
   async function handleClick() {
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
+    // Only keep valid URLs; Farcaster only supports up to 2 embeds
     const embeds = [primary, secondary].filter(Boolean) as string[];
 
-    // 1) Mini-app native share if available
+    // 1) Mini-app native share if available (inside Warpcast / Farcaster client)
     try {
-      const anySdk = sdk as any; // <- cast to any so TS doesn't complain
-      if (anySdk?.actions?.openCastComposer) {
-        await anySdk.actions.openCastComposer({
-          text,
-          embeds,
-        });
-        return;
-      }
+      await sdk.actions.composeCast({
+        text,
+        embeds,
+      });
+      return;
     } catch {
-      // fall through to Warpcast web share
+      // If we're not in a mini app host, fall through to web share.
     }
 
-    // 2) Fallback: Warpcast web composer
+    // 2) Fallback: Warpcast web composer (normal browser)
     const params = new URLSearchParams();
     if (text) params.set("text", text);
     embeds.forEach((u) => params.append("embeds[]", u));
