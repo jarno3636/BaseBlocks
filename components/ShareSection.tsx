@@ -1,43 +1,47 @@
 // components/ShareSection.tsx
 "use client";
 
-import ShareToFarcaster from "@/components/ShareToFarcaster";
-import { buildTweetUrl } from "@/lib/share";
+import ShareToFarcaster from "./ShareToFarcaster";
 
 type ShareSectionProps = {
   hasCube: boolean;
   cubeId: number;
   ageDays: number;
   prestigeLabelText: string;
-  primarySymbol?: string;
-  cubeImageUrl?: string; // direct NFT image url (https)
+  primarySymbol: string;
 };
 
-function resolveOrigin(): string {
+function getSiteOrigin(): string {
   if (typeof window !== "undefined" && window.location?.origin) {
     return window.location.origin.replace(/\/$/, "");
   }
 
-  const raw =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_URL ||
-    process.env.VERCEL_URL ||
-    "https://baseblox.vercel.app";
-
-  if (raw.startsWith("http://") || raw.startsWith("https://")) {
-    return raw.replace(/\/$/, "");
+  const env =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "";
+  if (env) {
+    const withProto = /^https?:\/\//i.test(env) ? env : `https://${env}`;
+    return withProto.replace(/\/$/, "");
   }
-  return `https://${raw.replace(/\/$/, "")}`;
+
+  return "https://baseblox.vercel.app";
 }
 
-const MINI_APP_LINK =
-  process.env.NEXT_PUBLIC_FC_MINIAPP_LINK ||
-  process.env.NEXT_PUBLIC_FC_MINIAPP_URL ||
-  "";
+function getCubeUrl(cubeId: number): string {
+  const origin = getSiteOrigin();
+  // if later you add a dedicated /cube/[id] page, update this:
+  return `${origin}/?cubeId=${cubeId}`;
+}
 
-function copyToClipboard(text: string) {
-  if (!text) return;
-  navigator?.clipboard?.writeText(text).catch(() => {});
+function openTwitterShare(text: string, url?: string) {
+  const params = new URLSearchParams();
+  if (text) params.set("text", text);
+  if (url) params.set("url", url);
+
+  const shareUrl = `https://x.com/intent/post?${params.toString()}`;
+
+  if (typeof window !== "undefined") {
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
+  }
 }
 
 export default function ShareSection({
@@ -46,153 +50,88 @@ export default function ShareSection({
   ageDays,
   prestigeLabelText,
   primarySymbol,
-  cubeImageUrl,
 }: ShareSectionProps) {
-  const origin = resolveOrigin();
+  const origin = getSiteOrigin();
+  const cubeUrl = hasCube ? getCubeUrl(cubeId) : origin;
 
-  // NFT image for this cube (must be a real https URL)
-  const nftImageUrl =
-    hasCube && cubeImageUrl && cubeImageUrl.startsWith("http")
-      ? cubeImageUrl
-      : undefined;
-
-  const appShareUrl = MINI_APP_LINK || origin;
-  const appShareImageUrl = `${origin}/share.PNG`;
-
-  const cubeBaseText = hasCube
-    ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}${
-        primarySymbol ? ` (${primarySymbol})` : ""
+  const cubeShareText = hasCube
+    ? `My BaseBlox identity cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}${
+        primarySymbol ? `, primary token ${primarySymbol}` : ""
       }.`
-    : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
+    : "Mint your BaseBlox identity cube on Base.";
 
-  const cubeFcText = `${cubeBaseText} #BaseBlox #Onchain`;
-  const cubeTweetText = `${cubeBaseText} #BaseBlox #Base`;
-
-  const cubeTweetUrl = buildTweetUrl({
-    text: cubeTweetText,
-    url: nftImageUrl || appShareUrl,
-  });
-
-  const appFcText =
-    "Mint a BaseBlox on Base and let your cube track age, prestige & your primary token. #BaseBlox #Onchain";
-
-  const appTweetText =
-    "Mint a BaseBlox identity cube on Base — your evolving digital identity. #BaseBlox #Base";
-
-  const appTweetUrl = buildTweetUrl({
-    text: appTweetText,
-    url: appShareUrl,
-  });
-
-  const disabledCubeShare = !hasCube || !nftImageUrl;
+  const appShareText =
+    "BaseBlox – evolving onchain identity cubes on Base. One cube per wallet, tracking age, prestige, and your primary token.";
 
   return (
-    <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-5">
-      {/* Share Your Cube */}
-      <div className="space-y-2">
+    <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-4">
+      <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+        Share
+      </p>
+
+      {/* Share your cube */}
+      <div className="rounded-2xl bg-slate-900/85 px-3 py-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+            <p className="text-xs font-semibold text-slate-50">
               Share your cube
             </p>
-            <p className="text-[11px] text-slate-200/85">
-              One cast with your cube art + the mini-app link embed.
+            <p className="text-[11px] text-slate-400">
+              Post your current cube stats and let people see your onchain
+              identity.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {disabledCubeShare ? (
-            <button
-              type="button"
-              disabled
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold
-                bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
-            >
-              <span>Share cube on Farcaster</span>
-            </button>
-          ) : (
-            <ShareToFarcaster
-              text={cubeFcText}
-              url={nftImageUrl}          // NFT image only
-              secondaryUrl={appShareUrl} // mini-app link (second embed)
-            />
-          )}
-
-          <a
-            href={disabledCubeShare ? "#" : cubeTweetUrl}
-            target="_blank"
-            rel="noreferrer"
-            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition
-              ${
-                disabledCubeShare
-                  ? "bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
-                  : "bg-slate-900/80 border border-white/20 text-slate-50 hover:bg-slate-800/90 shadow-[0_10px_24px_rgba(0,0,0,.35)]"
-              }`}
-          >
-            <span>Share cube on X</span>
-          </a>
-        </div>
-
-        {hasCube && nftImageUrl && (
-          <button
-            type="button"
-            onClick={() => copyToClipboard(nftImageUrl)}
-            className="mt-1 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
-              bg-slate-900/70 border border-slate-600 text-slate-200
-              hover:bg-slate-800/90 transition"
-          >
-            Copy cube image URL
-          </button>
-        )}
-
-        {!hasCube && (
-          <p className="mt-1 text-[11px] text-slate-500">
-            Mint a cube to unlock personal share links.
-          </p>
-        )}
-      </div>
-
-      {/* Divider */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" />
-
-      {/* Share the App */}
-      <div className="space-y-2">
-        <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
-          Share BaseBlox app
-        </p>
-        <p className="text-[11px] text-slate-200/85">
-          One share image that opens your mini-app.
-        </p>
-
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-2">
+          {/* Farcaster share for cube */}
           <ShareToFarcaster
-            text={appFcText}
-            url={appShareImageUrl}
-            secondaryUrl={appShareUrl}
+            text={cubeShareText}
+            url={cubeUrl}
+            className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-violet-500/20 border border-violet-400/70 text-violet-50 hover:bg-violet-500/30 transition"
           />
 
-          <a
-            href={appTweetUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold
-              bg-slate-900/80 border border-white/20 text-slate-50
-              hover:bg-slate-800/90 transition shadow-[0_10px_24px_rgba(0,0,0,.35)]"
+          {/* X / Twitter share for cube */}
+          <button
+            type="button"
+            onClick={() => openTwitterShare(cubeShareText, cubeUrl)}
+            className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-sky-500/20 border border-sky-400/70 text-sky-50 hover:bg-sky-500/30 transition"
           >
-            <span>Share app on X</span>
-          </a>
+            Share cube on X
+          </button>
+        </div>
+      </div>
+
+      {/* Share the BaseBlox app itself */}
+      <div className="rounded-2xl bg-slate-900/85 px-3 py-3 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-semibold text-slate-50">
+              Share BaseBlox
+            </p>
+            <p className="text-[11px] text-slate-400">
+              Invite others to mint their own identity cube on Base.
+            </p>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => copyToClipboard(appShareUrl)}
-          className="mt-1 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
-            bg-slate-900/70 border border-slate-600 text-slate-200
-            hover:bg-slate-800/90 transition"
-        >
-          Copy mini-app link
-        </button>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {/* Farcaster share for app */}
+          <ShareToFarcaster
+            text={appShareText}
+            url={origin}
+            className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-violet-500/20 border border-violet-400/70 text-violet-50 hover:bg-violet-500/30 transition"
+          />
+
+          {/* X / Twitter share for app */}
+          <button
+            type="button"
+            onClick={() => openTwitterShare(appShareText, origin)}
+            className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-sky-500/20 border border-sky-400/70 text-sky-50 hover:bg-sky-500/30 transition"
+          >
+            Share app on X
+          </button>
+        </div>
       </div>
     </div>
   );
