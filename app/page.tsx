@@ -227,7 +227,7 @@ export default function Home() {
   const recentTokenIds = useMemo(() => {
     if (!nextTokenIdData || nextTokenIdData <= 1n) return [] as bigint[];
     const last = Number(nextTokenIdData) - 1;
-    const first = Math.max(1, last - 4);
+    const first = Math.max(1, last - 4); // up to 4 most recent
     const ids: bigint[] = [];
     for (let id = last; id >= first; id--) ids.push(BigInt(id));
     return ids;
@@ -291,6 +291,9 @@ export default function Home() {
 
     return out;
   }, [recentResults, recentTokenIds]);
+
+  // Up to 4 most recent cubes (for 2×2 grid)
+  const gridRecent = recentCubes.slice(0, 4);
 
   // ---------- Featured promo cubes (tokenIds 2–5 once minted) ----------
 
@@ -596,10 +599,6 @@ export default function Home() {
     }
   }
 
-  const latestCube = recentCubes[0];
-  const otherRecent = recentCubes.slice(1);
-  const gridRecent = otherRecent.slice(0, 4);
-
   // ---------- UI ----------
 
   return (
@@ -688,7 +687,7 @@ export default function Home() {
                   <div>
                     <h2 className="text-base font-semibold leading-tight text-slate-50">
                       {effectiveCubeId != null
-                        ? `No cube yet` // label when not minted
+                        ? `Cube #${effectiveCubeId}`
                         : "No cube yet"}
                     </h2>
                     <p className="mt-1 text-xs text-slate-200/90">
@@ -1062,9 +1061,9 @@ export default function Home() {
           cubeImageUrl={activeCubeImage}
         />
 
-        {/* Freshly forged cubes – latest centered, then 2x2 grid */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
-          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
+        {/* Freshly forged cubes – 2x2 grid, centered */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 text-center">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
             Freshly forged cubes
           </p>
 
@@ -1073,46 +1072,40 @@ export default function Home() {
               No cubes have been forged yet. Be the first mint on BaseBlox.
             </p>
           ) : (
-            <div className="space-y-4">
-              {latestCube && (
-                <div className="flex justify-center">
-                  <CubeVisual
-                    tokenId={latestCube.tokenId}
-                    label={`Cube #${latestCube.tokenId}`}
-                    size={96}
-                    imageSrc={latestCube.imageUrl}
-                  />
-                </div>
-              )}
+            <>
+              <p className="text-[11px] text-slate-400 mb-3">
+                Latest BaseBlox mints on Base (most recent first).
+              </p>
 
-              {gridRecent.length > 0 && (
-                <div className="grid grid-cols-2 gap-3">
-                  {gridRecent.map((item) => (
-                    <div
-                      key={item.tokenId}
-                      className="rounded-2xl bg-slate-900/90 px-3 py-3 flex flex-col items-center gap-2"
-                    >
-                      <CubeVisual
-                        tokenId={item.tokenId}
-                        label={`Cube #${item.tokenId}`}
-                        size={80}
-                        imageSrc={item.imageUrl}
-                        showMeta={false}
-                      />
-                      <span className="text-xs font-semibold text-slate-50">
-                        Cube #{item.tokenId}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+              <div className="grid grid-cols-2 gap-3">
+                {gridRecent.map((item) => (
+                  <div
+                    key={item.tokenId}
+                    className="rounded-2xl bg-slate-900/90 px-3 py-3 flex flex-col items-center gap-1.5"
+                  >
+                    <CubeVisual
+                      tokenId={item.tokenId}
+                      label=""
+                      size={96}
+                      imageSrc={item.imageUrl}
+                      showMeta={false}
+                    />
+                    <span className="text-xs font-semibold text-slate-50">
+                      Cube #{item.tokenId}
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Minted {item.mintedAtDate}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
-        {/* Featured cubes (promo mints 2–5) */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
-          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
+        {/* Featured cubes (promo mints 2–5) – 2x2 grid */}
+        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 text-center">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
             Featured cubes
           </p>
           <p className="text-xs text-slate-200/85 mb-3">
@@ -1125,20 +1118,24 @@ export default function Home() {
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              {featuredCubes.map((item) => (
+              {featuredCubes.slice(0, 4).map((item) => (
                 <div
                   key={item.tokenId}
-                  className="flex items-center gap-2 rounded-2xl bg-slate-900/90 px-3 py-3"
+                  className="rounded-2xl bg-slate-900/90 px-3 py-3 flex flex-col items-center gap-1.5"
                 >
-                  <BlueCubeAvatar size={32} imageSrc={item.imageUrl} />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-50">
-                      Cube #{item.tokenId}
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      Promo mint identity
-                    </span>
-                  </div>
+                  <CubeVisual
+                    tokenId={item.tokenId}
+                    label=""
+                    size={90}
+                    imageSrc={item.imageUrl}
+                    showMeta={false}
+                  />
+                  <span className="text-xs font-semibold text-slate-50">
+                    Cube #{item.tokenId}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Promo mint identity
+                  </span>
                 </div>
               ))}
             </div>
