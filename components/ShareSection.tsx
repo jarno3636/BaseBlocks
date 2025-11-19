@@ -10,7 +10,7 @@ type ShareSectionProps = {
   ageDays: number;
   prestigeLabelText: string;
   primarySymbol?: string;
-  cubeImageUrl?: string; // direct NFT image URL (https)
+  cubeImageUrl?: string; // direct NFT image url (https)
 };
 
 function resolveOrigin(): string {
@@ -50,18 +50,19 @@ export default function ShareSection({
 }: ShareSectionProps) {
   const origin = resolveOrigin();
 
-  // ✅ NFT image: must be a real https image URL
+  // NFT image for this cube (must be a real https URL)
   const nftImageUrl =
     hasCube && cubeImageUrl && cubeImageUrl.startsWith("http")
       ? cubeImageUrl
       : undefined;
 
-  // ✅ Mini-app canonical URL (this should be your HTTPS mini app URL, not a warpcast:// link)
   const appShareUrl = MINI_APP_LINK || origin;
+  const appShareImageUrl = `${origin}/share.PNG`;
 
-  // --------- Text ----------
   const cubeBaseText = hasCube
-    ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}.`
+    ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}${
+        primarySymbol ? ` (${primarySymbol})` : ""
+      }.`
     : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
 
   const cubeFcText = `${cubeBaseText} #BaseBlox #Onchain`;
@@ -86,31 +87,35 @@ export default function ShareSection({
   const disabledCubeShare = !hasCube || !nftImageUrl;
 
   return (
-    <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-4">
+    <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-5">
       {/* Share Your Cube */}
-      <div>
-        <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
-          Share your cube
-        </p>
-        <p className="text-[11px] text-slate-200/85 mb-2">
-          One cast with your cube image + your mini-app link.
-        </p>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+              Share your cube
+            </p>
+            <p className="text-[11px] text-slate-200/85">
+              One cast with your cube art + the mini-app link embed.
+            </p>
+          </div>
+        </div>
 
         <div className="flex flex-wrap gap-2">
           {disabledCubeShare ? (
             <button
               type="button"
               disabled
-              className="rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold
                 bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
             >
-              Share cube on Farcaster
+              <span>Share cube on Farcaster</span>
             </button>
           ) : (
             <ShareToFarcaster
               text={cubeFcText}
-              url={nftImageUrl}          // 🟩 pure NFT image embed
-              secondaryUrl={appShareUrl} // 🟦 mini-app card embed
+              url={nftImageUrl}        // 🟩 NFT image only
+              secondaryUrl={appShareUrl} // 🟦 mini-app link
             />
           )}
 
@@ -118,14 +123,14 @@ export default function ShareSection({
             href={disabledCubeShare ? "#" : cubeTweetUrl}
             target="_blank"
             rel="noreferrer"
-            className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition
+            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition
               ${
                 disabledCubeShare
                   ? "bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
                   : "bg-slate-900/80 border border-white/20 text-slate-50 hover:bg-slate-800/90 shadow-[0_10px_24px_rgba(0,0,0,.35)]"
               }`}
           >
-            Share cube on X
+            <span>Share cube on X</span>
           </a>
         </div>
 
@@ -133,7 +138,7 @@ export default function ShareSection({
           <button
             type="button"
             onClick={() => copyToClipboard(nftImageUrl)}
-            className="mt-2 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
+            className="mt-1 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
               bg-slate-900/70 border border-slate-600 text-slate-200
               hover:bg-slate-800/90 transition"
           >
@@ -142,7 +147,7 @@ export default function ShareSection({
         )}
 
         {!hasCube && (
-          <p className="mt-2 text-[11px] text-slate-500">
+          <p className="mt-1 text-[11px] text-slate-500">
             Mint a cube to unlock personal share links.
           </p>
         )}
@@ -152,36 +157,37 @@ export default function ShareSection({
       <div className="h-px w-full bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" />
 
       {/* Share the App */}
-      <div>
-        <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
+      <div className="space-y-2">
+        <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
           Share BaseBlox app
         </p>
-        <p className="text-[11px] text-slate-200/85 mb-2">
+        <p className="text-[11px] text-slate-200/85">
           One share image that opens your mini-app.
         </p>
 
         <div className="flex flex-wrap gap-2">
           <ShareToFarcaster
             text={appFcText}
-            url={appShareUrl} // 🔵 mini-app URL → Base will use your OG/share.PNG as the preview image
+            url={appShareImageUrl}   {/* image card */}
+            secondaryUrl={appShareUrl} {/* link to mini-app */}
           />
 
           <a
             href={appTweetUrl}
             target="_blank"
             rel="noreferrer"
-            className="rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold
+            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold
               bg-slate-900/80 border border-white/20 text-slate-50
               hover:bg-slate-800/90 transition shadow-[0_10px_24px_rgba(0,0,0,.35)]"
           >
-            Share app on X
+            <span>Share app on X</span>
           </a>
         </div>
 
         <button
           type="button"
           onClick={() => copyToClipboard(appShareUrl)}
-          className="mt-2 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
+          className="mt-1 inline-flex items-center rounded-lg px-3 py-1.5 text-[11px] font-medium
             bg-slate-900/70 border border-slate-600 text-slate-200
             hover:bg-slate-800/90 transition"
         >
