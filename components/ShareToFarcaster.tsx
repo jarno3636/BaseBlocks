@@ -52,11 +52,21 @@ export default function ShareToFarcaster({
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
 
-    const embeds: string[] = [];
-    if (primary) embeds.push(primary);
-    if (secondary && secondary !== primary) embeds.push(secondary);
+    const embedsArray: string[] = [];
+    if (primary) embedsArray.push(primary);
+    if (secondary && secondary !== primary) embedsArray.push(secondary);
 
     const message = text || "";
+
+    // 🔧 Convert embedsArray (string[]) -> tuple type expected by MiniKit
+    type EmbedsTuple = [] | [string] | [string, string];
+
+    let embeds: EmbedsTuple = [];
+    if (embedsArray.length === 1) {
+      embeds = [embedsArray[0]];
+    } else if (embedsArray.length >= 2) {
+      embeds = [embedsArray[0], embedsArray[1]];
+    }
 
     // ✅ Primary path: inside Base app / Mini App
     if (composeCast) {
@@ -67,7 +77,7 @@ export default function ShareToFarcaster({
     // 🌐 Fallback: normal web – open Warpcast composer
     const params = new URLSearchParams();
     if (message) params.set("text", message);
-    embeds.forEach((e) => params.append("embeds[]", e));
+    (embeds as string[]).forEach((e) => params.append("embeds[]", e));
 
     const href = `https://warpcast.com/~/compose?${params.toString()}`;
 
