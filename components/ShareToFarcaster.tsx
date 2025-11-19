@@ -67,30 +67,49 @@ export default function ShareToFarcaster({
     // Plain array for building Warpcast URL
     const embedList = [primary, secondary].filter(Boolean) as string[];
 
-    // 1) Preferred: native composeCast inside Base / Farcaster host
-    try {
-      await sdk.actions.composeCast({
-        text,
-        embeds: embedsTuple,
-      });
-      return;
-    } catch {
-      // If not in mini app host or not supported, fall through
-    }
-
-    // 2) Fallback: Warpcast composer via SDK navigation
+    // Build Warpcast composer URL (works in any browser / host)
     const params = new URLSearchParams();
     if (text) params.set("text", text);
     embedList.forEach((u) => params.append("embeds[]", u));
-
     const warpcastUrl = `https://warpcast.com/~/compose?${params.toString()}`;
 
+    // 1) If host *explicitly* supports composeCast, use it (Warpcast native UX)
     try {
+      const capabilities = (await (sdk as any)?.getCapabilities?.()) as
+        | string[]
+        | undefined;
+
+      const supportsCompose = Array.isArray(capabilities)
+        ? capabilities.includes("actions.composeCast")
+        : false;
+
+      if (supportsCompose) {
+        await sdk.actions.composeCast({
+          text,
+          embeds: embedsTuple,
+        });
+        return;
+      }
+    } catch {
+      // Ignore and fall through to openUrl fallback.
+    }
+
+    // 2) Fallback: use openUrl via the SDK (Base app & Warpcast both understand this)
+    try {
+      // openUrl accepts either a string or an object; string is fine here
       await sdk.actions.openUrl(warpcastUrl);
       return;
     } catch {
-      // 3) Last fallback: plain browser window
-      if (typeof window !== "undefined") {
+      // continue to last-resort browser fallback
+    }
+
+    // 3) Last fallback: plain browser navigation (window.open can be blocked in WebViews)
+    if (typeof window !== "undefined") {
+      try {
+        // Prefer same-tab navigation to avoid popup blocking
+        window.location.href = warpcastUrl;
+      } catch {
+        // Very last resort: try a popup
         window.open(warpcastUrl, "_blank", "noopener,noreferrer");
       }
     }
