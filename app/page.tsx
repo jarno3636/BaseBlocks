@@ -603,54 +603,66 @@ export default function Home() {
   // ---------- UI ----------
 
   return (
-    <section className="relative w-full flex flex-col gap-6 sm:gap-8 text-slate-50">
+    <section
+      className="
+        relative
+        w-full
+        max-w-md
+        mx-auto
+        px-3 sm:px-4
+        py-6 sm:py-8
+        flex flex-col
+        gap-6 sm:gap-8
+        text-slate-50
+      "
+    >
       {/* soft page-level glows */}
       <div className="pointer-events-none absolute inset-x-0 -top-40 h-64 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-70" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.30),transparent_60%)] opacity-60" />
 
       {/* HERO CARD */}
-      <div className="glass-card stats-appear overflow-hidden px-5 py-7 sm:px-7 sm:py-9">
+      <div className="glass-card stats-appear overflow-hidden px-5 py-6 sm:px-6 sm:py-7">
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-80" />
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-70" />
 
-        <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10">
-          <div className="flex-1 text-center md:text-left space-y-4">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
+        <div className="relative flex flex-col items-center gap-4">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
                 BaseBlox
               </span>
             </h1>
 
-            <div className="mt-3 mb-4 h-px w-24 mx-auto md:mx-0 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
+            <div className="mx-auto h-px w-20 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
 
-            <p className="text-sm sm:text-base text-slate-200/90 max-w-xl mx-auto md:mx-0">
+            <p className="text-sm text-slate-200/90">
               Your evolving onchain identity cube. One cube per wallet — age,
               prestige level, and your primary token, all etched on Base. Mint
               once and let your cube tell your story.
             </p>
           </div>
 
-          <div className="flex-1 flex justify-center">
+          <div className="flex justify-center">
             <Image
               src="/hero.PNG"
               alt="BaseBlox hero"
-              width={320}
-              height={320}
-              className="floating-hero w-full max-w-xs sm:max-w-sm rounded-2xl shadow-xl shadow-sky-900/50"
+              width={260}
+              height={260}
+              className="floating-hero w-full max-w-[220px] rounded-2xl shadow-xl shadow-sky-900/50"
             />
           </div>
         </div>
       </div>
 
       {/* Content cards */}
-      <div className="relative flex flex-col gap-6 sm:gap-7 md:gap-8">
+      <div className="relative flex flex-col gap-6 sm:gap-7">
         {/* Combined: your cube + identity snapshot */}
-        <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-6">
+        <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
           <div className="relative space-y-4">
             {/* Top row: cube + wallet */}
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex justify-center sm:justify-start">
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-center">
                 <CubeVisual
                   tokenId={effectiveCubeId ?? undefined}
                   label={
@@ -658,88 +670,86 @@ export default function Home() {
                       ? "Your BaseBlox cube"
                       : "BaseBlox cube"
                   }
-                  size={280}
+                  size={220} // smaller for mobile
                   imageSrc={myCubeImageToShow}
                   showMeta={false}
                 />
               </div>
 
-              <div className="flex-1 flex flex-col gap-3">
+              <div className="flex flex-col gap-3">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                     Your cube
                   </p>
-                  <div className="mt-1 mb-4 h-px w-16 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
+                  <div className="mt-1 mb-3 h-px w-16 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div>
-                      <h2 className="text-base sm:text-lg font-semibold leading-tight text-slate-50">
-                        {effectiveCubeId != null
-                          ? `Cube #${effectiveCubeId}`
-                          : "No cube yet"}
-                      </h2>
-                      <p className="mt-1 text-xs text-slate-200/90">
-                        {address
-                          ? truncateAddress(address)
-                          : "Connect a Base wallet to begin"}
-                      </p>
-                      {effectiveCubeId != null && (
-                        <>
-                          <p className="text-xs text-slate-300/85">
-                            Minted{" "}
-                            <span className="font-medium text-slate-50">
-                              {activeMintedAtDate}
-                            </span>
-                          </p>
-                          <p className="text-[10px] text-sky-200/90 mt-0.5">
-                            Using cube #{effectiveCubeId} as your identity on
-                            this page.
-                          </p>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="self-start">
-                      <ConnectButton chainStatus="none" showBalance={false} />
-                    </div>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <h2 className="text-base font-semibold leading-tight text-slate-50">
+                      {effectiveCubeId != null
+                        ? `No cube yet` // label when not minted
+                        : "No cube yet"}
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-200/90">
+                      {address
+                        ? truncateAddress(address)
+                        : "Connect a Base wallet to begin"}
+                    </p>
+                    {effectiveCubeId != null && (
+                      <>
+                        <p className="text-xs text-slate-300/85">
+                          Minted{" "}
+                          <span className="font-medium text-slate-50">
+                            {activeMintedAtDate}
+                          </span>
+                        </p>
+                        <p className="text-[10px] text-sky-200/90 mt-0.5">
+                          Using cube #{effectiveCubeId} as your identity on
+                          this page.
+                        </p>
+                      </>
+                    )}
                   </div>
 
-                  {allOwnedCubes.length > 1 && effectiveCubeId != null && (
-                    <div>
-                      <p className="text-[11px] text-slate-400 mb-1">
-                        Active cube
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {allOwnedCubes.map((id) => (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() =>
-                              setActiveCubeId(
-                                id === effectiveCubeId ? null : id,
-                              )
-                            }
-                            className={`text-[11px] px-2.5 py-1 rounded-full border transition ${
-                              id === effectiveCubeId
-                                ? "bg-sky-500/30 border-sky-400 text-sky-50"
-                                : "bg-slate-900/80 border-slate-600 text-slate-200 hover:bg-slate-800/90"
-                            }`}
-                          >
-                            #{id}
-                            {id === effectiveCubeId ? " (active)" : ""}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <div className="self-start">
+                    <ConnectButton chainStatus="none" showBalance={false} />
+                  </div>
                 </div>
+
+                {allOwnedCubes.length > 1 && effectiveCubeId != null && (
+                  <div>
+                    <p className="text-[11px] text-slate-400 mb-1">
+                      Active cube
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {allOwnedCubes.map((id) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() =>
+                            setActiveCubeId(
+                              id === effectiveCubeId ? null : id,
+                            )
+                          }
+                          className={`text-[11px] px-2.5 py-1 rounded-full border transition ${
+                            id === effectiveCubeId
+                              ? "bg-sky-500/30 border-sky-400 text-sky-50"
+                              : "bg-slate-900/80 border-slate-600 text-slate-200 hover:bg-slate-800/90"
+                          }`}
+                        >
+                          #{id}
+                          {id === effectiveCubeId ? " (active)" : ""}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             {(notConnected || noCubeYet) && (
-              <div className="rounded-2xl bg-slate-950/70 px-4 py-3.5 text-xs text-slate-100/90">
+              <div className="rounded-2xl bg-slate-950/70 px-4 py-3 text-xs text-slate-100/90">
                 {notConnected && (
                   <p>
                     Connect your Base wallet to see your BaseBlox cube stats and
@@ -755,7 +765,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* Identity snapshot inline in same card */}
+            {/* Identity snapshot */}
             {effectiveCubeId != null && (
               <div className="mt-1 space-y-3">
                 <div className="flex items-center justify-between gap-3">
@@ -1136,7 +1146,7 @@ export default function Home() {
         </div>
 
         {/* Contract link at very bottom of stack */}
-        <div className="mt-4 mb-1 flex justify-center">
+        <div className="mt-3 mb-1 flex justify-center">
           <a
             href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
             target="_blank"
