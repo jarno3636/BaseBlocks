@@ -57,6 +57,11 @@ textarea {
 /* Primary glass card style used throughout the app */
 .glass-card {
   position: relative;
+
+  /* Make each card a centered, narrower column */
+  width: min(100% - 2rem, 480px); /* 1rem padding on each side on mobile */
+  margin: 0 auto 1.75rem;         /* center + space between cards */
+
   border-radius: 1.5rem;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background:
