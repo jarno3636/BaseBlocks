@@ -46,7 +46,8 @@ export default function ShareToFarcaster({
   secondaryUrl,
   className,
 }: Props) {
-  const { composeCast, canCompose } = useComposeCast();
+  // In current OnchainKit, this returns an object that has `composeCast`
+  const { composeCast } = useComposeCast();
 
   const handleClick = () => {
     const primary = toAbs(url);
@@ -61,11 +62,14 @@ export default function ShareToFarcaster({
     // MiniKit expects: [] | [string] | [string, string]
     type EmbedsTuple = [] | [string] | [string, string];
     let embeds: EmbedsTuple = [];
-    if (embedsArray.length === 1) embeds = [embedsArray[0]];
-    else if (embedsArray.length >= 2) embeds = [embedsArray[0], embedsArray[1]];
+    if (embedsArray.length === 1) {
+      embeds = [embedsArray[0]];
+    } else if (embedsArray.length >= 2) {
+      embeds = [embedsArray[0], embedsArray[1]];
+    }
 
-    // ✅ Inside Base / mini app
-    if (canCompose && composeCast) {
+    // ✅ Inside Base app / mini app (MiniKit)
+    if (composeCast) {
       composeCast({ text: message, embeds });
       return;
     }
@@ -73,7 +77,7 @@ export default function ShareToFarcaster({
     // 🌐 Fallback: open Warpcast composer on web
     const params = new URLSearchParams();
     if (message) params.set("text", message);
-    (embeds as string[]).forEach((e) => params.append("embeds[]", e));
+    embedsArray.forEach((e) => params.append("embeds[]", e));
 
     const href = `https://warpcast.com/~/compose?${params.toString()}`;
 
@@ -89,8 +93,8 @@ export default function ShareToFarcaster({
       className={
         className ??
         "inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold " +
-        "bg-sky-500/15 border border-sky-400/80 text-sky-50 hover:bg-sky-500/30 " +
-        "transition shadow-[0_10px_24px_rgba(8,47,73,.55)]"
+          "bg-sky-500/15 border border-sky-400/80 text-sky-50 hover:bg-sky-500/30 " +
+          "transition shadow-[0_10px_24px_rgba(8,47,73,.55)]"
       }
     >
       <span className="text-[10px]">◆</span>
