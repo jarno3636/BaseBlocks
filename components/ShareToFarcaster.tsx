@@ -64,52 +64,41 @@ export default function ShareToFarcaster({
       embedsTuple = undefined;
     }
 
-    // Plain array for building Warpcast URL
+    // Plain array for building Warpcast URL fallback
     const embedList = [primary, secondary].filter(Boolean) as string[];
 
-    // Build Warpcast composer URL (works in any browser / host)
+    // 1) Preferred: native composeCast inside Farcaster/Base host
+    try {
+      await sdk.actions.composeCast({
+        text,
+        embeds: embedsTuple,
+      });
+      return;
+    } catch {
+      // If not in mini app host or not supported, fall through
+    }
+
+    // 2) Fallback: Warpcast composer via SDK navigation
     const params = new URLSearchParams();
     if (text) params.set("text", text);
     embedList.forEach((u) => params.append("embeds[]", u));
+
     const warpcastUrl = `https://warpcast.com/~/compose?${params.toString()}`;
 
-    // 1) If host *explicitly* supports composeCast, use it (Warpcast native UX)
     try {
-      const capabilities = (await (sdk as any)?.getCapabilities?.()) as
-        | string[]
-        | undefined;
-
-      const supportsCompose = Array.isArray(capabilities)
-        ? capabilities.includes("actions.composeCast")
-        : false;
-
-      if (supportsCompose) {
-        await sdk.actions.composeCast({
-          text,
-          embeds: embedsTuple,
-        });
-        return;
-      }
-    } catch {
-      // Ignore and fall through to openUrl fallback.
-    }
-
-    // 2) Fallback: use openUrl via the SDK (Base app & Warpcast both understand this)
-    try {
-      // openUrl accepts either a string or an object; string is fine here
       await sdk.actions.openUrl(warpcastUrl);
       return;
     } catch {
       // continue to last-resort browser fallback
     }
 
-    // 3) Last fallback: plain browser navigation (window.open can be blocked in WebViews)
+    // 3) Last fallback: plain browser navigation
     if (typeof window !== "undefined") {
       try {
-        // Prefer same-tab navigation to avoid popup blocking
+        // Same-tab navigation tends to work better in webviews (Base app)
         window.location.href = warpcastUrl;
       } catch {
-        // Very last resort: try a popup
+        // Ultra last resort
         window.open(warpcastUrl, "_blank", "noopener,noreferrer");
       }
     }
