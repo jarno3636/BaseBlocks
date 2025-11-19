@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -90,37 +91,6 @@ function extractImageFromTokenUri(uri?: string | null): string | undefined {
   }
 
   return uri;
-}
-
-// Small circular avatar used in lists (recent / featured)
-function BlueCubeAvatar({
-  size = 40,
-  imageSrc,
-}: {
-  size?: number;
-  imageSrc?: string;
-}) {
-  return (
-    <div
-      className="flex items-center justify-center rounded-full bg-slate-900/80 shadow-sm shadow-sky-900/40 overflow-hidden"
-      style={{ width: size, height: size }}
-    >
-      {imageSrc ? (
-        <Image
-          src={imageSrc}
-          alt="BaseBlox cube"
-          width={size}
-          height={size}
-          className="object-cover"
-        />
-      ) : (
-        <div
-          className="rounded-[10px] bg-gradient-to-br from-sky-400 via-sky-500 to-blue-700 shadow-inner shadow-sky-900/60"
-          style={{ width: size * 0.6, height: size * 0.6 }}
-        />
-      )}
-    </div>
-  );
 }
 
 // Larger “NFT-style” cube render
@@ -620,7 +590,7 @@ export default function Home() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.30),transparent_60%)] opacity-60" />
 
       {/* HERO CARD */}
-      <div className="glass-card stats-appear overflow-hidden px-5 py-6 sm:px-6 sm:py-7 w-full text-center">
+      <div className="glass-card stats-appear overflow-hidden w-full text-center">
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-80" />
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-70" />
 
@@ -656,7 +626,7 @@ export default function Home() {
       {/* Content cards */}
       <div className="relative flex flex-col gap-6 sm:gap-7 w-full">
         {/* Combined: your cube + identity snapshot */}
-        <div className="glass-card stats-appear overflow-hidden px-5 py-5 sm:px-6 sm:py-6 text-center">
+        <div className="glass-card stats-appear overflow-hidden text-center">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
           <div className="relative flex flex-col items-center text-center gap-4">
             {/* Top row: cube + wallet */}
@@ -711,7 +681,8 @@ export default function Home() {
                     )}
                   </div>
 
-                  <div className="self-center">
+                  {/* 🔹 Center the Connect Wallet button */}
+                  <div className="w-full flex justify-center">
                     <ConnectButton chainStatus="none" showBalance={false} />
                   </div>
                 </div>
@@ -823,7 +794,7 @@ export default function Home() {
         </div>
 
         {/* Mint overview */}
-        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
+        <div className="glass-card text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Mint overview
           </p>
@@ -853,7 +824,7 @@ export default function Home() {
         </div>
 
         {/* Mint & manage */}
-        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 space-y-3 text-center">
+        <div className="glass-card space-y-3 text-center">
           <div className="flex flex-col items-center gap-2">
             <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
               Mint & manage
@@ -987,7 +958,7 @@ export default function Home() {
         </div>
 
         {/* Links */}
-        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
+        <div className="glass-card text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Links
           </p>
@@ -1051,8 +1022,8 @@ export default function Home() {
           }
         />
 
-        {/* Freshly forged cubes – 2x2 grid, minimal text */}
-        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
+        {/* 🔹 Freshly forged cubes – 2x2 grid, ONLY Cube # under each cube */}
+        <div className="glass-card text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
             Freshly forged cubes
           </p>
@@ -1062,11 +1033,11 @@ export default function Home() {
               No cubes have been forged yet. Be the first mint on BaseBlox.
             </p>
           ) : (
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center">
               {gridRecent.map((item) => (
                 <div
                   key={item.tokenId}
-                  className="rounded-2xl bg-slate-900/90 px-3 py-3 flex flex-col items-center gap-1.5"
+                  className="flex flex-col items-center gap-2"
                 >
                   <CubeVisual
                     tokenId={item.tokenId}
@@ -1084,8 +1055,8 @@ export default function Home() {
           )}
         </div>
 
-        {/* Featured cubes (promo mints 2–5) – 2x2 grid, minimal text */}
-        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
+        {/* 🔹 Featured cubes (promo mints 2–5) – 2x2 grid, ONLY Cube # text */}
+        <div className="glass-card text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
             Featured cubes
           </p>
@@ -1095,11 +1066,11 @@ export default function Home() {
               Promo cubes #2 – #5 will appear here once they are minted.
             </p>
           ) : (
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center">
               {featuredCubes.slice(0, 4).map((item) => (
                 <div
                   key={item.tokenId}
-                  className="rounded-2xl bg-slate-900/90 px-3 py-3 flex flex-col items-center gap-1.5"
+                  className="flex flex-col items-center gap-2"
                 >
                   <CubeVisual
                     tokenId={item.tokenId}
