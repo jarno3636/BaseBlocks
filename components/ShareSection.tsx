@@ -114,8 +114,8 @@ export default function ShareSection({
           ) : (
             <ShareToFarcaster
               text={cubeFcText}
-              url={nftImageUrl}        // 🟩 NFT image only
-              secondaryUrl={appShareUrl} // 🟦 mini-app link
+              url={nftImageUrl}          // NFT image only
+              secondaryUrl={appShareUrl} // mini-app link (second embed)
             />
           )}
 
@@ -168,8 +168,8 @@ export default function ShareSection({
         <div className="flex flex-wrap gap-2">
           <ShareToFarcaster
             text={appFcText}
-            url={appShareImageUrl}   {/* image card */}
-            secondaryUrl={appShareUrl} {/* link to mini-app */}
+            url={appShareImageUrl}
+            secondaryUrl={appShareUrl}
           />
 
           <a
