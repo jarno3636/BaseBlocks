@@ -15,6 +15,9 @@ import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { base } from "viem/chains";
 import { wagmiConfig } from "@/lib/wallet";
 
+// ⭐ NEW: MiniKitProvider
+import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
+
 /* ---------------- BigInt JSON polyfill ---------------- */
 declare global {
   interface BigInt {
@@ -72,7 +75,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             modalSize="compact"
             appInfo={{ appName: "BaseBlox" }}
           >
-            {children}
+            {/* ⭐ MiniKitProvider MUST WRAP your entire app */}
+            <MiniKitProvider
+              appId={process.env.NEXT_PUBLIC_MINIAPP_ID!}
+            >
+              {children}
+            </MiniKitProvider>
           </RainbowKitProvider>
         </WagmiProvider>
       </HydrationBoundary>
