@@ -165,19 +165,22 @@ textarea {
   margin-right: auto;
 }
 
-/* 2) Force the recent + featured cubes into a 2×2 grid
-   This matches: className="grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center"
-*/
+/* 2) Freshly forged + Featured cubes: clean 2×2 grid inside card */
 .glass-card .grid.grid-cols-2 {
   display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 1rem;
-  row-gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  justify-content: center;
   justify-items: center;
+  align-items: start;
+
+  /* keep grid away from the glass-card edges */
+  padding: 0.5rem 0.75rem;
+  gap: 1.25rem 1rem; /* row gap, column gap */
 }
 
-/* 3) Keep each cube tile from stretching full width */
+/* 3) Each cube tile size + centering */
 .glass-card .grid.grid-cols-2 > div {
   width: 100%;
-  max-width: 180px;
+  max-width: 140px;   /* adjust smaller/larger if you want */
+  margin: 0 auto;
 }
