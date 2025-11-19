@@ -150,20 +150,28 @@ textarea {
   will-change: transform;
 }
 
-/* ---------- Explicit grids for cube galleries ---------- */
+/* ===================================================== */
+/*  HARD OVERRIDES FOR CUBE LAYOUTS (no Tailwind needed) */
+/* ===================================================== */
 
-/* Force a 2-column grid for recent + featured cubes on all screen sizes */
-.fresh-grid,
-.featured-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;           /* space between cards */
-  justify-items: center; /* center each cube card inside its cell */
+/* Center any "flex justify-center" wrappers, in case Tailwind isn't active */
+.glass-card .flex.justify-center {
+  display: flex;
+  justify-content: center;
 }
 
-/* Make sure each cube card has a nice fixed-ish width and doesn’t stretch */
-.fresh-item,
-.featured-item {
+/* Make the recent + featured cubes actually be 2 columns
+   (matches the markup: className="grid grid-cols-2 ...") */
+.glass-card .grid.grid-cols-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1rem;
+  row-gap: 1.5rem;
+  justify-items: center;
+}
+
+/* Keep each cube tile from stretching edge-to-edge */
+.glass-card .grid.grid-cols-2 > div {
   width: 100%;
   max-width: 180px;
 }
