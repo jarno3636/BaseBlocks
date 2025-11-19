@@ -6,14 +6,12 @@ import AppReady from "@/components/AppReady";
 
 /** ---- Dynamic metadata (absolute URLs + mini app / frame embed) ---- */
 export async function generateMetadata(): Promise<Metadata> {
-  // Prefer explicit site URL, then Vercel URL, then hard-coded fallback
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL;
 
   const origin = envUrl
     ? `https://${envUrl.replace(/\/$/, "")}`
     : "https://baseblox.vercel.app";
 
-  // This is the image used for X, Farcaster, etc.
   const image = `${origin}/share.PNG`;
 
   const title = "BaseBlox: Identity Cubes";
@@ -72,8 +70,12 @@ export default function RootLayout({
 
         {/* wagmi / RainbowKit / mini-context / Neynar */}
         <Providers>
-          {/* Let pages control their own layout and spacing */}
-          {children}
+          {/* Center the app column inside Warpcast/Base */}
+          <main className="min-h-screen flex justify-center">
+            <div className="w-full max-w-lg sm:max-w-2xl lg:max-w-3xl px-3 sm:px-4 py-6 sm:py-8">
+              {children}
+            </div>
+          </main>
         </Providers>
       </body>
     </html>
