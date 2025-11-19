@@ -13,7 +13,6 @@ type Props = {
 };
 
 function getOrigin(): string {
-  // Prefer runtime origin when in the browser
   if (typeof window !== "undefined" && window.location?.origin) {
     return window.location.origin.replace(/\/$/, "");
   }
@@ -48,29 +47,42 @@ export default function ShareToFarcaster({
   async function handleClick() {
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
-    // Only keep valid URLs; Farcaster only supports up to 2 embeds
     const embeds = [primary, secondary].filter(Boolean) as string[];
 
-    // 1) Mini-app native share if available (inside Warpcast / Farcaster client)
-    try {
-      await sdk.actions.composeCast({
-        text,
-        embeds,
-      });
-      return;
-    } catch {
-      // If we're not in a mini app host, fall through to web share.
-    }
-
-    // 2) Fallback: Warpcast web composer (normal browser)
+    // Build Warpcast compose URL once for fallbacks
     const params = new URLSearchParams();
     if (text) params.set("text", text);
     embeds.forEach((u) => params.append("embeds[]", u));
+    const warpcastComposeUrl = `https://warpcast.com/~/compose?${params.toString()}`;
 
-    const targetUrl = `https://warpcast.com/~/compose?${params.toString()}`;
+    try {
+      // 1) Detect capabilities if we're in a mini app host
+      const capabilities = (await sdk.getCapabilities?.()) ?? [];
 
+      const supportsCompose = capabilities.includes("actions.composeCast");
+      const supportsOpenUrl = capabilities.includes("actions.openUrl");
+
+      // 1a) Preferred: native cast composer
+      if (supportsCompose) {
+        await sdk.actions.composeCast({
+          text,
+          embeds,
+        });
+        return;
+      }
+
+      // 1b) Fallback inside client: open compose URL in-app
+      if (supportsOpenUrl) {
+        await sdk.actions.openUrl(warpcastComposeUrl);
+        return;
+      }
+    } catch {
+      // If SDK/capabilities fail, we'll fall through to browser fallback
+    }
+
+    // 2) Final fallback: normal browser behavior
     if (typeof window !== "undefined") {
-      window.open(targetUrl, "_blank", "noopener,noreferrer");
+      window.open(warpcastComposeUrl, "_blank", "noopener,noreferrer");
     }
   }
 
