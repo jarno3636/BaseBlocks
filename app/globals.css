@@ -57,16 +57,17 @@ textarea {
 /* Primary glass card style used throughout the app */
 .glass-card {
   position: relative;
+  box-sizing: border-box;
 
-  /* Center each card and keep a nice readable width */
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto 1.75rem; /* ✅ bring back vertical spacing between cards */
+  /* Center each card and keep a nice readable width.
+     `100% - 2rem` = always at least 1rem of gap on both sides on mobile. */
+  width: min(100% - 2rem, 520px);
+  margin: 0 auto 1.75rem; /* vertical spacing between cards */
 
   /* Inner breathing room so content isn't stuck to the edges */
-  padding: 1.5rem 1.75rem;
+  padding: 1.25rem 1.5rem;
 
-  /* Default to centered content (forms/sections can override with text-left) */
+  /* Default to centered content (sections can override with text-left) */
   text-align: center;
 
   border-radius: 1.5rem;
@@ -80,6 +81,15 @@ textarea {
     0 0 0 1px rgba(15, 23, 42, 0.7),
     0 0 90px rgba(56, 189, 248, 0.12); /* soft cyan glow for premium feel */
   backdrop-filter: blur(22px);
+}
+
+/* Slightly bump padding on larger screens */
+@media (min-width: 640px) {
+  .glass-card {
+    padding: 1.5rem 1.75rem;
+    width: 100%;
+    max-width: 560px;
+  }
 }
 
 /* Legacy stats card (if used elsewhere) */
