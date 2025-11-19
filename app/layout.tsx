@@ -71,8 +71,9 @@ export default function RootLayout({
         {/* wagmi / RainbowKit / mini-context / Neynar */}
         <Providers>
           {/* Center the app column inside Warpcast/Base */}
-          <main className="min-h-screen flex justify-center">
-            <div className="w-full max-w-lg sm:max-w-2xl lg:max-w-3xl px-3 sm:px-4 py-6 sm:py-8">
+          <main className="min-h-screen flex justify-center px-3 sm:px-4 py-6 sm:py-8">
+            {/* This is just a column wrapper; cards handle their own width */}
+            <div className="w-full max-w-2xl">
               {children}
             </div>
           </main>
