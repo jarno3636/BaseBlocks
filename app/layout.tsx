@@ -45,8 +45,6 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [image],
     },
     other: {
-      // Optional Farcaster frame-style metadata (when used as a simple link)
-      // This still just opens your site; Base mini app behavior comes from farcaster.json.
       "fc:frame": "vNext",
       "fc:frame:image": image,
       "fc:frame:button:1": "Open BaseBlox",
@@ -67,15 +65,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-[#020617] text-slate-50 antialiased">
-        {/* Notify Farcaster as soon as the app is usable */}
+      {/* Let globals.css control the gradient background */}
+      <body className="text-slate-50 antialiased">
+        {/* Notify Farcaster / Base when the app is ready */}
         <AppReady />
 
-        {/* wagmi / RainbowKit / etc */}
+        {/* wagmi / RainbowKit / mini-context / Neynar */}
         <Providers>
-          <main className="min-h-screen flex items-center justify-center px-4">
-            {children}
-          </main>
+          {/* Let pages control their own layout and spacing */}
+          {children}
         </Providers>
       </body>
     </html>
