@@ -58,9 +58,16 @@ textarea {
 .glass-card {
   position: relative;
 
-  /* Make each card a centered, narrower column */
-  width: min(100% - 2rem, 480px); /* 1rem padding on each side on mobile */
-  margin: 0 auto 1.75rem;         /* center + space between cards */
+  /* Center each card and keep a nice readable width */
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 1.75rem; /* centered + space between cards */
+
+  /* Give breathing room so text/images are not on the edge */
+  padding: 1.5rem 1.75rem;
+
+  /* Default to centered content (forms/sections can override with text-left) */
+  text-align: center;
 
   border-radius: 1.5rem;
   border: 1px solid rgba(148, 163, 184, 0.35);
