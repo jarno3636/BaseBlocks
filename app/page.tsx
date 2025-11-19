@@ -624,15 +624,15 @@ export default function Home() {
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-80" />
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-70" />
 
-        <div className="relative flex flex-col items-center gap-4">
-          <div className="text-center space-y-3">
+        <div className="relative flex flex-col items-center gap-4 text-center">
+          <div className="space-y-3">
             <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
                 BaseBlox
               </span>
             </h1>
 
-            <div className="mx-auto h-px w-20 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
+            <div className="mx-auto h-px w-24 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
 
             <p className="text-sm text-slate-200/90">
               Your evolving onchain identity cube. One cube per wallet — age,
@@ -656,11 +656,11 @@ export default function Home() {
       {/* Content cards */}
       <div className="relative flex flex-col gap-6 sm:gap-7">
         {/* Combined: your cube + identity snapshot */}
-        <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
+        <div className="glass-card stats-appear overflow-hidden px-5 py-5 sm:px-6 sm:py-6">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
-          <div className="relative space-y-4">
+          <div className="relative flex flex-col items-center text-center gap-4">
             {/* Top row: cube + wallet */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col items-center gap-4 w-full">
               <div className="flex justify-center">
                 <CubeVisual
                   tokenId={effectiveCubeId ?? undefined}
@@ -669,21 +669,21 @@ export default function Home() {
                       ? "Your BaseBlox cube"
                       : "BaseBlox cube"
                   }
-                  size={220} // smaller for mobile
+                  size={220}
                   imageSrc={myCubeImageToShow}
                   showMeta={false}
                 />
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col items-center gap-3 w-full">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                     Your cube
                   </p>
-                  <div className="mt-1 mb-3 h-px w-16 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
+                  <div className="mt-1 mb-3 h-px w-20 mx-auto bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
                 </div>
 
-                <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex flex-col items-center gap-3 w-full">
                   <div>
                     <h2 className="text-base font-semibold leading-tight text-slate-50">
                       {effectiveCubeId != null
@@ -697,7 +697,7 @@ export default function Home() {
                     </p>
                     {effectiveCubeId != null && (
                       <>
-                        <p className="text-xs text-slate-300/85">
+                        <p className="text-xs text-slate-300/85 mt-1">
                           Minted{" "}
                           <span className="font-medium text-slate-50">
                             {activeMintedAtDate}
@@ -711,17 +711,17 @@ export default function Home() {
                     )}
                   </div>
 
-                  <div className="self-start">
+                  <div className="self-center">
                     <ConnectButton chainStatus="none" showBalance={false} />
                   </div>
                 </div>
 
                 {allOwnedCubes.length > 1 && effectiveCubeId != null && (
-                  <div>
+                  <div className="w-full">
                     <p className="text-[11px] text-slate-400 mb-1">
                       Active cube
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap justify-center gap-1.5">
                       {allOwnedCubes.map((id) => (
                         <button
                           key={id}
@@ -766,27 +766,17 @@ export default function Home() {
 
             {/* Identity snapshot */}
             {effectiveCubeId != null && (
-              <div className="mt-1 space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                      Identity snapshot
-                    </p>
-                    <p className="text-xs text-slate-200/85">
-                      Your cube evolves over time as your onchain story unfolds.
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-sm font-semibold text-slate-50">
-                      {activePrestigeLabelText}
-                    </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">
-                      Prestige level
-                    </span>
-                  </div>
+              <div className="mt-1 space-y-3 w-full">
+                <div className="flex flex-col items-center gap-1.5">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                    Identity snapshot
+                  </p>
+                  <p className="text-xs text-slate-200/85 max-w-xs">
+                    Your cube evolves over time as your onchain story unfolds.
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                   <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
                     <p className="text-[11px] text-slate-400 mb-1">Age</p>
                     <p className="text-lg font-semibold text-slate-50">
@@ -833,7 +823,7 @@ export default function Home() {
         </div>
 
         {/* Mint overview */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Mint overview
           </p>
@@ -863,16 +853,14 @@ export default function Home() {
         </div>
 
         {/* Mint & manage */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
-                Mint & manage
-              </p>
-              <p className="text-xs text-slate-200/85">
-                Forge your cube, set a primary token, and prestige over time.
-              </p>
-            </div>
+        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 space-y-3 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+              Mint & manage
+            </p>
+            <p className="text-xs text-slate-200/85 max-w-xs">
+              Forge your cube, set a primary token, and prestige over time.
+            </p>
           </div>
 
           <button
@@ -898,17 +886,15 @@ export default function Home() {
           {/* Prestige section */}
           {effectiveCubeId != null && (
             <div className="mt-2 rounded-2xl bg-slate-900/90 px-3 py-3.5 space-y-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
-                    Prestige
-                  </p>
-                  <p className="text-[11px] text-slate-200/80">
-                    Every ~6 months of age you can prestige, resetting your age
-                    and upgrading the badge on your card. Come back here when
-                    your active cube is old enough to level up again.
-                  </p>
-                </div>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
+                  Prestige
+                </p>
+                <p className="text-[11px] text-slate-200/80 max-w-xs">
+                  Every ~6 months of age you can prestige, resetting your age
+                  and upgrading the badge on your card. Come back here when
+                  your active cube is old enough to level up again.
+                </p>
                 <span className="text-xs text-slate-300">
                   Level {activePrestigeLevel}
                 </span>
@@ -936,12 +922,13 @@ export default function Home() {
           {effectiveCubeId != null && (
             <form
               onSubmit={handleSetPrimaryToken}
-              className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 px-3 py-3.5"
+              className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 px-3 py-3.5 text-left"
             >
-              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
+              {/* keep form text left for usability */}
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1 text-center">
                 Primary token
               </p>
-              <p className="text-[11px] text-slate-200/80 mb-1.5">
+              <p className="text-[11px] text-slate-200/80 mb-1.5 text-center">
                 Link a token you&apos;re known for. Symbol is etched on the
                 active cube.
               </p>
@@ -977,7 +964,7 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={isWriting}
-                className={`mt-2 inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-lg border transition ${
+                className={`mt-2 inline-flex items-center justify-center w-full text-xs px-3 py-1.5 rounded-lg border transition ${
                   isWriting
                     ? "bg-slate-900/60 border-slate-700 text-slate-500 cursor-not-allowed"
                     : "bg-slate-900 border-slate-600 text-slate-100 hover:bg-slate-800/90"
@@ -987,10 +974,12 @@ export default function Home() {
               </button>
 
               {manageError && (
-                <p className="text-[11px] text-rose-400 mt-1">{manageError}</p>
+                <p className="text-[11px] text-rose-400 mt-1 text-center">
+                  {manageError}
+                </p>
               )}
               {manageSuccess && (
-                <p className="text-[11px] text-emerald-400 mt-1">
+                <p className="text-[11px] text-emerald-400 mt-1 text-center">
                   {manageSuccess}
                 </p>
               )}
@@ -999,11 +988,11 @@ export default function Home() {
         </div>
 
         {/* Links */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5">
+        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-2">
             Links
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {effectiveCubeId != null && (
               <a
                 href={`https://basescan.org/token/${BASEBLOCKS_ADDRESS}?a=${effectiveCubeId}`}
@@ -1021,7 +1010,7 @@ export default function Home() {
               <p className="text-[11px] text-slate-400 mb-1">
                 Other cubes in this wallet (last 256 mints scanned)
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap justify-center gap-2">
                 {extraOwnedCubes.map((id) => (
                   <button
                     key={id}
@@ -1041,7 +1030,7 @@ export default function Home() {
                 ))}
               </div>
               {effectiveCubeId != null && (
-                <p className="mt-1 text-[10px] text-slate-500">
+                <p className="mt-1 text-[10px] text-slate-500 max-w-xs mx-auto">
                   Your BaseBlox identity on this page follows the active cube,
                   but these cubes are also held by your wallet. For very old
                   mints outside the last 256, check BaseScan directly.
@@ -1062,7 +1051,7 @@ export default function Home() {
         />
 
         {/* Freshly forged cubes – 2x2 grid, centered */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 text-center">
+        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
             Freshly forged cubes
           </p>
@@ -1104,7 +1093,7 @@ export default function Home() {
         </div>
 
         {/* Featured cubes (promo mints 2–5) – 2x2 grid */}
-        <div className="glass-card px-4 py-4 sm:px-5 sm:py-5 text-center">
+        <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
             Featured cubes
           </p>
