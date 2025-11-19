@@ -47,13 +47,27 @@ export default function ShareToFarcaster({
   async function handleClick() {
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
-    const embeds = [primary, secondary].filter(Boolean) as string[];
+
+    // 👇 Tuple for composeCast (what the types expect)
+    let embedsTuple: [] | [string] | [string, string] | undefined;
+    if (primary && secondary) {
+      embedsTuple = [primary, secondary];
+    } else if (primary) {
+      embedsTuple = [primary];
+    } else if (secondary) {
+      embedsTuple = [secondary];
+    } else {
+      embedsTuple = undefined;
+    }
+
+    // 👇 Plain array for building the Warpcast URL
+    const embedList = [primary, secondary].filter(Boolean) as string[];
 
     // 1) Preferred: native composeCast inside Base / Farcaster host
     try {
       await sdk.actions.composeCast({
         text,
-        embeds,
+        embeds: embedsTuple,
       });
       return;
     } catch {
@@ -64,7 +78,7 @@ export default function ShareToFarcaster({
     // 2) Fallback: open Warpcast composer via SDK navigation
     const params = new URLSearchParams();
     if (text) params.set("text", text);
-    embeds.forEach((u) => params.append("embeds[]", u));
+    embedList.forEach((u) => params.append("embeds[]", u));
 
     const warpcastUrl = `https://warpcast.com/~/compose?${params.toString()}`;
 
