@@ -1051,63 +1051,51 @@ export default function Home() {
           }
         />
 
-        {/* Freshly forged cubes – 2x2 grid, centered */}
+        {/* Freshly forged cubes – 2x2 grid, minimal text */}
         <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
-          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
             Freshly forged cubes
           </p>
 
           {recentCubes.length === 0 ? (
-            <p className="text-xs text-slate-400">
+            <p className="mt-2 text-xs text-slate-400">
               No cubes have been forged yet. Be the first mint on BaseBlox.
             </p>
           ) : (
-            <>
-              <p className="text-[11px] text-slate-400 mb-3">
-                Latest BaseBlox mints on Base (most recent first).
-              </p>
-
-              <div className="grid grid-cols-2 gap-3">
-                {gridRecent.map((item) => (
-                  <div
-                    key={item.tokenId}
-                    className="rounded-2xl bg-slate-900/90 px-3 py-3 flex flex-col items-center gap-1.5"
-                  >
-                    <CubeVisual
-                      tokenId={item.tokenId}
-                      label=""
-                      size={96}
-                      imageSrc={item.imageUrl}
-                      showMeta={false}
-                    />
-                    <span className="text-xs font-semibold text-slate-50">
-                      Cube #{item.tokenId}
-                    </span>
-                    <span className="text-[10px] text-slate-400">
-                      Minted {item.mintedAtDate}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              {gridRecent.map((item) => (
+                <div
+                  key={item.tokenId}
+                  className="rounded-2xl bg-slate-900/90 px-3 py-3 flex flex-col items-center gap-1.5"
+                >
+                  <CubeVisual
+                    tokenId={item.tokenId}
+                    label=""
+                    size={96}
+                    imageSrc={item.imageUrl}
+                    showMeta={false}
+                  />
+                  <span className="text-xs font-semibold text-slate-50">
+                    Cube #{item.tokenId}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Featured cubes (promo mints 2–5) – 2x2 grid */}
+        {/* Featured cubes (promo mints 2–5) – 2x2 grid, minimal text */}
         <div className="glass-card px-5 py-5 sm:px-6 sm:py-6 text-center">
-          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
+          <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
             Featured cubes
-          </p>
-          <p className="text-xs text-slate-200/85 mb-3">
-            Promo BaseBlox cubes. Early identity cards forged via promo mints.
           </p>
 
           {featuredCubes.length === 0 ? (
-            <p className="text-xs text-slate-400">
+            <p className="mt-2 text-xs text-slate-400">
               Promo cubes #2 – #5 will appear here once they are minted.
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               {featuredCubes.slice(0, 4).map((item) => (
                 <div
                   key={item.tokenId}
@@ -1122,9 +1110,6 @@ export default function Home() {
                   />
                   <span className="text-xs font-semibold text-slate-50">
                     Cube #{item.tokenId}
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    Promo mint identity
                   </span>
                 </div>
               ))}
