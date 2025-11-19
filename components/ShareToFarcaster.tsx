@@ -1,7 +1,7 @@
 // components/ShareToFarcaster.tsx
 "use client";
 
-import { sdk } from "@farcaster/miniapp-sdk";
+import { useComposeCast } from "@coinbase/onchainkit/minikit";
 
 type Props = {
   text: string;
@@ -44,43 +44,33 @@ export default function ShareToFarcaster({
   secondaryUrl,
   className,
 }: Props) {
+  const { composeCast } = useComposeCast();
+
   async function handleClick() {
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
     const embeds = [primary, secondary].filter(Boolean) as string[];
 
-    // Build Warpcast compose URL once for fallbacks
+    // Build Warpcast compose URL for fallback
     const params = new URLSearchParams();
     if (text) params.set("text", text);
     embeds.forEach((u) => params.append("embeds[]", u));
     const warpcastComposeUrl = `https://warpcast.com/~/compose?${params.toString()}`;
 
     try {
-      // 1) Detect capabilities if we're in a mini app host
-      const capabilities = (await sdk.getCapabilities?.()) ?? [];
-
-      const supportsCompose = capabilities.includes("actions.composeCast");
-      const supportsOpenUrl = capabilities.includes("actions.openUrl");
-
-      // 1a) Preferred: native cast composer
-      if (supportsCompose) {
-        await sdk.actions.composeCast({
+      // Preferred path: Base / Farcaster mini app host via OnchainKit
+      if (composeCast) {
+        await composeCast({
           text,
           embeds,
         });
         return;
       }
-
-      // 1b) Fallback inside client: open compose URL in-app
-      if (supportsOpenUrl) {
-        await sdk.actions.openUrl(warpcastComposeUrl);
-        return;
-      }
     } catch {
-      // If SDK/capabilities fail, we'll fall through to browser fallback
+      // If composeCast throws, fall through to web
     }
 
-    // 2) Final fallback: normal browser behavior
+    // Fallback: open Warpcast composer in a normal browser window
     if (typeof window !== "undefined") {
       window.open(warpcastComposeUrl, "_blank", "noopener,noreferrer");
     }
