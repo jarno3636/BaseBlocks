@@ -5,12 +5,15 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
   text: string;
-  /** URL to embed in the cast (image or page). */
+  /** Primary URL to embed in the cast (image or page). */
   url?: string;
+  /** Optional second URL (e.g. mini-app link) to embed as well. */
+  secondaryUrl?: string;
   className?: string;
 };
 
 function getOrigin(): string {
+  // Prefer runtime origin when in the browser
   if (typeof window !== "undefined" && window.location?.origin) {
     return window.location.origin.replace(/\/$/, "");
   }
@@ -36,29 +39,34 @@ function toAbs(u?: string): string {
   }
 }
 
-export default function ShareToFarcaster({ text, url, className }: Props) {
+export default function ShareToFarcaster({
+  text,
+  url,
+  secondaryUrl,
+  className,
+}: Props) {
   async function handleClick() {
-    const absUrl = toAbs(url);
+    const primary = toAbs(url);
+    const secondary = toAbs(secondaryUrl);
+    const embeds = [primary, secondary].filter(Boolean) as string[];
 
     // 1) Mini-app native share if available
     try {
       if (sdk?.actions?.openCastComposer) {
         await sdk.actions.openCastComposer({
-          // body of the cast
           text,
-          // Warpcast expects embeds as URLs
-          embeds: absUrl ? [absUrl] : [],
+          embeds,
         });
         return;
       }
     } catch {
-      // fall through to Warpcast URL share
+      // fall through to Warpcast web share
     }
 
     // 2) Fallback: Warpcast web composer
     const params = new URLSearchParams();
     if (text) params.set("text", text);
-    if (absUrl) params.append("embeds[]", absUrl);
+    embeds.forEach((u) => params.append("embeds[]", u));
 
     const targetUrl = `https://warpcast.com/~/compose?${params.toString()}`;
 
