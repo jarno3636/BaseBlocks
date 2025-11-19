@@ -10,7 +10,7 @@ type ShareSectionProps = {
   ageDays: number;
   prestigeLabelText: string;
   primarySymbol?: string;
-  cubeImageUrl?: string; // direct NFT image URL (if available)
+  cubeImageUrl?: string; // direct NFT image URL (https)
 };
 
 function resolveOrigin(): string {
@@ -50,26 +50,18 @@ export default function ShareSection({
 }: ShareSectionProps) {
   const origin = resolveOrigin();
 
-  // 🔹 NFT image: direct https image URL (like your BaseBots art)
+  // ✅ NFT image: must be a real https image URL
   const nftImageUrl =
     hasCube && cubeImageUrl && cubeImageUrl.startsWith("http")
       ? cubeImageUrl
       : undefined;
 
-  // 🔹 Mini-app URL
+  // ✅ Mini-app canonical URL (this should be your HTTPS mini app URL, not a warpcast:// link)
   const appShareUrl = MINI_APP_LINK || origin;
 
-  // 🔹 Static share card for the app (e.g. “MINT YOUR CUBE” style image)
-  const appShareImageUrl = `${origin}/share.PNG`;
-
   // --------- Text ----------
-  const primaryTokenBit =
-    primarySymbol && primarySymbol.trim().length > 0
-      ? ` (primary: $${primarySymbol.trim()})`
-      : "";
-
   const cubeBaseText = hasCube
-    ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}${primaryTokenBit}.`
+    ? `My BaseBlox cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}.`
     : "Mint a BaseBlox cube and let your age, prestige, and token define your onchain identity.";
 
   const cubeFcText = `${cubeBaseText} #BaseBlox #Onchain`;
@@ -101,7 +93,7 @@ export default function ShareSection({
           Share your cube
         </p>
         <p className="text-[11px] text-slate-200/85 mb-2">
-          One cast with your cube image plus a BaseBlox mini-app card.
+          One cast with your cube image + your mini-app link.
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -117,8 +109,8 @@ export default function ShareSection({
           ) : (
             <ShareToFarcaster
               text={cubeFcText}
-              url={nftImageUrl}        // 🟩 pure NFT image
-              secondaryUrl={appShareUrl} // 🟦 mini-app card with link
+              url={nftImageUrl}          // 🟩 pure NFT image embed
+              secondaryUrl={appShareUrl} // 🟦 mini-app card embed
             />
           )}
 
@@ -165,14 +157,13 @@ export default function ShareSection({
           Share BaseBlox app
         </p>
         <p className="text-[11px] text-slate-200/85 mb-2">
-          One share image that opens your BaseBlox mini-app.
+          One share image that opens your mini-app.
         </p>
 
         <div className="flex flex-wrap gap-2">
           <ShareToFarcaster
             text={appFcText}
-            url={appShareImageUrl} // 🖼 image card
-            secondaryUrl={appShareUrl} // 🔗 mini-app link
+            url={appShareUrl} // 🔵 mini-app URL → Base will use your OG/share.PNG as the preview image
           />
 
           <a
