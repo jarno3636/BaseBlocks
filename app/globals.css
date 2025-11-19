@@ -63,6 +63,9 @@ textarea {
   max-width: 520px;
   margin: 0 auto; /* centered; vertical spacing handled by Tailwind gap */
 
+  /* 🔹 Add padding back so content isn't stuck to the edges */
+  padding: 1.5rem 1.75rem;
+
   /* Default to centered content (forms/sections can override with text-left) */
   text-align: center;
 
