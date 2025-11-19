@@ -9,6 +9,7 @@ type ShareSectionProps = {
   ageDays: number;
   prestigeLabelText: string;
   primarySymbol: string;
+  cubeImageUrl?: string; // optional NFT image URL from tokenURI
 };
 
 function getSiteOrigin(): string {
@@ -28,7 +29,7 @@ function getSiteOrigin(): string {
 
 function getCubeUrl(cubeId: number): string {
   const origin = getSiteOrigin();
-  // if later you add a dedicated /cube/[id] page, update this:
+  // later you can swap this to /cube/[id]
   return `${origin}/?cubeId=${cubeId}`;
 }
 
@@ -50,9 +51,11 @@ export default function ShareSection({
   ageDays,
   prestigeLabelText,
   primarySymbol,
+  cubeImageUrl,
 }: ShareSectionProps) {
   const origin = getSiteOrigin();
   const cubeUrl = hasCube ? getCubeUrl(cubeId) : origin;
+  const nftImageUrl = cubeImageUrl; // may be undefined
 
   const cubeShareText = hasCube
     ? `My BaseBlox identity cube #${cubeId} on Base – ${ageDays} days old, ${prestigeLabelText}${
@@ -84,14 +87,18 @@ export default function ShareSection({
         </div>
 
         <div className="flex flex-wrap gap-2 mt-2">
-          {/* Farcaster share for cube */}
+          {/* Farcaster share for cube:
+              - primary embed: NFT image (if present), otherwise cube page
+              - secondary embed: cube page / app URL
+          */}
           <ShareToFarcaster
             text={cubeShareText}
-            url={cubeUrl}
+            url={nftImageUrl || cubeUrl}
+            secondaryUrl={cubeUrl}
             className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-violet-500/20 border border-violet-400/70 text-violet-50 hover:bg-violet-500/30 transition"
           />
 
-          {/* X / Twitter share for cube */}
+          {/* X / Twitter share for cube (can only take one URL) */}
           <button
             type="button"
             onClick={() => openTwitterShare(cubeShareText, cubeUrl)}
