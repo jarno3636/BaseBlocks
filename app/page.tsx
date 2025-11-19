@@ -1,4 +1,3 @@
-// app/page.tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -611,6 +610,7 @@ export default function Home() {
         px-3 sm:px-4
         py-6 sm:py-8
         flex flex-col
+        items-center
         gap-6 sm:gap-8
         text-slate-50
       "
@@ -620,12 +620,12 @@ export default function Home() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.30),transparent_60%)] opacity-60" />
 
       {/* HERO CARD */}
-      <div className="glass-card stats-appear overflow-hidden px-5 py-6 sm:px-6 sm:py-7">
+      <div className="glass-card stats-appear overflow-hidden px-5 py-6 sm:px-6 sm:py-7 w-full text-center">
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-80" />
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-70" />
 
         <div className="relative flex flex-col items-center gap-4 text-center">
-          <div className="space-y-3">
+          <div className="space-y-3 max-w-sm mx-auto">
             <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
                 BaseBlox
@@ -654,9 +654,9 @@ export default function Home() {
       </div>
 
       {/* Content cards */}
-      <div className="relative flex flex-col gap-6 sm:gap-7">
+      <div className="relative flex flex-col gap-6 sm:gap-7 w-full">
         {/* Combined: your cube + identity snapshot */}
-        <div className="glass-card stats-appear overflow-hidden px-5 py-5 sm:px-6 sm:py-6">
+        <div className="glass-card stats-appear overflow-hidden px-5 py-5 sm:px-6 sm:py-6 text-center">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
           <div className="relative flex flex-col items-center text-center gap-4">
             {/* Top row: cube + wallet */}
@@ -748,7 +748,7 @@ export default function Home() {
             </div>
 
             {(notConnected || noCubeYet) && (
-              <div className="rounded-2xl bg-slate-950/70 px-4 py-3 text-xs text-slate-100/90">
+              <div className="rounded-2xl bg-slate-950/70 px-4 py-3 text-xs text-slate-100/90 max-w-sm mx-auto">
                 {notConnected && (
                   <p>
                     Connect your Base wallet to see your BaseBlox cube stats and
@@ -885,7 +885,7 @@ export default function Home() {
 
           {/* Prestige section */}
           {effectiveCubeId != null && (
-            <div className="mt-2 rounded-2xl bg-slate-900/90 px-3 py-3.5 space-y-2.5">
+            <div className="mt-2 rounded-2xl bg-slate-900/90 px-3 py-3.5 space-y-2.5 text-center">
               <div className="flex flex-col items-center gap-2 text-center">
                 <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
                   Prestige
@@ -922,18 +922,17 @@ export default function Home() {
           {effectiveCubeId != null && (
             <form
               onSubmit={handleSetPrimaryToken}
-              className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 px-3 py-3.5 text-left"
+              className="mt-2 space-y-2.5 rounded-2xl bg-slate-900/90 px-3 py-3.5 text-center"
             >
-              {/* keep form text left for usability */}
-              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1 text-center">
+              <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em] mb-1">
                 Primary token
               </p>
-              <p className="text-[11px] text-slate-200/80 mb-1.5 text-center">
+              <p className="text-[11px] text-slate-200/80 mb-1.5 max-w-xs mx-auto">
                 Link a token you&apos;re known for. Symbol is etched on the
                 active cube.
               </p>
               <div className="space-y-2">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 text-left">
                   <label className="text-[11px] text-slate-400">
                     Token address (Base)
                   </label>
@@ -945,7 +944,7 @@ export default function Home() {
                     className="w-full rounded-lg bg-slate-950 px-2.5 py-1.5 text-xs text-slate-50 outline-none focus:border-sky-400 border border-slate-700/70"
                   />
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 text-left">
                   <label className="text-[11px] text-slate-400">
                     Token symbol (max 8 chars)
                   </label>
@@ -974,12 +973,12 @@ export default function Home() {
               </button>
 
               {manageError && (
-                <p className="text-[11px] text-rose-400 mt-1 text-center">
+                <p className="text-[11px] text-rose-400 mt-1">
                   {manageError}
                 </p>
               )}
               {manageSuccess && (
-                <p className="text-[11px] text-emerald-400 mt-1 text-center">
+                <p className="text-[11px] text-emerald-400 mt-1">
                   {manageSuccess}
                 </p>
               )}
@@ -1040,14 +1039,16 @@ export default function Home() {
           )}
         </div>
 
-        {/* Share section */}
+        {/* Share section – props exactly as requested */}
         <ShareSection
           hasCube={effectiveCubeId != null}
           cubeId={effectiveCubeId ?? 0}
           ageDays={activeAgeDays}
           prestigeLabelText={activePrestigeLabelText}
           primarySymbol={activePrimarySymbol}
-          cubeImageUrl={activeCubeImage}
+          cubeImageUrl={
+            effectiveCubeId != null && activeCubeImage ? activeCubeImage : undefined
+          }
         />
 
         {/* Freshly forged cubes – 2x2 grid, centered */}
