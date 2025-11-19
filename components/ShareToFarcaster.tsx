@@ -1,14 +1,12 @@
 // components/ShareToFarcaster.tsx
 "use client";
 
-import { useComposeCast } from "@coinbase/onchainkit/minikit";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
-  text?: string;
-  /** Primary embed – usually the NFT image URL */
+  text: string;
+  /** URL to embed in the cast (image or page). */
   url?: string;
-  /** Secondary embed – usually the mini-app/page URL */
-  secondaryUrl?: string;
   className?: string;
 };
 
@@ -17,74 +15,57 @@ function getOrigin(): string {
     return window.location.origin.replace(/\/$/, "");
   }
 
-  const raw =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_URL ||
-    process.env.VERCEL_URL ||
-    "https://baseblox.vercel.app";
-
-  if (/^https?:\/\//i.test(raw)) {
-    return raw.replace(/\/$/, "");
+  const env =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || "";
+  if (env) {
+    const withProto = /^https?:\/\//i.test(env) ? env : `https://${env}`;
+    return withProto.replace(/\/$/, "");
   }
-  return `https://${raw.replace(/\/$/, "")}`;
+
+  return "https://baseblox.vercel.app";
 }
 
-function toAbs(u?: string): string | undefined {
-  if (!u) return undefined;
-  if (/^https?:\/\//i.test(u)) return u;
-  const base = getOrigin();
+function toAbs(u?: string): string {
+  if (!u) return "";
   try {
+    if (/^https?:\/\//i.test(u)) return u;
+    const base = getOrigin();
     return new URL(u, base).toString();
   } catch {
-    return undefined;
+    return "";
   }
 }
 
-export default function ShareToFarcaster({
-  text,
-  url,
-  secondaryUrl,
-  className,
-}: Props) {
-  // In current OnchainKit, this returns an object that has `composeCast`
-  const { composeCast } = useComposeCast();
+export default function ShareToFarcaster({ text, url, className }: Props) {
+  async function handleClick() {
+    const absUrl = toAbs(url);
 
-  const handleClick = () => {
-    const primary = toAbs(url);
-    const secondary = toAbs(secondaryUrl);
-
-    const embedsArray: string[] = [];
-    if (primary) embedsArray.push(primary);
-    if (secondary && secondary !== primary) embedsArray.push(secondary);
-
-    const message = text || "";
-
-    // MiniKit expects: [] | [string] | [string, string]
-    type EmbedsTuple = [] | [string] | [string, string];
-    let embeds: EmbedsTuple = [];
-    if (embedsArray.length === 1) {
-      embeds = [embedsArray[0]];
-    } else if (embedsArray.length >= 2) {
-      embeds = [embedsArray[0], embedsArray[1]];
+    // 1) Mini-app native share if available
+    try {
+      if (sdk?.actions?.openCastComposer) {
+        await sdk.actions.openCastComposer({
+          // body of the cast
+          text,
+          // Warpcast expects embeds as URLs
+          embeds: absUrl ? [absUrl] : [],
+        });
+        return;
+      }
+    } catch {
+      // fall through to Warpcast URL share
     }
 
-    // ✅ Inside Base app / mini app (MiniKit)
-    if (composeCast) {
-      composeCast({ text: message, embeds });
-      return;
-    }
-
-    // 🌐 Fallback: open Warpcast composer on web
+    // 2) Fallback: Warpcast web composer
     const params = new URLSearchParams();
-    if (message) params.set("text", message);
-    embedsArray.forEach((e) => params.append("embeds[]", e));
+    if (text) params.set("text", text);
+    if (absUrl) params.append("embeds[]", absUrl);
 
-    const href = `https://warpcast.com/~/compose?${params.toString()}`;
+    const targetUrl = `https://warpcast.com/~/compose?${params.toString()}`;
 
     if (typeof window !== "undefined") {
-      window.open(href, "_blank");
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
     }
-  };
+  }
 
   return (
     <button
@@ -92,13 +73,12 @@ export default function ShareToFarcaster({
       onClick={handleClick}
       className={
         className ??
-        "inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold " +
-          "bg-sky-500/15 border border-sky-400/80 text-sky-50 hover:bg-sky-500/30 " +
-          "transition shadow-[0_10px_24px_rgba(8,47,73,.55)]"
+        "inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium " +
+          "bg-violet-500/20 border border-violet-400/70 text-violet-50 hover:bg-violet-500/30 " +
+          "transition"
       }
     >
-      <span className="text-[10px]">◆</span>
-      <span>Share on Farcaster</span>
+      Share on Farcaster
     </button>
   );
 }
