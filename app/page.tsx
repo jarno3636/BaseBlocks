@@ -107,12 +107,12 @@ function CubeVisual({
   imageSrc?: string;
   showMeta?: boolean;
 }) {
-  const cardWidth = size * 1.5;
+  const maxCardWidth = size * 1.5;
 
   return (
     <div
-      className="relative mx-auto flex flex-col items-center justify-center rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
-      style={{ width: cardWidth }}
+      className="relative mx-auto flex flex-col items-center justify-center rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden w-full"
+      style={{ maxWidth: maxCardWidth }}
     >
       <div className="pointer-events-none absolute -inset-16 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.55),transparent_60%)] opacity-70" />
       <div className="relative flex flex-col items-center gap-3 px-4 pt-4 pb-4">
@@ -261,8 +261,10 @@ export default function Home() {
     return out;
   }, [recentResults, recentTokenIds]);
 
-  // Up to 4 most recent cubes (for 2×2 grid)
+  // Up to 4 most recent cubes (for solo + 2×2 grid)
   const gridRecent = recentCubes.slice(0, 4);
+  const topRecent = gridRecent[0];
+  const restRecent = gridRecent.slice(1);
 
   // ---------- Featured promo cubes (tokenIds 2–5 once minted) ----------
 
@@ -318,7 +320,7 @@ export default function Home() {
     }
     const last = Number(nextTokenIdData) - 1;
     const mintedCount = last;
-    const windowSize = Math.min(mintedCount, 256);
+    the const windowSize = Math.min(mintedCount, 256);
     const first = last - windowSize + 1;
     const ids: bigint[] = [];
     for (let id = last; id >= first; id--) {
@@ -681,7 +683,7 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* 🔹 Center the Connect Wallet button */}
+                  {/* Center the Connect Wallet button */}
                   <div className="w-full flex justify-center">
                     <ConnectButton chainStatus="none" showBalance={false} />
                   </div>
@@ -1010,7 +1012,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Share section – props exactly as requested */}
+        {/* Share section */}
         <ShareSection
           hasCube={effectiveCubeId != null}
           cubeId={effectiveCubeId ?? 0}
@@ -1022,7 +1024,7 @@ export default function Home() {
           }
         />
 
-        {/* 🔹 Freshly forged cubes – newest solo on top, then 2-wide rows */}
+        {/* Freshly forged cubes – newest solo on top, then 2-wide rows */}
         <div className="glass-card text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
             Freshly forged cubes
@@ -1033,31 +1035,50 @@ export default function Home() {
               No cubes have been forged yet. Be the first mint on BaseBlox.
             </p>
           ) : (
-            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center">
-              {gridRecent.map((item, idx) => (
-                <div
-                  key={item.tokenId}
-                  className={`flex flex-col items-center gap-2 ${
-                    idx === 0 ? "col-span-2" : ""
-                  }`}
-                >
-                  <CubeVisual
-                    tokenId={item.tokenId}
-                    label=""
-                    size={idx === 0 ? 120 : 96}
-                    imageSrc={item.imageUrl}
-                    showMeta={false}
-                  />
-                  <span className="text-xs font-semibold text-slate-50">
-                    Cube #{item.tokenId}
-                  </span>
+            <>
+              {topRecent && (
+                <div className="mt-4 flex justify-center">
+                  <div className="flex flex-col items-center gap-2 w-full max-w-[260px]">
+                    <CubeVisual
+                      tokenId={topRecent.tokenId}
+                      label=""
+                      size={120}
+                      imageSrc={topRecent.imageUrl}
+                      showMeta={false}
+                    />
+                    <span className="text-xs font-semibold text-slate-50">
+                      Cube #{topRecent.tokenId}
+                    </span>
+                  </div>
                 </div>
-              ))}
-            </div>
+              )}
+
+              {restRecent.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center">
+                  {restRecent.map((item) => (
+                    <div
+                      key={item.tokenId}
+                      className="flex flex-col items-center gap-2 w-full"
+                    >
+                      <CubeVisual
+                        tokenId={item.tokenId}
+                        label=""
+                        size={96}
+                        imageSrc={item.imageUrl}
+                        showMeta={false}
+                      />
+                      <span className="text-xs font-semibold text-slate-50">
+                        Cube #{item.tokenId}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* 🔹 Featured cubes (promo mints 2–5) – 2x2 grid, ONLY Cube # text */}
+        {/* Featured cubes (promo mints 2–5) – 2x2 grid, ONLY Cube # text */}
         <div className="glass-card text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
             Featured cubes
@@ -1072,7 +1093,7 @@ export default function Home() {
               {featuredCubes.slice(0, 4).map((item) => (
                 <div
                   key={item.tokenId}
-                  className="flex flex-col items-center gap-2"
+                  className="flex flex-col items-center gap-2 w-full"
                 >
                   <CubeVisual
                     tokenId={item.tokenId}
