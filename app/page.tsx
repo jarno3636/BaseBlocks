@@ -107,15 +107,25 @@ function CubeVisual({
   imageSrc?: string;
   showMeta?: boolean;
 }) {
-  const maxCardWidth = size * 1.5;
+  // Hard cap the width so the card is always nicely centered
+  const maxCardWidth = (size ?? 120) + 120;
 
   return (
     <div
-      className="relative mx-auto flex flex-col items-center justify-center rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden w-full"
+      className="
+        relative
+        mx-auto
+        flex flex-col items-center justify-center
+        rounded-3xl border border-sky-400/50
+        bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95
+        shadow-2xl shadow-sky-900/60
+        overflow-hidden
+        w-full
+      "
       style={{ maxWidth: maxCardWidth }}
     >
       <div className="pointer-events-none absolute -inset-16 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.55),transparent_60%)] opacity-70" />
-      <div className="relative flex flex-col items-center gap-3 px-4 pt-4 pb-4">
+      <div className="relative flex flex-col items-center gap-3 px-4 pt-4 pb-4 w-full">
         <div
           className="relative flex items-center justify-center rounded-3xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 shadow-2xl shadow-sky-900/70 overflow-hidden"
           style={{ width: size, height: size }}
@@ -1036,6 +1046,7 @@ export default function Home() {
             </p>
           ) : (
             <>
+              {/* newest cube, big + centered */}
               {topRecent && (
                 <div className="mt-4 flex justify-center">
                   <div className="flex flex-col items-center gap-2 w-full max-w-[260px]">
@@ -1053,12 +1064,13 @@ export default function Home() {
                 </div>
               )}
 
+              {/* next cubes, forced 2-wide via flex-wrap */}
               {restRecent.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center">
+                <div className="mt-4 flex flex-wrap justify-center gap-4">
                   {restRecent.map((item) => (
                     <div
                       key={item.tokenId}
-                      className="flex flex-col items-center gap-2 w-full"
+                      className="flex flex-col items-center gap-2 basis-1/2 max-w-[180px]"
                     >
                       <CubeVisual
                         tokenId={item.tokenId}
@@ -1078,7 +1090,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Featured cubes (promo mints 2–5) – 2x2 grid, ONLY Cube # text */}
+        {/* Featured cubes (promo mints 2–5) – 2x2 grid via flex wrap */}
         <div className="glass-card text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
             Featured cubes
@@ -1089,11 +1101,11 @@ export default function Home() {
               Promo cubes #2 – #5 will appear here once they are minted.
             </p>
           ) : (
-            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center">
+            <div className="mt-4 flex flex-wrap justify-center gap-4">
               {featuredCubes.slice(0, 4).map((item) => (
                 <div
                   key={item.tokenId}
-                  className="flex flex-col items-center gap-2 w-full"
+                  className="flex flex-col items-center gap-2 basis-1/2 max-w-[180px]"
                 >
                   <CubeVisual
                     tokenId={item.tokenId}
