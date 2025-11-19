@@ -48,7 +48,7 @@ export default function ShareToFarcaster({
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
 
-    // 👇 Tuple for composeCast (what the types expect)
+    // Tuple for composeCast (what the types expect)
     let embedsTuple: [] | [string] | [string, string] | undefined;
     if (primary && secondary) {
       embedsTuple = [primary, secondary];
@@ -60,7 +60,7 @@ export default function ShareToFarcaster({
       embedsTuple = undefined;
     }
 
-    // 👇 Plain array for building the Warpcast URL
+    // Plain array for building the Warpcast URL
     const embedList = [primary, secondary].filter(Boolean) as string[];
 
     // 1) Preferred: native composeCast inside Base / Farcaster host
@@ -99,12 +99,14 @@ export default function ShareToFarcaster({
       onClick={handleClick}
       className={
         className ??
-        "inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium " +
-          "bg-violet-500/20 border border-violet-400/70 text-violet-50 hover:bg-violet-500/30 " +
-          "transition"
+        "inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold " +
+          "bg-gradient-to-r from-violet-500/25 via-fuchsia-500/25 to-sky-500/25 " +
+          "border border-violet-300/70 text-violet-50 shadow-[0_0_18px_rgba(167,139,250,0.45)] " +
+          "hover:shadow-[0_0_26px_rgba(129,140,248,0.65)] hover:translate-y-[1px] transition"
       }
     >
-      Share on Farcaster
+      <span className="text-sm">✦</span>
+      <span>Share on Farcaster</span>
     </button>
   );
 }
