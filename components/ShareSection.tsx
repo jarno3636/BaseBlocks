@@ -27,10 +27,19 @@ function getSiteOrigin(): string {
   return "https://baseblox.vercel.app";
 }
 
+// Prefer the registered mini-app URL if set, else fall back to the web origin.
+function getAppShareUrl(): string {
+  const mini = process.env.NEXT_PUBLIC_MINIAPP_URL;
+  if (mini && mini.trim()) {
+    return mini.replace(/\/$/, "");
+  }
+  return getSiteOrigin();
+}
+
 function getCubeUrl(cubeId: number): string {
-  const origin = getSiteOrigin();
-  // later you can swap this to /cube/[id]
-  return `${origin}/?cubeId=${cubeId}`;
+  const base = getAppShareUrl();
+  // For mini-app, you can read this query param inside your app if you want.
+  return `${base}?cubeId=${cubeId}`;
 }
 
 function openTwitterShare(text: string, url?: string) {
@@ -53,8 +62,8 @@ export default function ShareSection({
   primarySymbol,
   cubeImageUrl,
 }: ShareSectionProps) {
-  const origin = getSiteOrigin();
-  const cubeUrl = hasCube ? getCubeUrl(cubeId) : origin;
+  const appShareUrl = getAppShareUrl();
+  const cubeUrl = hasCube ? getCubeUrl(cubeId) : appShareUrl;
   const nftImageUrl = cubeImageUrl; // may be undefined
 
   const cubeShareText = hasCube
@@ -88,8 +97,8 @@ export default function ShareSection({
 
         <div className="flex flex-wrap gap-2 mt-2">
           {/* Farcaster share for cube:
-              - primary embed: NFT image (if present), otherwise cube page
-              - secondary embed: cube page / app URL
+              - primary embed: NFT image (if HTTPS), otherwise cube page
+              - secondary embed: cube mini-app URL
           */}
           <ShareToFarcaster
             text={cubeShareText}
@@ -98,7 +107,7 @@ export default function ShareSection({
             className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-violet-500/20 border border-violet-400/70 text-violet-50 hover:bg-violet-500/30 transition"
           />
 
-          {/* X / Twitter share for cube (can only take one URL) */}
+          {/* X / Twitter share for cube (one URL only) */}
           <button
             type="button"
             onClick={() => openTwitterShare(cubeShareText, cubeUrl)}
@@ -126,14 +135,14 @@ export default function ShareSection({
           {/* Farcaster share for app */}
           <ShareToFarcaster
             text={appShareText}
-            url={origin}
+            url={appShareUrl}
             className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-violet-500/20 border border-violet-400/70 text-violet-50 hover:bg-violet-500/30 transition"
           />
 
           {/* X / Twitter share for app */}
           <button
             type="button"
-            onClick={() => openTwitterShare(appShareText, origin)}
+            onClick={() => openTwitterShare(appShareText, appShareUrl)}
             className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-sky-500/20 border border-sky-400/70 text-sky-50 hover:bg-sky-500/30 transition"
           >
             Share app on X
