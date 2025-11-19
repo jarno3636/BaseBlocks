@@ -1,7 +1,7 @@
 // components/ShareToFarcaster.tsx
 "use client";
 
-import { useComposeCast } from "@coinbase/onchainkit/minikit";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
   text: string;
@@ -44,35 +44,38 @@ export default function ShareToFarcaster({
   secondaryUrl,
   className,
 }: Props) {
-  const { composeCast } = useComposeCast();
-
   async function handleClick() {
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
     const embeds = [primary, secondary].filter(Boolean) as string[];
 
-    // Build Warpcast compose URL for fallback
+    // 1) Preferred: native composeCast inside Base / Farcaster host
+    try {
+      await sdk.actions.composeCast({
+        text,
+        embeds,
+      });
+      return;
+    } catch {
+      // If we're not in a mini app host or composeCast isn't supported,
+      // fall through to openUrl below.
+    }
+
+    // 2) Fallback: open Warpcast composer via SDK navigation
     const params = new URLSearchParams();
     if (text) params.set("text", text);
     embeds.forEach((u) => params.append("embeds[]", u));
-    const warpcastComposeUrl = `https://warpcast.com/~/compose?${params.toString()}`;
+
+    const warpcastUrl = `https://warpcast.com/~/compose?${params.toString()}`;
 
     try {
-      // Preferred path: Base / Farcaster mini app host via OnchainKit
-      if (composeCast) {
-        await composeCast({
-          text,
-          embeds,
-        });
-        return;
-      }
+      await sdk.actions.openUrl(warpcastUrl);
+      return;
     } catch {
-      // If composeCast throws, fall through to web
-    }
-
-    // Fallback: open Warpcast composer in a normal browser window
-    if (typeof window !== "undefined") {
-      window.open(warpcastComposeUrl, "_blank", "noopener,noreferrer");
+      // 3) Last-ditch fallback in plain browser
+      if (typeof window !== "undefined") {
+        window.open(warpcastUrl, "_blank", "noopener,noreferrer");
+      }
     }
   }
 
