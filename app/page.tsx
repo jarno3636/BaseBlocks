@@ -141,7 +141,7 @@ function CubeVisual({
 
   return (
     <div
-      className="relative rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
+      className="relative mx-auto rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
       style={{ width: cardWidth }}
     >
       <div className="pointer-events-none absolute -inset-16 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.55),transparent_60%)] opacity-70" />
@@ -164,7 +164,7 @@ function CubeVisual({
         </div>
 
         {showMeta && (
-          <div className="w-full flex items-center justify-between text-[11px] text-slate-100/90">
+          <div className="w-full flex items-center justify-center gap-2 text-[11px] text-slate-100/90">
             <span className="font-medium uppercase tracking-[0.16em]">
               {label}
             </span>
@@ -348,7 +348,7 @@ export default function Home() {
     }
     const last = Number(nextTokenIdData) - 1;
     const mintedCount = last;
-    const windowSize = Math.min(mintedCount, 256);
+    the windowSize = Math.min(mintedCount, 256);
     const first = last - windowSize + 1;
     const ids: bigint[] = [];
     for (let id = last; id >= first; id--) {
@@ -661,7 +661,7 @@ export default function Home() {
           <div className="relative flex flex-col items-center text-center gap-4">
             {/* Top row: cube + wallet */}
             <div className="flex flex-col items-center gap-4 w-full">
-              <div className="flex justify-center">
+              <div className="flex justify-center w-full">
                 <CubeVisual
                   tokenId={effectiveCubeId ?? undefined}
                   label={
