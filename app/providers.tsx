@@ -15,7 +15,7 @@ import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { base } from "viem/chains";
 import { wagmiConfig } from "@/lib/wallet";
 
-// ⭐ NEW: MiniKitProvider
+// MiniKitProvider (no appId prop)
 import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
 
 /* ---------------- BigInt JSON polyfill ---------------- */
@@ -33,7 +33,9 @@ if (typeof (BigInt.prototype as any).toJSON !== "function") {
 
 /* ---------------- React Query setup ------------------- */
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 10_000, refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: { staleTime: 10_000, refetchOnWindowFocus: false },
+  },
 });
 
 function serializeData(data: unknown) {
@@ -75,10 +77,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             modalSize="compact"
             appInfo={{ appName: "BaseBlox" }}
           >
-            {/* ⭐ MiniKitProvider MUST WRAP your entire app */}
-            <MiniKitProvider
-              appId={process.env.NEXT_PUBLIC_MINIAPP_ID!}
-            >
+            {/* MiniKitProvider wraps the app, no props needed */}
+            <MiniKitProvider>
               {children}
             </MiniKitProvider>
           </RainbowKitProvider>
