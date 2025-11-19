@@ -187,7 +187,6 @@ export default function Home() {
 
   // ---------- Onchain reads: primary cube (cubeOf) + global state ----------
 
-  // "Minted identity cube" mapping
   const { data: cubeIdData } = useReadContract({
     address: BASEBLOCKS_ADDRESS,
     abi: BASEBLOCKS_ABI,
@@ -298,7 +297,6 @@ export default function Home() {
   const featuredTokenIds = useMemo(() => {
     const ids: bigint[] = [];
     if (!nextTokenIdData) return ids;
-    // token is minted if id < nextTokenId
     for (let id = 2; id <= 5; id++) {
       const bid = BigInt(id);
       if (bid < nextTokenIdData) ids.push(bid);
@@ -348,7 +346,6 @@ export default function Home() {
     }
     const last = Number(nextTokenIdData) - 1;
     const mintedCount = last;
-    // Scan up to the last 256 cubes; if total minted <= 256, this covers all.
     const windowSize = Math.min(mintedCount, 256);
     const first = last - windowSize + 1;
     const ids: bigint[] = [];
@@ -382,7 +379,6 @@ export default function Home() {
       const owner = ownedScanResults[idx]?.result as string | undefined;
       if (owner && owner.toLowerCase() === lower) {
         const numericId = Number(id);
-        // skip the primary cubeOf(address) in this list
         if (!hasMintedCube || numericId !== mintedCubeId) {
           extras.push(numericId);
         }
@@ -393,7 +389,6 @@ export default function Home() {
     return extras;
   }, [address, ownedScanResults, ownedScanTokenIds, hasMintedCube, mintedCubeId]);
 
-  // All cubes we know this wallet owns (primary + extras)
   const allOwnedCubes = useMemo(() => {
     const ids = new Set<number>();
     if (hasMintedCube) ids.add(mintedCubeId);
@@ -407,7 +402,6 @@ export default function Home() {
 
   const [activeCubeId, setActiveCubeId] = useState<number | null>(null);
 
-  // The cube we actually show stats + art for
   const effectiveCubeId = useMemo(() => {
     if (activeCubeId != null) return activeCubeId;
     if (allOwnedCubes.length > 0) return allOwnedCubes[0];
@@ -417,7 +411,6 @@ export default function Home() {
   const effectiveCubeIdBig =
     effectiveCubeId != null ? BigInt(effectiveCubeId) : null;
 
-  // Reads for the *active* cube
   const { data: activeCubeData } = useReadContract({
     address: BASEBLOCKS_ADDRESS,
     abi: BASEBLOCKS_ABI,
@@ -512,11 +505,9 @@ export default function Home() {
     activeTokenUriData as string | undefined,
   );
 
-  // when user does NOT have any cube (connected or not), show fallback.PNG.
   const myCubeImageToShow =
     effectiveCubeId != null && activeCubeImage ? activeCubeImage : "/fallback.PNG";
 
-  // prestige timing: 180 days between prestiges
   const canPrestige = effectiveCubeId != null && activeAgeDays >= 180;
   const prestigeCooldownDays =
     effectiveCubeId != null && activeAgeDays < 180 ? 180 - activeAgeDays : 0;
@@ -607,36 +598,35 @@ export default function Home() {
 
   const latestCube = recentCubes[0];
   const otherRecent = recentCubes.slice(1);
-  const gridRecent = otherRecent.slice(0, 4); // up to 4 in the 2x2 grid
+  const gridRecent = otherRecent.slice(0, 4);
 
   // ---------- UI ----------
 
   return (
-    <section className="relative w-full max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 md:py-16 flex flex-col gap-8 text-slate-50">
+    <section className="relative w-full flex flex-col gap-6 sm:gap-8 text-slate-50">
       {/* soft page-level glows */}
       <div className="pointer-events-none absolute inset-x-0 -top-40 h-64 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.40),transparent_60%)] opacity-70" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.30),transparent_60%)] opacity-60" />
 
       {/* HERO CARD */}
-      <div className="glass-card stats-appear overflow-hidden px-6 py-8 sm:px-8 sm:py-10">
+      <div className="glass-card stats-appear overflow-hidden px-5 py-7 sm:px-7 sm:py-9">
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.45),transparent_55%)] opacity-80" />
         <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.35),transparent_55%)] opacity-70" />
 
         <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10">
           <div className="flex-1 text-center md:text-left space-y-4">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-tight tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-sky-200 via-cyan-200 to-indigo-200 bg-clip-text text-transparent">
                 BaseBlox
               </span>
             </h1>
 
-            {/* subtle divider between title and body */}
             <div className="mt-3 mb-4 h-px w-24 mx-auto md:mx-0 bg-gradient-to-r from-sky-300/90 via-cyan-200/90 to-transparent" />
 
             <p className="text-sm sm:text-base text-slate-200/90 max-w-xl mx-auto md:mx-0">
               Your evolving onchain identity cube. One cube per wallet — age,
-              prestige level, and your primary token, all etched on Base.
-              Mint once and let your cube tell your story.
+              prestige level, and your primary token, all etched on Base. Mint
+              once and let your cube tell your story.
             </p>
           </div>
 
@@ -644,16 +634,16 @@ export default function Home() {
             <Image
               src="/hero.PNG"
               alt="BaseBlox hero"
-              width={360}
-              height={360}
-              className="hero-float w-full max-w-xs sm:max-w-sm rounded-2xl shadow-xl shadow-sky-900/50"
+              width={320}
+              height={320}
+              className="floating-hero w-full max-w-xs sm:max-w-sm rounded-2xl shadow-xl shadow-sky-900/50"
             />
           </div>
         </div>
       </div>
 
       {/* Content cards */}
-      <div className="relative mt-8 flex flex-col gap-8 sm:gap-10 md:gap-12">
+      <div className="relative flex flex-col gap-6 sm:gap-7 md:gap-8">
         {/* Combined: your cube + identity snapshot */}
         <div className="glass-card stats-appear overflow-hidden px-4 py-4 sm:px-5 sm:py-6">
           <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] opacity-80" />
@@ -661,7 +651,6 @@ export default function Home() {
             {/* Top row: cube + wallet */}
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex justify-center sm:justify-start">
-                {/* NOTE: cube itself does NOT animate */}
                 <CubeVisual
                   tokenId={effectiveCubeId ?? undefined}
                   label={
@@ -669,14 +658,13 @@ export default function Home() {
                       ? "Your BaseBlox cube"
                       : "BaseBlox cube"
                   }
-                  size={336} // big hero cube
+                  size={280}
                   imageSrc={myCubeImageToShow}
                   showMeta={false}
                 />
               </div>
 
               <div className="flex-1 flex flex-col gap-3">
-                {/* "Your cube" title + line */}
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                     Your cube
@@ -705,10 +693,9 @@ export default function Home() {
                               {activeMintedAtDate}
                             </span>
                           </p>
-                          {/* NEW: identity label */}
                           <p className="text-[10px] text-sky-200/90 mt-0.5">
-                            Using cube #{effectiveCubeId} as your identity on this
-                            page.
+                            Using cube #{effectiveCubeId} as your identity on
+                            this page.
                           </p>
                         </>
                       )}
@@ -1055,14 +1042,14 @@ export default function Home() {
           )}
         </div>
 
-        {/* ⬇️ Shared component: Share your cube + Share BaseBlox */}
+        {/* Share section */}
         <ShareSection
           hasCube={effectiveCubeId != null}
           cubeId={effectiveCubeId ?? 0}
           ageDays={activeAgeDays}
           prestigeLabelText={activePrestigeLabelText}
           primarySymbol={activePrimarySymbol}
-          cubeImageUrl={activeCubeImage}   // 👈 add this line
+          cubeImageUrl={activeCubeImage}
         />
 
         {/* Freshly forged cubes – latest centered, then 2x2 grid */}
@@ -1148,8 +1135,8 @@ export default function Home() {
           )}
         </div>
 
-        {/* Contract link at very bottom of page */}
-        <div className="mt-6 mb-2 flex justify-center">
+        {/* Contract link at very bottom of stack */}
+        <div className="mt-4 mb-1 flex justify-center">
           <a
             href={`https://basescan.org/address/${BASEBLOCKS_ADDRESS}`}
             target="_blank"
@@ -1164,12 +1151,10 @@ export default function Home() {
       {/* Mint confirmation popup */}
       {showMintCongrats && (
         <div className="fixed inset-0 z-40 flex items-center justify-center px-6">
-          {/* backdrop */}
           <div
             className="absolute inset-0 bg-black/60"
             onClick={() => setShowMintCongrats(false)}
           />
-          {/* card */}
           <div className="relative z-50 max-w-sm w-full rounded-3xl border border-sky-400/70 bg-slate-950/95 px-6 py-6 shadow-[0_0_60px_rgba(56,189,248,.6)]">
             <div className="flex flex-col items-center text-center gap-3">
               <div className="text-4xl">🎉</div>
