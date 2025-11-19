@@ -46,7 +46,7 @@ export default function ShareToFarcaster({
   secondaryUrl,
   className,
 }: Props) {
-  const { composeCast } = useComposeCast();
+  const { composeCast, canCompose } = useComposeCast();
 
   const handleClick = () => {
     const primary = toAbs(url);
@@ -58,23 +58,19 @@ export default function ShareToFarcaster({
 
     const message = text || "";
 
-    // 🔧 Convert embedsArray (string[]) -> tuple type expected by MiniKit
+    // MiniKit expects: [] | [string] | [string, string]
     type EmbedsTuple = [] | [string] | [string, string];
-
     let embeds: EmbedsTuple = [];
-    if (embedsArray.length === 1) {
-      embeds = [embedsArray[0]];
-    } else if (embedsArray.length >= 2) {
-      embeds = [embedsArray[0], embedsArray[1]];
-    }
+    if (embedsArray.length === 1) embeds = [embedsArray[0]];
+    else if (embedsArray.length >= 2) embeds = [embedsArray[0], embedsArray[1]];
 
-    // ✅ Primary path: inside Base app / Mini App
-    if (composeCast) {
+    // ✅ Inside Base / mini app
+    if (canCompose && composeCast) {
       composeCast({ text: message, embeds });
       return;
     }
 
-    // 🌐 Fallback: normal web – open Warpcast composer
+    // 🌐 Fallback: open Warpcast composer on web
     const params = new URLSearchParams();
     if (message) params.set("text", message);
     (embeds as string[]).forEach((e) => params.append("embeds[]", e));
@@ -92,10 +88,13 @@ export default function ShareToFarcaster({
       onClick={handleClick}
       className={
         className ??
-        "rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold bg-slate-900/80 border border-white/20 text-slate-50 hover:bg-slate-800/90 transition shadow-[0_10px_24px_rgba(0,0,0,.35)]"
+        "inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold " +
+        "bg-sky-500/15 border border-sky-400/80 text-sky-50 hover:bg-sky-500/30 " +
+        "transition shadow-[0_10px_24px_rgba(8,47,73,.55)]"
       }
     >
-      Share on Farcaster
+      <span className="text-[10px]">◆</span>
+      <span>Share on Farcaster</span>
     </button>
   );
 }
