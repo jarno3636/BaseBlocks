@@ -1,6 +1,7 @@
 // components/ShareToFarcaster.tsx
 "use client";
 
+import type { ReactNode } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
 
 type Props = {
@@ -10,6 +11,8 @@ type Props = {
   /** Optional second URL (e.g. mini-app link) to embed as well. */
   secondaryUrl?: string;
   className?: string;
+  /** Optional custom button contents. */
+  children?: ReactNode;
 };
 
 function getOrigin(): string {
@@ -43,12 +46,13 @@ export default function ShareToFarcaster({
   url,
   secondaryUrl,
   className,
+  children,
 }: Props) {
   async function handleClick() {
     const primary = toAbs(url);
     const secondary = toAbs(secondaryUrl);
 
-    // Tuple for composeCast (what the types expect)
+    // Tuple type that matches composeCast embeds
     let embedsTuple: [] | [string] | [string, string] | undefined;
     if (primary && secondary) {
       embedsTuple = [primary, secondary];
@@ -60,7 +64,7 @@ export default function ShareToFarcaster({
       embedsTuple = undefined;
     }
 
-    // Plain array for building the Warpcast URL
+    // Plain array for building Warpcast URL
     const embedList = [primary, secondary].filter(Boolean) as string[];
 
     // 1) Preferred: native composeCast inside Base / Farcaster host
@@ -71,11 +75,10 @@ export default function ShareToFarcaster({
       });
       return;
     } catch {
-      // If we're not in a mini app host or composeCast isn't supported,
-      // fall through to openUrl below.
+      // If not in mini app host or not supported, fall through
     }
 
-    // 2) Fallback: open Warpcast composer via SDK navigation
+    // 2) Fallback: Warpcast composer via SDK navigation
     const params = new URLSearchParams();
     if (text) params.set("text", text);
     embedList.forEach((u) => params.append("embeds[]", u));
@@ -86,7 +89,7 @@ export default function ShareToFarcaster({
       await sdk.actions.openUrl(warpcastUrl);
       return;
     } catch {
-      // 3) Last-ditch fallback in plain browser
+      // 3) Last fallback: plain browser window
       if (typeof window !== "undefined") {
         window.open(warpcastUrl, "_blank", "noopener,noreferrer");
       }
@@ -99,14 +102,12 @@ export default function ShareToFarcaster({
       onClick={handleClick}
       className={
         className ??
-        "inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold " +
-          "bg-gradient-to-r from-violet-500/25 via-fuchsia-500/25 to-sky-500/25 " +
-          "border border-violet-300/70 text-violet-50 shadow-[0_0_18px_rgba(167,139,250,0.45)] " +
-          "hover:shadow-[0_0_26px_rgba(129,140,248,0.65)] hover:translate-y-[1px] transition"
+        "inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium " +
+          "bg-violet-500/20 border border-violet-400/70 text-violet-50 hover:bg-violet-500/30 " +
+          "transition"
       }
     >
-      <span className="text-sm">✦</span>
-      <span>Share on Farcaster</span>
+      {children ?? <span>Share on Farcaster</span>}
     </button>
   );
 }
