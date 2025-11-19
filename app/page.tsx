@@ -348,7 +348,7 @@ export default function Home() {
     }
     const last = Number(nextTokenIdData) - 1;
     const mintedCount = last;
-    the windowSize = Math.min(mintedCount, 256);
+    const windowSize = Math.min(mintedCount, 256);
     const first = last - windowSize + 1;
     const ids: bigint[] = [];
     for (let id = last; id >= first; id--) {
