@@ -111,7 +111,7 @@ function CubeVisual({
 
   return (
     <div
-      className="relative mx-auto rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
+      className="relative mx-auto flex flex-col items-center justify-center rounded-3xl border border-sky-400/50 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-slate-900/95 shadow-2xl shadow-sky-900/60 overflow-hidden"
       style={{ width: cardWidth }}
     >
       <div className="pointer-events-none absolute -inset-16 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.55),transparent_60%)] opacity-70" />
@@ -126,7 +126,7 @@ function CubeVisual({
               alt={label}
               width={size}
               height={size}
-              className="object-cover"
+              className="object-contain"
             />
           ) : (
             <div className="w-[70%] h-[70%] rounded-2xl border border-white/70 bg-sky-50/95 shadow-inner shadow-sky-900/40" />
@@ -1022,7 +1022,7 @@ export default function Home() {
           }
         />
 
-        {/* 🔹 Freshly forged cubes – 2x2 grid, ONLY Cube # under each cube */}
+        {/* 🔹 Freshly forged cubes – newest solo on top, then 2-wide rows */}
         <div className="glass-card text-center">
           <p className="text-[11px] text-slate-400 uppercase tracking-[0.16em]">
             Freshly forged cubes
@@ -1034,15 +1034,17 @@ export default function Home() {
             </p>
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center">
-              {gridRecent.map((item) => (
+              {gridRecent.map((item, idx) => (
                 <div
                   key={item.tokenId}
-                  className="flex flex-col items-center gap-2"
+                  className={`flex flex-col items-center gap-2 ${
+                    idx === 0 ? "col-span-2" : ""
+                  }`}
                 >
                   <CubeVisual
                     tokenId={item.tokenId}
                     label=""
-                    size={96}
+                    size={idx === 0 ? 120 : 96}
                     imageSrc={item.imageUrl}
                     showMeta={false}
                   />
@@ -1075,7 +1077,7 @@ export default function Home() {
                   <CubeVisual
                     tokenId={item.tokenId}
                     label=""
-                    size={90}
+                    size={96}
                     imageSrc={item.imageUrl}
                     showMeta={false}
                   />
